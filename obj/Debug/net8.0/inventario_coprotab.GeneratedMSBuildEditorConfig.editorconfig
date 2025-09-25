@@ -28,12 +28,36 @@ build_property._RazorSourceGeneratorDebug =
 build_property.EffectiveAnalysisLevelStyle = 8.0
 build_property.EnableCodeStyleSeverity = 
 
+[C:/Users/Archy/Documents/Programacion/NetCore/inventario_coprotab/inventario_coprotab/Views/Dispositivo/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGlzcG9zaXRpdm9cQ3JlYXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Archy/Documents/Programacion/NetCore/inventario_coprotab/inventario_coprotab/Views/Dispositivo/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGlzcG9zaXRpdm9cRGVsZXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Archy/Documents/Programacion/NetCore/inventario_coprotab/inventario_coprotab/Views/Dispositivo/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGlzcG9zaXRpdm9cRGV0YWlscy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Archy/Documents/Programacion/NetCore/inventario_coprotab/inventario_coprotab/Views/Dispositivo/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGlzcG9zaXRpdm9cRWRpdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Archy/Documents/Programacion/NetCore/inventario_coprotab/inventario_coprotab/Views/Dispositivo/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGlzcG9zaXRpdm9cSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/Archy/Documents/Programacion/NetCore/inventario_coprotab/inventario_coprotab/Views/Home/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Archy/Documents/Programacion/NetCore/inventario_coprotab/inventario_coprotab/Views/Home/Privacy.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcml2YWN5LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Archy/Documents/Programacion/NetCore/inventario_coprotab/inventario_coprotab/Views/Movimiento/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTW92aW1pZW50b1xDcmVhdGUuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Archy/Documents/Programacion/NetCore/inventario_coprotab/inventario_coprotab/Views/Shared/Error.cshtml]

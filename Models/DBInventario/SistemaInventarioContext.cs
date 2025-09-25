@@ -32,7 +32,15 @@ public partial class SistemaInventarioContext : DbContext
     public virtual DbSet<Ubicacione> Ubicaciones { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseSqlServer("Name=MiConexion");
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+    #if DEBUG
+                // Solo en modo debug / desarrollo
+                optionsBuilder.UseSqlServer("Data Source=.;Initial Catalog=InventarioSistemas;Integrated Security=true;MultipleActiveResultSets=True;TrustServerCertificate=true;");
+    #endif
+        }
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

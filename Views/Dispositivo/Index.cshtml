@@ -1,0 +1,90 @@
+﻿@model IEnumerable<inventario_coprotab.Models.DBInventario.Dispositivo>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+
+<form method="get" class="mb-3">
+    <div class="row">
+        <div class="col-md-2">
+            <input type="text" name="searchCode" class="form-control" placeholder="Código" value="@ViewBag.SearchCode" />
+        </div>
+        <div class="col-md-2">
+            <input type="text" name="searchSerie" class="form-control" placeholder="Serie" value="@ViewBag.SearchSerie" />
+        </div>
+        <div class="col-md-2">
+            <input type="text" name="searchTipo" class="form-control" placeholder="Tipo" value="@ViewBag.SearchTipo" />
+        </div>
+        <div class="col-md-2">
+            <select name="searchEstado" class="form-control">
+                <option value="" selected="@(ViewBag.SearchEstado == null || ViewBag.SearchEstado == "")">Todos los estados</option>
+                <option value="Activo" selected="@(ViewBag.SearchEstado == "Activo")">Activo</option>
+                <option value="Inactivo" selected="@(ViewBag.SearchEstado == "Inactivo")">Inactivo</option>
+                <option value="En Reparación" selected="@(ViewBag.SearchEstado == "En Reparación")">En Reparación</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary">Buscar</button>
+            <a asp-action="Index" class="btn btn-secondary">Limpiar</a>
+        </div>
+    </div>
+</form>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.Nombre)</th>
+            <th>@Html.DisplayNameFor(model => model.Descripcion)</th>
+            <th>@Html.DisplayNameFor(model => model.CodigoInventario)</th>
+            <th>@Html.DisplayNameFor(model => model.NroSerie)</th>
+            <th>@Html.DisplayNameFor(model => model.Estado)</th>
+            <th>@Html.DisplayNameFor(model => model.FechaAlta)</th>
+            <th>@Html.DisplayNameFor(model => model.FechaBaja)</th>
+            <th>Stock Actual</th> <!-- Cambiado para mostrar la alerta -->
+            <th>@Html.DisplayNameFor(model => model.StockMinimo)</th>
+            <th>@Html.DisplayNameFor(model => model.EstadoRegistro)</th>
+            <th>Marca</th>
+            <th>Tipo</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@Html.DisplayFor(modelItem => item.Nombre)</td>
+                <td>@Html.DisplayFor(modelItem => item.Descripcion)</td>
+                <td>@Html.DisplayFor(modelItem => item.CodigoInventario)</td>
+                <td>@Html.DisplayFor(modelItem => item.NroSerie)</td>
+                <td>@Html.DisplayFor(modelItem => item.Estado)</td>
+                <td>@Html.DisplayFor(modelItem => item.FechaAlta)</td>
+                <td>@Html.DisplayFor(modelItem => item.FechaBaja)</td>
+                <td>
+                    @if (item.StockActual <= item.StockMinimo && item.StockMinimo > 0)
+                    {
+                        <span class="badge bg-warning text-dark">⚠️ Bajo stock</span>
+                    }
+                    else
+                    {
+                        @Html.DisplayFor(modelItem => item.StockActual)
+                    }
+                </td>
+                <td>@Html.DisplayFor(modelItem => item.StockMinimo)</td>
+                <td>@Html.DisplayFor(modelItem => item.EstadoRegistro)</td>
+                <td>@(item.IdMarcaNavigation?.Nombre ?? "Sin marca")</td>
+                <td>@(item.IdTipoNavigation?.Descripcion ?? "Sin tipo")</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.IdDispositivo">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@item.IdDispositivo">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@item.IdDispositivo">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,8 +1,12 @@
+using inventario_coprotab.Models.DBInventario;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-
+builder.Services.AddDbContext<SistemaInventarioContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("MiConexion")));
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

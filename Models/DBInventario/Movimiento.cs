@@ -26,4 +26,6 @@ public partial class Movimiento
     public virtual Responsable? IdResponsableNavigation { get; set; }
 
     public virtual Ubicacione? IdUbicacionNavigation { get; set; }
+
+    
 }
