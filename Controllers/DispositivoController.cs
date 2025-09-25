@@ -71,26 +71,30 @@ namespace inventario_coprotab.Controllers
         // GET: Dispositivo/Create
         public IActionResult Create()
         {
-            ViewData["IdMarca"] = new SelectList(_context.Marcas, "IdMarca", "IdMarca");
-            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares, "IdTipo", "IdTipo");
+            ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre");
+            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion");
             return View();
         }
 
         // POST: Dispositivo/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // POST: Dispositivo/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("IdDispositivo,Nombre,Descripcion,IdMarca,IdTipo,CodigoInventario,NroSerie,Estado,FechaAlta,FechaBaja,StockActual,StockMinimo,EstadoRegistro")] Dispositivo dispositivo)
         {
             if (ModelState.IsValid)
             {
+                dispositivo.FechaAlta = DateTime.Now.Date; // ⚡ Auto-llenar fecha alta
+                dispositivo.EstadoRegistro = true;         // Por defecto, activo
                 _context.Add(dispositivo);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["IdMarca"] = new SelectList(_context.Marcas, "IdMarca", "IdMarca", dispositivo.IdMarca);
-            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares, "IdTipo", "IdTipo", dispositivo.IdTipo);
+
+            ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", dispositivo.IdMarca);
+            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", dispositivo.IdTipo);
             return View(dispositivo);
         }
 

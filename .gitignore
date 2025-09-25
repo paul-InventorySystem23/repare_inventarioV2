@@ -1,0 +1,53 @@
+## Visual Studio ##
+.vs/
+*.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## Build results ##
+bin/
+obj/
+out/
+artifacts/
+
+## Logs ##
+*.log
+logs/
+
+## Configuración local ##
+appsettings.Development.json
+
+## Paquetes ##
+*.nupkg
+*.snupkg
+*.nuspec
+*.dll
+*.exe
+
+## Archivos de publicación ##
+publish/
+*.Publish.xml
+
+## Archivos generados por herramientas ##
+Generated_Code/
+
+## Rider / JetBrains ##
+.idea/
+*.sln.iml
+
+## Sistema operativo ##
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
