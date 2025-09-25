@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("inventario_coprotab")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b45ba1c04116ca470bc846c6ac9fa6fe66046e3a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3c860427bd9e2370c9e24dfd33633a0caec9defb")]
 [assembly: System.Reflection.AssemblyProductAttribute("inventario_coprotab")]
 [assembly: System.Reflection.AssemblyTitleAttribute("inventario_coprotab")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

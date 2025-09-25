@@ -78,5 +78,20 @@ namespace inventario_coprotab.Controllers
             ViewBag.Responsables = _context.Responsables.ToList();
             return View(model);
         }
+
+        public async Task<IActionResult> Movimientos()
+        {
+            var movimientos = new List<Movimiento>();
+
+             movimientos =  _context.Movimientos.ToList();
+
+            return View(movimientos);
+        }
+
+
+
+
+
+
     }
 }

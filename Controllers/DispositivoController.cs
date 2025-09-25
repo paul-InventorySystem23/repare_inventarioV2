@@ -82,7 +82,7 @@ namespace inventario_coprotab.Controllers
         // POST: Dispositivo/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("IdDispositivo,Nombre,Descripcion,IdMarca,IdTipo,CodigoInventario,NroSerie,Estado,FechaAlta,FechaBaja,StockActual,StockMinimo,EstadoRegistro")] Dispositivo dispositivo)
+        /*public async Task<IActionResult> Create([Bind("IdDispositivo,Nombre,Descripcion,IdMarca,IdTipo,CodigoInventario,NroSerie,Estado,FechaAlta,FechaBaja,StockActual,StockMinimo,EstadoRegistro")] Dispositivo dispositivo)
         {
             if (ModelState.IsValid)
             {
@@ -96,7 +96,7 @@ namespace inventario_coprotab.Controllers
             ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", dispositivo.IdMarca);
             ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", dispositivo.IdTipo);
             return View(dispositivo);
-        }
+        }*/
 
         // GET: Dispositivo/Edit/5
         public async Task<IActionResult> Edit(int? id)
