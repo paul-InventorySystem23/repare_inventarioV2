@@ -18,6 +18,7 @@ logs/
 
 ## Configuración local ##
 appsettings.Development.json
+appsettings.json
 
 ## Paquetes ##
 *.nupkg

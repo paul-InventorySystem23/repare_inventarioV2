@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using inventario_coprotab.Models.DBInventario;
+using inventario_coprotab.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using inventario_coprotab.Models.DBInventario;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace inventario_coprotab.Controllers
 {
@@ -67,13 +68,14 @@ namespace inventario_coprotab.Controllers
 
             return View(dispositivo);
         }
-
         // GET: Dispositivo/Create
         public IActionResult Create()
         {
             ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre");
             ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion");
-            return View();
+
+            var viewModel = new DispositivoCreateViewModel();
+            return View(viewModel);
         }
 
         // POST: Dispositivo/Create
@@ -82,40 +84,46 @@ namespace inventario_coprotab.Controllers
         // POST: Dispositivo/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("IdDispositivo,Nombre,Descripcion,IdMarca,IdTipo,CodigoInventario,NroSerie,Estado,FechaAlta,FechaBaja,StockActual,StockMinimo,EstadoRegistro")] Dispositivo dispositivo)
+        public async Task<IActionResult> Create(DispositivoCreateViewModel model)
         {
             if (ModelState.IsValid)
             {
-                dispositivo.FechaAlta = DateTime.Now.Date; // ⚡ Auto-llenar fecha alta
-                dispositivo.EstadoRegistro = true;         // Por defecto, activo
+                var dispositivo = new Dispositivo
+                {
+                    Nombre = model.Nombre,
+                    Descripcion = model.Descripcion,
+                    IdMarca = model.IdMarca,
+                    IdTipo = model.IdTipo,
+                    CodigoInventario = model.CodigoInventario,
+                    NroSerie = model.NroSerie,
+                    Estado = model.Estado ?? "Activo",
+                    FechaAlta = DateOnly.FromDateTime(DateTime.Now),
+                    EstadoRegistro = true,
+                    StockMinimo = 0 // Por defecto
+                };
+
+                // Obtener el tipo para saber si es hardware o consumible
+                var tipo = await _context.TipoHardwares.FindAsync(model.IdTipo);
+                if (tipo?.Descripcion == "Consumible")
+                {
+                    dispositivo.StockActual = model.CantidadInicial ?? 0;
+                }
+                else
+                {
+                    dispositivo.StockActual = 1; // Por defecto para hardware
+                }
+
                 _context.Add(dispositivo);
                 await _context.SaveChangesAsync();
+
                 return RedirectToAction(nameof(Index));
             }
 
-            ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", dispositivo.IdMarca);
-            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", dispositivo.IdTipo);
-            return View(dispositivo);
+            ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", model.IdMarca);
+            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", model.IdTipo);
+
+            return View(model);
         }
-
-        // GET: Dispositivo/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var dispositivo = await _context.Dispositivos.FindAsync(id);
-            if (dispositivo == null)
-            {
-                return NotFound();
-            }
-            ViewData["IdMarca"] = new SelectList(_context.Marcas, "IdMarca", "IdMarca", dispositivo.IdMarca);
-            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares, "IdTipo", "IdTipo", dispositivo.IdTipo);
-            return View(dispositivo);
-        }
-
         // POST: Dispositivo/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
