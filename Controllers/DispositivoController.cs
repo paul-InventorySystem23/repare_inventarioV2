@@ -68,6 +68,7 @@ namespace inventario_coprotab.Controllers
 
             return View(dispositivo);
         }
+
         // GET: Dispositivo/Create
         public IActionResult Create()
         {
@@ -78,9 +79,6 @@ namespace inventario_coprotab.Controllers
             return View(viewModel);
         }
 
-        // POST: Dispositivo/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         // POST: Dispositivo/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -124,9 +122,26 @@ namespace inventario_coprotab.Controllers
 
             return View(model);
         }
+
+        // GET: Dispositivo/Edit/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var dispositivo = await _context.Dispositivos.FindAsync(id);
+            if (dispositivo == null)
+            {
+                return NotFound();
+            }
+            ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", dispositivo.IdMarca);
+            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", dispositivo.IdTipo);
+            return View(dispositivo);
+        }
+
         // POST: Dispositivo/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("IdDispositivo,Nombre,Descripcion,IdMarca,IdTipo,CodigoInventario,NroSerie,Estado,FechaAlta,FechaBaja,StockActual,StockMinimo,EstadoRegistro")] Dispositivo dispositivo)
@@ -156,8 +171,8 @@ namespace inventario_coprotab.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["IdMarca"] = new SelectList(_context.Marcas, "IdMarca", "IdMarca", dispositivo.IdMarca);
-            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares, "IdTipo", "IdTipo", dispositivo.IdTipo);
+            ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", dispositivo.IdMarca);
+            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", dispositivo.IdTipo);
             return View(dispositivo);
         }
 
