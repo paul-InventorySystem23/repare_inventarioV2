@@ -32,5 +32,29 @@ namespace inventario_coprotab.Controllers
             }
             return View(marca);
         }
+        // GET: Marca/GetMarcas
+        [HttpGet]
+        public async Task<IActionResult> GetMarcas()
+        {
+            var marcas = await _context.Marcas
+                .Select(m => new { id = m.IdMarca, nombre = m.Nombre })
+                .ToListAsync();
+            return Json(marcas);
+        }
+        // POST: Marca/Create (AJAX)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateAjax([FromBody] Marca marca)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.Marcas.Add(marca);
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, id = marca.IdMarca, nombre = marca.Nombre });
+            }
+            var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+            return Json(new { success = false, errors = errors });
+        }
     }
+
 }

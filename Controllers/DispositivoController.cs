@@ -100,9 +100,16 @@ namespace inventario_coprotab.Controllers
                     StockMinimo = 0 // Por defecto
                 };
 
+                // 🔍 PUNTO DE DEPURACIÓN: Ver qué valor llega
+                System.Diagnostics.Debug.WriteLine($"Cantidad Inicial recibida: {model.CantidadInicial}");
+                System.Diagnostics.Debug.WriteLine($"Tipo Descripción: {model.IdTipo}");
+
+                
                 // Obtener el tipo para saber si es hardware o consumible
                 var tipo = await _context.TipoHardwares.FindAsync(model.IdTipo);
-                if (tipo?.Descripcion == "Consumible")
+
+                // ✅ Mejor: usar el ID directamente (más seguro)
+                if (model.IdTipo == 2) // Cambia 2 por el ID real de "Consumible"
                 {
                     dispositivo.StockActual = model.CantidadInicial ?? 0;
                 }

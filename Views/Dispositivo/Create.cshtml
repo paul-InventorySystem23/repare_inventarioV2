@@ -1,10 +1,10 @@
 ﻿@model inventario_coprotab.ViewModels.DispositivoCreateViewModel
+
 @{
     ViewData["Title"] = "Create";
 }
 
 <h1>Create</h1>
-
 <h4>Dispositivo</h4>
 <hr />
 <div class="row">
@@ -32,13 +32,13 @@
 
             <div class="form-group">
                 <label asp-for="IdTipo" class="control-label"></label>
-                <select asp-for="IdTipo" class="form-control" asp-items="ViewBag.IdTipo" id="IdTipo"></select>
+                <select asp-for="IdTipo" class="form-control" asp-items="ViewBag.IdTipo" id="IdTipo" onchange="actualizarFormulario()"></select>
             </div>
 
             <!-- Campo dinámico: Cantidad Inicial (solo si es consumible) -->
             <div id="campo-cantidad" class="form-group" style="display: none;">
-                <label asp-for="CantidadInicial" class="control-label"></label>
-                <input asp-for="CantidadInicial" class="form-control" min="1" />
+                <label asp-for="CantidadInicial" class="control-label">Cantidad Inicial</label>
+                <input asp-for="CantidadInicial" class="form-control" type="number" min="1" />
                 <span asp-validation-for="CantidadInicial" class="text-danger"></span>
             </div>
 
@@ -67,11 +67,7 @@
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
-<!-- Modal para crear nueva marca -->
+<!-- Modal para crear marca -->
 <div class="modal fade" id="createMarcaModal" tabindex="-1" aria-labelledby="createMarcaModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -80,12 +76,10 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="createMarcaForm">
-                    <div class="mb-3">
-                        <label for="nombreMarca" class="form-label">Nombre</label>
-                        <input type="text" class="form-control" id="nombreMarca" required />
-                    </div>
-                </form>
+                <div class="form-group">
+                    <label for="nombreMarca">Nombre</label>
+                    <input type="text" class="form-control" id="nombreMarca" required />
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -95,20 +89,21 @@
     </div>
 </div>
 
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-
     <script>
         function actualizarFormulario() {
             var tipoSelect = document.getElementById('IdTipo');
             var cantidadDiv = document.getElementById('campo-cantidad');
+            var selectedValue = tipoSelect.value; // ✅ Usar el VALUE, no el TEXT
 
-            // Obtener el valor seleccionado (IdTipo)
-            var selectedValue = tipoSelect.value;
-
-            // Si es consumible (id_tipo = 2), mostrar el campo
+            // Asumiendo que "2" es el ID de "Consumible" en tu base de datos
             if (selectedValue === "2") {
                 cantidadDiv.style.display = 'block';
                 document.getElementById('CantidadInicial').required = true;
@@ -119,26 +114,20 @@
             }
         }
 
-        // Llamar a la función al cargar la página
-        document.addEventListener('DOMContentLoaded', function () {
-            actualizarFormulario();
-        });
-
-        // Asegurar que se ejecute al cambiar el tipo
-        document.getElementById('IdTipo').addEventListener('change', actualizarFormulario);
-
         function crearMarca() {
-            var nombre = document.getElementById('nombreMarca').value;
+            var nombre = document.getElementById('nombreMarca').value.trim();
             if (!nombre) {
                 alert('El nombre es obligatorio');
                 return;
             }
 
-            fetch('/Marca/Create', {
+            var token = $('input[name="__RequestVerificationToken"]').val();
+
+            fetch('/Marca/CreateAjax', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    'RequestVerificationToken': token
                 },
                 body: JSON.stringify({ nombre: nombre })
             })
@@ -147,10 +136,25 @@
                 if (data.success) {
                     alert('Marca creada exitosamente');
                     $('#createMarcaModal').modal('hide');
-                    location.reload();
+
+                    // Actualizar el desplegable de marcas con la nueva marca
+                    var select = document.getElementById('IdMarca');
+                    var option = document.createElement('option');
+                    option.value = data.id;
+                    option.text = data.nombre;
+                    option.selected = true; // Seleccionar la nueva marca
+                    select.appendChild(option);
+
+                    // Cerrar el modal
+                    $('#createMarcaModal').modal('hide');
                 } else {
-                    alert('Error al crear la marca');
+                    var errorMsg = data.errors?.join('\n') || 'Error desconocido';
+                    alert('Error al crear la marca:\n' + errorMsg);
                 }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error de red al crear la marca');
             });
         }
     </script>

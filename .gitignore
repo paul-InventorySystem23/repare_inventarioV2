@@ -52,3 +52,5 @@ $RECYCLE.BIN/
 
 # Linux
 *~
+bin/
+obj/
