@@ -48,7 +48,7 @@ namespace inventario_coprotab.Controllers
                 var movimiento = new Movimiento
                 {
                     IdDispositivo = model.IdDispositivo,
-                    TipoMovimiento = model.TipoMovimiento,
+                    TipoMovimiento = model.TipoMovimiento ?? "Sin nombre",
                     Fecha = DateOnly.FromDateTime(DateTime.Now),
                     IdUbicacion = model.IdUbicacion,
                     IdResponsable = model.IdResponsable,

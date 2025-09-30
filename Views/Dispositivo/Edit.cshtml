@@ -1,16 +1,18 @@
-﻿@model inventario_coprotab.ViewModels.DispositivoCreateViewModel
+﻿//Al guardar un edit se elimina de la vista de dispositivos y no lo muestra
+@model inventario_coprotab.ViewModels.DispositivoEditViewModel
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Edit";
 }
 
-<h1>Create</h1>
+<h1>Edit</h1>
 <h4>Dispositivo</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Create">
+        <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="IdDispositivo" />
 
             <div class="form-group">
                 <label asp-for="Nombre" class="control-label"></label>
@@ -27,16 +29,17 @@
             <div class="form-group">
                 <label asp-for="IdMarca" class="control-label"></label>
                 <select asp-for="IdMarca" class="form-control" asp-items="ViewBag.IdMarca"></select>
-                <a href="#" class="btn btn-sm btn-outline-primary mt-1" data-bs-toggle="modal" data-bs-target="#createMarcaModal">+ Nueva Marca</a>
+                <span asp-validation-for="IdMarca" class="text-danger"></span>
             </div>
 
             <div class="form-group">
                 <label asp-for="IdTipo" class="control-label"></label>
                 <select asp-for="IdTipo" class="form-control" asp-items="ViewBag.IdTipo" id="IdTipo" onchange="actualizarFormulario()"></select>
+                <span asp-validation-for="IdTipo" class="text-danger"></span>
             </div>
 
             <!-- Campo dinámico: Cantidad Inicial (solo si es consumible) -->
-            <div id="campo-cantidad" class="form-group" style="display: none;">
+            <div id="campo-cantidad" class="form-group" style="display: @(Model.IdTipo == 2 ? "block" : "none");">
                 <label asp-for="CantidadInicial" class="control-label">Cantidad Inicial</label>
                 <input asp-for="CantidadInicial" class="form-control" type="number" min="1" />
                 <span asp-validation-for="CantidadInicial" class="text-danger"></span>
@@ -61,31 +64,9 @@
             </div>
 
             <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+                <input type="submit" value="Save" class="btn btn-primary" />
             </div>
         </form>
-    </div>
-</div>
-
-<!-- Modal para crear marca -->
-<div class="modal fade" id="createMarcaModal" tabindex="-1" aria-labelledby="createMarcaModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="createMarcaModalLabel">Crear Nueva Marca</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="nombreMarca">Nombre</label>
-                    <input type="text" class="form-control" id="nombreMarca" required />
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="crearMarca()">Guardar</button>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -114,51 +95,9 @@
             }
         }
 
+        // Ejecutar al cargar la página para reflejar el valor inicial
         document.addEventListener('DOMContentLoaded', function () {
             actualizarFormulario();
         });
-
-        function crearMarca() {
-            var nombre = document.getElementById('nombreMarca').value.trim();
-            if (!nombre) {
-                alert('El nombre es obligatorio');
-                return;
-            }
-
-            var token = $('input[name="__RequestVerificationToken"]').val();
-
-            fetch('/Marca/CreateAjax', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': token
-                },
-                body: JSON.stringify({ nombre: nombre })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Marca creada exitosamente');
-                    $('#createMarcaModal').modal('hide');
-
-                    // Actualizar el desplegable de marcas con la nueva marca
-                    var select = document.getElementById('IdMarca');
-                    var option = document.createElement('option');
-                    option.value = data.id;
-                    option.text = data.nombre;
-                    option.selected = true; // Seleccionar la nueva marca
-                    select.appendChild(option);
-
-                    $('#createMarcaModal').modal('hide');
-                } else {
-                    var errorMsg = data.errors?.join('\n') || 'Error desconocido';
-                    alert('Error al crear la marca:\n' + errorMsg);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error de red al crear la marca');
-            });
-        }
     </script>
 }

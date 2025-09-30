@@ -114,6 +114,11 @@
             }
         }
 
+        // ✅ AGREGA ESTA LÍNEA PARA EJECUTAR AL CARGAR
+        document.addEventListener('DOMContentLoaded', function () {
+            actualizarFormulario();
+        });
+
         function crearMarca() {
             var nombre = document.getElementById('nombreMarca').value.trim();
             if (!nombre) {
