@@ -1,0 +1,95 @@
+﻿@model inventario_coprotab.Models.DBInventario.Marca
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>Marca</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+
+        <form asp-action="Create">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Nombre" class="control-label"></label>
+                <input asp-for="Nombre" class="form-control" />
+                <span asp-validation-for="Nombre" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+<script>
+        function crearMarca() {
+        var nombre = document.getElementById('nombreMarca').value.trim();
+        if (!nombre) {
+            alert('El nombre es obligatorio');
+            return;
+        }
+
+        var token = $('input[name="__RequestVerificationToken"]').val();
+
+        fetch('/Marca/CreateAjax', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token
+            },
+            body: JSON.stringify({ nombre: nombre })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Marca creada exitosamente');
+                $('#createMarcaModal').modal('hide');
+                // Opcional: recargar el desplegable de marcas sin recargar la página
+                cargarMarcasEnSelect(data.id);
+            } else {
+                var errorMsg = data.errors?.join('\n') || 'Error desconocido';
+                alert('Error al crear la marca:\n' + errorMsg);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error de red al crear la marca');
+        });
+    }
+
+    // Opcional: actualiza el <select> sin recargar la página
+    function cargarMarcasEnSelect(nuevaMarcaId) {
+        fetch('/Marca/GetMarcas', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(marcas => {
+            var select = document.getElementById('IdMarca');
+            select.innerHTML = ''; // Limpiar opciones actuales
+            marcas.forEach(m => {
+                var option = document.createElement('option');
+                option.value = m.id;
+                option.text = m.nombre;
+                if (m.id === nuevaMarcaId) option.selected = true; // Seleccionar la nueva
+                select.appendChild(option);
+            });
+        })
+        .catch(err => console.error('Error al cargar marcas:', err));
+    }
+</script>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

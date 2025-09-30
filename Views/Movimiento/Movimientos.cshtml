@@ -20,12 +20,15 @@
             <th>Responsable</th>
             <th>Cantidad</th>
             <th>Observaciones</th>
+
             <th>Acciones</th>
+
         </tr>
     </thead>
     <tbody>
         @foreach (var item in Model)
         {
+
             <tr id="movimiento-@item.IdMovimiento">
                 <td>@item.IdDispositivo</td>
                 <td>@item.TipoMovimiento</td>
@@ -39,10 +42,12 @@
                     <a asp-action="Details" asp-route-id="@item.IdDispositivo">Details</a> |
                     <a asp-action="Delete" asp-route-id="@item.IdDispositivo">Delete</a>
                 </td>
+
             </tr>
         }
     </tbody>
 </table>
+
 
 <!-- Modal -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
@@ -103,3 +108,4 @@
         });
     </script>
 }
+

@@ -45,10 +45,9 @@
             <th>@Html.DisplayNameFor(model => model.NroSerie)</th>
             <th>@Html.DisplayNameFor(model => model.Estado)</th>
             <th>@Html.DisplayNameFor(model => model.FechaAlta)</th>
-            <th>@Html.DisplayNameFor(model => model.FechaBaja)</th>
-            <th>Stock Actual</th> <!-- Cambiado para mostrar la alerta -->
-            <th>@Html.DisplayNameFor(model => model.StockMinimo)</th>
-            <th>@Html.DisplayNameFor(model => model.EstadoRegistro)</th>
+            
+            <th>Stock Actual</th> 
+            
             <th>Marca</th>
             <th>Tipo</th>
             <th>Acciones</th>
@@ -64,19 +63,14 @@
                 <td>@Html.DisplayFor(modelItem => item.NroSerie)</td>
                 <td>@Html.DisplayFor(modelItem => item.Estado)</td>
                 <td>@Html.DisplayFor(modelItem => item.FechaAlta)</td>
-                <td>@Html.DisplayFor(modelItem => item.FechaBaja)</td>
+              
                 <td>
-                    @if (item.StockActual <= item.StockMinimo && item.StockMinimo > 0)
-                    {
-                        <span class="badge bg-warning text-dark">⚠️ Bajo stock</span>
-                    }
-                    else
-                    {
+                   
                         @Html.DisplayFor(modelItem => item.StockActual)
-                    }
+                    
                 </td>
-                <td>@Html.DisplayFor(modelItem => item.StockMinimo)</td>
-                <td>@Html.DisplayFor(modelItem => item.EstadoRegistro)</td>
+               
+                
                 <td>@(item.IdMarcaNavigation?.Nombre ?? "Sin marca")</td>
                 <td>@(item.IdTipoNavigation?.Descripcion ?? "Sin tipo")</td>
                 <td>

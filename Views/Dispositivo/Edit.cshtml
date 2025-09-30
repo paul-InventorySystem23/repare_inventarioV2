@@ -1,11 +1,11 @@
-﻿@model inventario_coprotab.Models.DBInventario.Dispositivo
+﻿//Al guardar un edit se elimina de la vista de dispositivos y no lo muestra
+@model inventario_coprotab.ViewModels.DispositivoEditViewModel
 
 @{
     ViewData["Title"] = "Edit";
 }
 
 <h1>Edit</h1>
-
 <h4>Dispositivo</h4>
 <hr />
 <div class="row">
@@ -13,66 +13,56 @@
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="IdDispositivo" />
+
             <div class="form-group">
                 <label asp-for="Nombre" class="control-label"></label>
                 <input asp-for="Nombre" class="form-control" />
                 <span asp-validation-for="Nombre" class="text-danger"></span>
             </div>
+
             <div class="form-group">
                 <label asp-for="Descripcion" class="control-label"></label>
                 <input asp-for="Descripcion" class="form-control" />
                 <span asp-validation-for="Descripcion" class="text-danger"></span>
             </div>
+
             <div class="form-group">
                 <label asp-for="IdMarca" class="control-label"></label>
                 <select asp-for="IdMarca" class="form-control" asp-items="ViewBag.IdMarca"></select>
                 <span asp-validation-for="IdMarca" class="text-danger"></span>
             </div>
+
             <div class="form-group">
                 <label asp-for="IdTipo" class="control-label"></label>
-                <select asp-for="IdTipo" class="form-control" asp-items="ViewBag.IdTipo"></select>
+                <select asp-for="IdTipo" class="form-control" asp-items="ViewBag.IdTipo" id="IdTipo" onchange="actualizarFormulario()"></select>
                 <span asp-validation-for="IdTipo" class="text-danger"></span>
             </div>
+
+            <!-- Campo dinámico: Cantidad Inicial (solo si es consumible) -->
+            <div id="campo-cantidad" class="form-group" style="display: @(Model.IdTipo == 2 ? "block" : "none");">
+                <label asp-for="CantidadInicial" class="control-label">Cantidad Inicial</label>
+                <input asp-for="CantidadInicial" class="form-control" type="number" min="1" />
+                <span asp-validation-for="CantidadInicial" class="text-danger"></span>
+            </div>
+
             <div class="form-group">
                 <label asp-for="CodigoInventario" class="control-label"></label>
                 <input asp-for="CodigoInventario" class="form-control" />
                 <span asp-validation-for="CodigoInventario" class="text-danger"></span>
             </div>
+
             <div class="form-group">
                 <label asp-for="NroSerie" class="control-label"></label>
                 <input asp-for="NroSerie" class="form-control" />
                 <span asp-validation-for="NroSerie" class="text-danger"></span>
             </div>
+
             <div class="form-group">
                 <label asp-for="Estado" class="control-label"></label>
                 <input asp-for="Estado" class="form-control" />
                 <span asp-validation-for="Estado" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="FechaAlta" class="control-label"></label>
-                <input asp-for="FechaAlta" class="form-control" />
-                <span asp-validation-for="FechaAlta" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="FechaBaja" class="control-label"></label>
-                <input asp-for="FechaBaja" class="form-control" />
-                <span asp-validation-for="FechaBaja" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="StockActual" class="control-label"></label>
-                <input asp-for="StockActual" class="form-control" />
-                <span asp-validation-for="StockActual" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="StockMinimo" class="control-label"></label>
-                <input asp-for="StockMinimo" class="form-control" />
-                <span asp-validation-for="StockMinimo" class="text-danger"></span>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="EstadoRegistro" /> @Html.DisplayNameFor(model => model.EstadoRegistro)
-                </label>
-            </div>
+
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>
@@ -85,5 +75,29 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        function actualizarFormulario() {
+            var tipoSelect = document.getElementById('IdTipo');
+            var cantidadDiv = document.getElementById('campo-cantidad');
+            var selectedValue = tipoSelect.value;
+
+            // Asumiendo que "2" es el ID de "Consumible"
+            if (selectedValue === "2") {
+                cantidadDiv.style.display = 'block';
+                document.getElementById('CantidadInicial').required = true;
+            } else {
+                cantidadDiv.style.display = 'none';
+                document.getElementById('CantidadInicial').required = false;
+                document.getElementById('CantidadInicial').value = '';
+            }
+        }
+
+        // Ejecutar al cargar la página para reflejar el valor inicial
+        document.addEventListener('DOMContentLoaded', function () {
+            actualizarFormulario();
+        });
+    </script>
 }

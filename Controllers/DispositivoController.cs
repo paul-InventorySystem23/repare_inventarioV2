@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using inventario_coprotab.Models.DBInventario;
+using inventario_coprotab.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using inventario_coprotab.Models.DBInventario;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace inventario_coprotab.Controllers
 {
@@ -73,29 +74,58 @@ namespace inventario_coprotab.Controllers
         {
             ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre");
             ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion");
-            return View();
+
+            var viewModel = new DispositivoCreateViewModel
+            {
+                IdTipo = 1 // Preseleccionar "Hardware" (ID = 1)
+            };
+            return View(viewModel);
         }
 
         // POST: Dispositivo/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        // POST: Dispositivo/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("IdDispositivo,Nombre,Descripcion,IdMarca,IdTipo,CodigoInventario,NroSerie,Estado,FechaAlta,FechaBaja,StockActual,StockMinimo,EstadoRegistro")] Dispositivo dispositivo)
+        public async Task<IActionResult> Create(DispositivoCreateViewModel model)
         {
             if (ModelState.IsValid)
             {
-                dispositivo.FechaAlta = DateTime.Now.Date; // ⚡ Auto-llenar fecha alta
-                dispositivo.EstadoRegistro = true;         // Por defecto, activo
+                var dispositivo = new Dispositivo
+                {
+                    Nombre = model.Nombre,
+                    Descripcion = model.Descripcion,
+                    IdMarca = model.IdMarca,
+                    IdTipo = model.IdTipo,
+                    CodigoInventario = model.CodigoInventario,
+                    NroSerie = model.NroSerie,
+                    Estado = model.Estado ?? "Activo",
+                    FechaAlta = DateOnly.FromDateTime(DateTime.Now),
+                    EstadoRegistro = true,
+                    StockMinimo = 0 // Por defecto
+                };
+
+                // Obtener el tipo para saber si es hardware o consumible
+                var tipo = await _context.TipoHardwares.FindAsync(model.IdTipo);
+
+                // ✅ Mejor: usar el ID directamente (más seguro)
+                if (model.IdTipo == 2) // Cambia 2 por el ID real de "Consumible"
+                {
+                    dispositivo.StockActual = model.CantidadInicial ?? 0;
+                }
+                else
+                {
+                    dispositivo.StockActual = 1; // Por defecto para hardware
+                }
+
                 _context.Add(dispositivo);
                 await _context.SaveChangesAsync();
+
                 return RedirectToAction(nameof(Index));
             }
 
-            ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", dispositivo.IdMarca);
-            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", dispositivo.IdTipo);
-            return View(dispositivo);
+            ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", model.IdMarca);
+            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", model.IdTipo);
+
+            return View(model);
         }
 
         // GET: Dispositivo/Edit/5
@@ -111,19 +141,38 @@ namespace inventario_coprotab.Controllers
             {
                 return NotFound();
             }
-            ViewData["IdMarca"] = new SelectList(_context.Marcas, "IdMarca", "IdMarca", dispositivo.IdMarca);
-            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares, "IdTipo", "IdTipo", dispositivo.IdTipo);
-            return View(dispositivo);
+
+            // Convertir Dispositivo a ViewModel
+            var viewModel = new DispositivoEditViewModel
+            {
+                IdDispositivo = dispositivo.IdDispositivo,
+                Nombre = dispositivo.Nombre,
+                Descripcion = dispositivo.Descripcion,
+                IdMarca = dispositivo.IdMarca, // ✅ Ya es int? en el ViewModel
+                IdTipo = dispositivo.IdTipo,   // ✅ Ya es int? en el ViewModel
+                CodigoInventario = dispositivo.CodigoInventario,
+                NroSerie = dispositivo.NroSerie,
+                Estado = dispositivo.Estado,
+                FechaAlta = dispositivo.FechaAlta,
+                FechaBaja = dispositivo.FechaBaja,
+                StockActual = dispositivo.StockActual, // ✅ Ya es int? en el ViewModel
+                StockMinimo = dispositivo.StockMinimo, // ✅ Ya es int? en el ViewModel
+                EstadoRegistro = dispositivo.EstadoRegistro,
+                CantidadInicial = dispositivo.StockActual // Puedes usar este campo para editar stock si es consumible
+            };
+
+            ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", viewModel.IdMarca);
+            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", viewModel.IdTipo);
+
+            return View(viewModel);
         }
 
         // POST: Dispositivo/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("IdDispositivo,Nombre,Descripcion,IdMarca,IdTipo,CodigoInventario,NroSerie,Estado,FechaAlta,FechaBaja,StockActual,StockMinimo,EstadoRegistro")] Dispositivo dispositivo)
+        public async Task<IActionResult> Edit(int id, DispositivoEditViewModel model)
         {
-            if (id != dispositivo.IdDispositivo)
+            if (id != model.IdDispositivo)
             {
                 return NotFound();
             }
@@ -132,12 +181,38 @@ namespace inventario_coprotab.Controllers
             {
                 try
                 {
+                    var dispositivo = await _context.Dispositivos.FindAsync(id);
+                    if (dispositivo == null)
+                    {
+                        return NotFound();
+                    }
+
+                    // Mapear ViewModel a Entidad
+                    // ✅ CS8601 resuelto
+                    dispositivo.Nombre = model.Nombre ?? "Sin nombre";
+                    dispositivo.Descripcion = model.Descripcion;
+                    dispositivo.IdMarca = model.IdMarca ?? 0; // ✅ Usa ?? para proporcionar un valor predeterminado
+                    dispositivo.IdTipo = model.IdTipo ?? 0;   // ✅ Usa ?? para proporcionar un valor predeterminado
+                    dispositivo.CodigoInventario = model.CodigoInventario;
+                    dispositivo.NroSerie = model.NroSerie;
+                    dispositivo.Estado = model.Estado;
+                    dispositivo.FechaBaja = model.FechaBaja;
+                    dispositivo.StockMinimo = model.StockMinimo ?? 0; // ✅ Usa ?? para proporcionar un valor predeterminado
+                    dispositivo.EstadoRegistro = model.EstadoRegistro;
+
+                    // Solo actualizar StockActual si es consumible
+                    var tipo = await _context.TipoHardwares.FindAsync(model.IdTipo);
+                    if (tipo?.Descripcion?.Trim().ToLower() == "consumible")
+                    {
+                        dispositivo.StockActual = model.CantidadInicial ?? dispositivo.StockActual;
+                    }
+
                     _context.Update(dispositivo);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!DispositivoExists(dispositivo.IdDispositivo))
+                    if (!DispositivoExists(model.IdDispositivo))
                     {
                         return NotFound();
                     }
@@ -148,9 +223,11 @@ namespace inventario_coprotab.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["IdMarca"] = new SelectList(_context.Marcas, "IdMarca", "IdMarca", dispositivo.IdMarca);
-            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares, "IdTipo", "IdTipo", dispositivo.IdTipo);
-            return View(dispositivo);
+
+            ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", model.IdMarca);
+            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", model.IdTipo);
+
+            return View(model);
         }
 
         // GET: Dispositivo/Delete/5
