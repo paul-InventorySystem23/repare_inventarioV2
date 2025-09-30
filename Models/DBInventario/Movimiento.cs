@@ -26,5 +26,5 @@ public partial class Movimiento
 
     public virtual Ubicacione? IdUbicacionNavigation { get; set; }
 
-    
+ 
 }

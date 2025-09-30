@@ -18,6 +18,8 @@ namespace inventario_coprotab.ViewModels
         public int? IdUbicacion { get; set; }
         public int? IdResponsable { get; set; }
         public string? Observaciones { get; set; }
+        public int IdMovimiento { get; set; }
+
 
         // Para mostrar info del dispositivo
         public string? NombreDispositivo { get; set; }
