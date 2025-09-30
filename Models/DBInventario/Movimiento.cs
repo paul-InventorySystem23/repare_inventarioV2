@@ -5,8 +5,7 @@ namespace inventario_coprotab.Models.DBInventario;
 
 public partial class Movimiento
 {
-    public int IdMovimiento { get; set; }
-
+    public int IdMovimiento { get; set; }               
     public int IdDispositivo { get; set; }
 
     public string TipoMovimiento { get; set; } = null!;
@@ -27,5 +26,5 @@ public partial class Movimiento
 
     public virtual Ubicacione? IdUbicacionNavigation { get; set; }
 
-    
+ 
 }

@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using inventario_coprotab.Models.DBInventario;
 using inventario_coprotab.ViewModels;
 using System.Linq;
-
+using System.Threading.Tasks;
 namespace inventario_coprotab.Controllers
 {
     public class MovimientoController : Controller
@@ -78,5 +78,81 @@ namespace inventario_coprotab.Controllers
             ViewBag.Responsables = _context.Responsables.ToList();
             return View(model);
         }
+
+        public async Task<IActionResult> Movimientos()
+        {
+            var movimientos = new List<Movimiento>();
+
+             movimientos =  _context.Movimientos.ToList();
+
+            return View(movimientos);
+        }
+        // GET: Movimiento/Edit
+        public async Task<IActionResult> Edit(int id)
+        {
+            var movimiento = await _context.Movimientos.FindAsync(id);
+            if (movimiento == null)
+                return NotFound();
+
+            var vm = new MovimientoViewModel
+            {
+                IdMovimiento = movimiento.IdMovimiento,
+                IdDispositivo = movimiento.IdDispositivo,
+                TipoMovimiento = movimiento.TipoMovimiento,
+                Cantidad = movimiento.Cantidad,
+                IdUbicacion = movimiento.IdUbicacion,
+                IdResponsable = movimiento.IdResponsable,
+                Observaciones = movimiento.Observaciones,
+                NombreDispositivo = _context.Dispositivos
+                         .Where(d => d.IdDispositivo == movimiento.IdDispositivo)
+                         .Select(d => d.Nombre).FirstOrDefault(),
+                StockActual = _context.Dispositivos
+                         .Where(d => d.IdDispositivo == movimiento.IdDispositivo)
+                         .Select(d => (int?)d.StockActual).FirstOrDefault() ?? 0
+            };
+
+
+            ViewBag.Dispositivos = _context.Dispositivos.Where(d => d.EstadoRegistro).ToList();
+            ViewBag.Ubicaciones = _context.Ubicaciones.ToList();
+            ViewBag.Responsables = _context.Responsables.ToList();
+
+            return PartialView("_EditMovimiento", vm);
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, MovimientoViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return PartialView("_EditMovimiento", model);
+
+            var movimiento = await _context.Movimientos.FindAsync(id);
+            if (movimiento == null)
+                return Json(new { success = false, message = "Movimiento no encontrado" });
+
+            movimiento.TipoMovimiento = model.TipoMovimiento;
+            movimiento.Cantidad = model.Cantidad;
+            movimiento.IdUbicacion = model.IdUbicacion;
+            movimiento.IdResponsable = model.IdResponsable;
+            movimiento.Observaciones = model.Observaciones;
+
+            _context.Update(movimiento);
+            await _context.SaveChangesAsync();
+
+            return Json(new
+            {
+                success = true,
+                movimiento = new
+                {
+                    id = movimiento.IdMovimiento,
+                    tipo = movimiento.TipoMovimiento,
+                    fecha = movimiento.Fecha.ToString("dd/MM/yyyy"),
+                    ubicacion = movimiento.IdUbicacion,
+                    responsable = movimiento.IdResponsable,
+                    cantidad = movimiento.Cantidad,
+                    observaciones = movimiento.Observaciones
+                }
+            });
+        }
+
     }
 }

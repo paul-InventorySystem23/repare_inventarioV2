@@ -1,0 +1,28 @@
+﻿@model inventario_coprotab.ViewModels.MovimientoViewModel
+
+<form asp-action="Edit" asp-controller="Movimiento" method="post" id="editMovimientoForm">
+    <input type="hidden" name="IdMovimiento" value="@Model.IdMovimiento" />
+
+
+    <div class="mb-3">
+        <label asp-for="TipoMovimiento" class="form-label"></label>
+        <input asp-for="TipoMovimiento" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Cantidad" class="form-label"></label>
+        <input asp-for="Cantidad" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Observaciones" class="form-label"></label>
+        <input asp-for="Observaciones" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label>Dispositivo</label>
+        <input class="form-control" value="@Model.NombreDispositivo" readonly />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Guardar</button>
+</form>

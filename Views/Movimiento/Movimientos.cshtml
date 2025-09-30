@@ -1,0 +1,105 @@
+﻿@model IEnumerable<inventario_coprotab.Models.DBInventario.Movimiento>
+
+@{
+    ViewData["Title"] = "Movimientos";
+}
+
+<h2>Movimientos</h2>
+
+<p>
+    <a class="btn btn-primary" asp-controller="Movimiento" asp-action="Create">Nuevo</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Dispositivo</th>
+            <th>Tipo</th>
+            <th>Fecha</th>
+            <th>Ubicación</th>
+            <th>Responsable</th>
+            <th>Cantidad</th>
+            <th>Observaciones</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr id="movimiento-@item.IdMovimiento">
+                <td>@item.IdDispositivo</td>
+                <td>@item.TipoMovimiento</td>
+                <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
+                <td>@item.IdUbicacion</td>
+                <td>@item.IdResponsable</td>
+                <td>@item.Cantidad</td>
+                <td>@item.Observaciones</td>
+                <td>
+                    <a href="javascript:void(0)" class="btn btn-sm btn-warning editMovimiento" data-id="@item.IdMovimiento">Editar</a>
+                    <a asp-action="Details" asp-route-id="@item.IdDispositivo">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@item.IdDispositivo">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Movimiento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="editModalBody">
+                <!-- Aquí se cargará el PartialView -->
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            // Abrir modal con formulario
+            $(".editMovimiento").click(function () {
+                var id = $(this).data("id");
+                $.get("/Movimiento/Edit/" + id, function (data) {
+                    $("#editModalBody").html(data);
+                    $("#editModal").modal("show");
+                });
+            });
+
+            // Guardar cambios vía AJAX y actualizar solo la fila
+            $(document).on("submit", "#editMovimientoForm", function (e) {
+                e.preventDefault();
+                var form = $(this);
+                $.ajax({
+                    url: form.attr("action"),
+                    type: "POST",
+                    data: form.serialize(),
+                    success: function (res) {
+                        if (res.success) {
+                            // Actualiza solo la fila modificada
+                            var row = $("#movimiento-" + res.movimiento.id);
+                            row.find("td:eq(1)").text(res.movimiento.tipo);
+                            row.find("td:eq(2)").text(res.movimiento.fecha);
+                            row.find("td:eq(3)").text(res.movimiento.ubicacion);
+                            row.find("td:eq(4)").text(res.movimiento.responsable);
+                            row.find("td:eq(5)").text(res.movimiento.cantidad);
+                            row.find("td:eq(6)").text(res.movimiento.observaciones);
+
+                            $("#editModal").modal("hide");
+                        } else {
+                            // Si hay errores, mostramos el partial view con validaciones
+                            $("#editModalBody").html(res);
+                        }
+                    }
+                });
+            });
+
+        });
+    </script>
+}
