@@ -1,5 +1,4 @@
-﻿//Al guardar un edit se elimina de la vista de dispositivos y no lo muestra
-@model inventario_coprotab.ViewModels.DispositivoEditViewModel
+﻿@model inventario_coprotab.ViewModels.DispositivoEditViewModel
 
 @{
     ViewData["Title"] = "Edit";
@@ -15,7 +14,7 @@
             <input type="hidden" asp-for="IdDispositivo" />
 
             <div class="form-group">
-                <label asp-for="Nombre" class="control-label"></label>
+                <label asp-for="Nombre" class="control-label">Nombre del dispositivo</label>
                 <input asp-for="Nombre" class="form-control" />
                 <span asp-validation-for="Nombre" class="text-danger"></span>
             </div>
@@ -27,13 +26,13 @@
             </div>
 
             <div class="form-group">
-                <label asp-for="IdMarca" class="control-label"></label>
+                <label asp-for="IdMarca" class="control-label">Marca</label>
                 <select asp-for="IdMarca" class="form-control" asp-items="ViewBag.IdMarca"></select>
                 <span asp-validation-for="IdMarca" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="IdTipo" class="control-label"></label>
+                <label asp-for="IdTipo" class="control-label">Tipo de dispositivo</label>
                 <select asp-for="IdTipo" class="form-control" asp-items="ViewBag.IdTipo" id="IdTipo" onchange="actualizarFormulario()"></select>
                 <span asp-validation-for="IdTipo" class="text-danger"></span>
             </div>
@@ -46,24 +45,26 @@
             </div>
 
             <div class="form-group">
-                <label asp-for="CodigoInventario" class="control-label"></label>
+                <label asp-for="CodigoInventario" class="control-label">Codigo de inventario</label>
                 <input asp-for="CodigoInventario" class="form-control" />
                 <span asp-validation-for="CodigoInventario" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="NroSerie" class="control-label"></label>
+                <label asp-for="NroSerie" class="control-label">N° de Serie</label>
                 <input asp-for="NroSerie" class="form-control" />
                 <span asp-validation-for="NroSerie" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
+            <div class="form-group mb-3">
                 <label asp-for="Estado" class="control-label"></label>
-                <input asp-for="Estado" class="form-control" />
+                <select asp-for="Estado" class="form-control" asp-items="@(new SelectList(ViewBag.EstadosDisponibles, Model.Estado))">
+                    <option value="">-- Seleccionar Estado --</option>
+                </select>
                 <span asp-validation-for="Estado" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
+            <div class="form-group mb-3">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>
         </form>

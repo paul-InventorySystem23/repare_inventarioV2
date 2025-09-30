@@ -29,6 +29,6 @@ namespace inventario_coprotab.ViewModels
 
         public int? StockActual { get; set; } // ✅ Ahora es nullable
         public int? StockMinimo { get; set; } // ✅ Ahora es nullable
-        public bool EstadoRegistro { get; set; }
+        
     }
 }

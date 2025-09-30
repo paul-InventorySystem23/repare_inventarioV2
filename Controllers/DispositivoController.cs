@@ -75,10 +75,14 @@ namespace inventario_coprotab.Controllers
             ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre");
             ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion");
 
+            // ✅ Agregar estados disponibles al ViewBag
+            ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
+
             var viewModel = new DispositivoCreateViewModel
             {
-                IdTipo = 1 // Preseleccionar "Hardware" (ID = 1)
+                IdTipo = 1 // ✅ Preseleccionar "Hardware" (ID = 1)
             };
+
             return View(viewModel);
         }
 
@@ -148,21 +152,35 @@ namespace inventario_coprotab.Controllers
                 IdDispositivo = dispositivo.IdDispositivo,
                 Nombre = dispositivo.Nombre,
                 Descripcion = dispositivo.Descripcion,
-                IdMarca = dispositivo.IdMarca, // ✅ Ya es int? en el ViewModel
-                IdTipo = dispositivo.IdTipo,   // ✅ Ya es int? en el ViewModel
+                IdMarca = dispositivo.IdMarca,
+                IdTipo = dispositivo.IdTipo,
                 CodigoInventario = dispositivo.CodigoInventario,
                 NroSerie = dispositivo.NroSerie,
                 Estado = dispositivo.Estado,
                 FechaAlta = dispositivo.FechaAlta,
                 FechaBaja = dispositivo.FechaBaja,
-                StockActual = dispositivo.StockActual, // ✅ Ya es int? en el ViewModel
-                StockMinimo = dispositivo.StockMinimo, // ✅ Ya es int? en el ViewModel
-                EstadoRegistro = dispositivo.EstadoRegistro,
-                CantidadInicial = dispositivo.StockActual // Puedes usar este campo para editar stock si es consumible
+                StockActual = dispositivo.StockActual,
+                StockMinimo = dispositivo.StockMinimo,
+                
+                CantidadInicial = dispositivo.StockActual
             };
 
-            ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", viewModel.IdMarca);
-            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", viewModel.IdTipo);
+            // ✅ Verificar que haya datos antes de crear SelectList
+            var marcas = await _context.Marcas.OrderBy(m => m.Nombre).ToListAsync();
+            var tipos = await _context.TipoHardwares.OrderBy(t => t.Descripcion).ToListAsync();
+
+            if (!marcas.Any() || !tipos.Any())
+            {
+                // Opcional: Mostrar mensaje de error o redirigir
+                TempData["ErrorMessage"] = "No hay marcas o tipos disponibles. Por favor, agregue al menos uno.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            ViewData["IdMarca"] = new SelectList(marcas, "IdMarca", "Nombre", viewModel.IdMarca);
+            ViewData["IdTipo"] = new SelectList(tipos, "IdTipo", "Descripcion", viewModel.IdTipo);
+
+            // ✅ Agregar estados disponibles al ViewBag
+            ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
 
             return View(viewModel);
         }
@@ -198,7 +216,7 @@ namespace inventario_coprotab.Controllers
                     dispositivo.Estado = model.Estado;
                     dispositivo.FechaBaja = model.FechaBaja;
                     dispositivo.StockMinimo = model.StockMinimo ?? 0; // ✅ Usa ?? para proporcionar un valor predeterminado
-                    dispositivo.EstadoRegistro = model.EstadoRegistro;
+                    
 
                     // Solo actualizar StockActual si es consumible
                     var tipo = await _context.TipoHardwares.FindAsync(model.IdTipo);
