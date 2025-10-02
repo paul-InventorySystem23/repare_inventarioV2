@@ -1,0 +1,143 @@
+﻿@model inventario_coprotab.ViewModels.DispositivoEditViewModel
+
+<form asp-action="EditModal" asp-controller="Dispositivo" method="post" id="formDispositivo">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="IdDispositivo" />
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="Nombre" class="form-label fw-bold">
+                <i class="bi bi-tag"></i> Nombre del Dispositivo
+            </label>
+            <input asp-for="Nombre" class="form-control" placeholder="Ej: Laptop Dell Latitude" />
+            <span asp-validation-for="Nombre" class="text-danger small"></span>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="IdMarca" class="form-label fw-bold">
+                <i class="bi bi-bookmark"></i> Marca
+            </label>
+            <select asp-for="IdMarca" class="form-select" asp-items="ViewBag.IdMarca"></select>
+            <span asp-validation-for="IdMarca" class="text-danger small"></span>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="IdTipo" class="form-label fw-bold">
+                <i class="bi bi-cpu"></i> Tipo de Dispositivo
+            </label>
+            <select asp-for="IdTipo" class="form-select" asp-items="ViewBag.IdTipo" id="IdTipoEdit" onchange="actualizarFormularioEdit()"></select>
+            <span asp-validation-for="IdTipo" class="text-danger small"></span>
+        </div>
+
+        <div class="col-md-6 mb-3" id="campo-cantidad-edit" style="display: @(Model.IdTipo == 2 ? "block" : "none");">
+            <label asp-for="CantidadInicial" class="form-label fw-bold">
+                <i class="bi bi-boxes"></i> Cantidad Actual
+            </label>
+            <input asp-for="CantidadInicial" class="form-control" type="number" min="1" />
+            <span asp-validation-for="CantidadInicial" class="text-danger small"></span>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Descripcion" class="form-label fw-bold">
+            <i class="bi bi-card-text"></i> Descripción
+        </label>
+        <textarea asp-for="Descripcion" class="form-control" rows="3" placeholder="Descripción detallada del dispositivo..."></textarea>
+        <span asp-validation-for="Descripcion" class="text-danger small"></span>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="CodigoInventario" class="form-label fw-bold">
+                <i class="bi bi-upc"></i> Código de Inventario
+            </label>
+            <input asp-for="CodigoInventario" class="form-control" />
+            <span asp-validation-for="CodigoInventario" class="text-danger small"></span>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="NroSerie" class="form-label fw-bold">
+                <i class="bi bi-hash"></i> Número de Serie
+            </label>
+            <input asp-for="NroSerie" class="form-control" />
+            <span asp-validation-for="NroSerie" class="text-danger small"></span>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="Estado" class="form-label fw-bold">
+                <i class="bi bi-circle-fill"></i> Estado
+            </label>
+            <select asp-for="Estado" class="form-select" asp-items="@(new SelectList(ViewBag.EstadosDisponibles, Model.Estado))">
+                <option value="">-- Seleccionar Estado --</option>
+            </select>
+            <span asp-validation-for="Estado" class="text-danger small"></span>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="StockMinimo" class="form-label fw-bold">
+                <i class="bi bi-box-seam"></i> Stock Mínimo
+            </label>
+            <input asp-for="StockMinimo" class="form-control" type="number" min="0" />
+            <span asp-validation-for="StockMinimo" class="text-danger small"></span>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-bold">
+                <i class="bi bi-calendar"></i> Fecha de Alta
+            </label>
+            <input type="text" class="form-control" value="@Model.FechaAlta?.ToString("dd/MM/yyyy")" readonly />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="FechaBaja" class="form-label fw-bold">
+                <i class="bi bi-calendar-x"></i> Fecha de Baja
+            </label>
+            <input asp-for="FechaBaja" class="form-control" type="date" />
+            <span asp-validation-for="FechaBaja" class="text-danger small"></span>
+        </div>
+    </div>
+
+    <div class="modal-footer border-0 pt-4">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle"></i> Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary-custom">
+            <i class="bi bi-save"></i> Guardar Cambios
+        </button>
+    </div>
+</form>
+
+<script>
+    function actualizarFormularioEdit() {
+        var tipoSelect = document.getElementById('IdTipoEdit');
+        var cantidadDiv = document.getElementById('campo-cantidad-edit');
+        var selectedValue = tipoSelect ? tipoSelect.value : '';
+
+        if (selectedValue === "2") {
+            cantidadDiv.style.display = 'block';
+            var input = cantidadDiv.querySelector('input');
+            if (input) input.required = true;
+        } else {
+            cantidadDiv.style.display = 'none';
+            var input = cantidadDiv.querySelector('input');
+            if (input) input.required = false;
+        }
+    }
+
+    setTimeout(function() {
+        actualizarFormularioEdit();
+
+        // Validación jQuery Unobtrusive
+        var form = $('#formDispositivo');
+        if (form.length > 0) {
+            $.validator.unobtrusive.parse(form);
+        }
+    }, 100);
+</script>

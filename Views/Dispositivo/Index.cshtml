@@ -1,84 +1,274 @@
 ﻿@model IEnumerable<inventario_coprotab.Models.DBInventario.Dispositivo>
+@Html.AntiForgeryToken()
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Gestión de Dispositivos";
 }
 
-<h1>Index</h1>
+<div class="page-header d-flex justify-content-between align-items-center">
+    <h1><i class="bi bi-laptop"></i> Gestión de Dispositivos</h1>
+    <button class="btn btn-primary-custom" onclick="abrirModalCrear()">
+        <i class="bi bi-plus-circle"></i> Nuevo Dispositivo
+    </button>
+</div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
+<!-- Filtros de búsqueda -->
+<div class="card-custom p-4 mb-4">
+    <h5 class="mb-3"><i class="bi bi-funnel"></i> Filtros de Búsqueda</h5>
+    <form method="get" id="formFiltros">
+        @Html.AntiForgeryToken()
+        <div class="row g-3">
+            <div class="col-md-3">
+                <input type="text" name="searchCode" class="form-control" placeholder="Código de Inventario" value="@ViewBag.SearchCode" />
+            </div>
+            <div class="col-md-3">
+                <input type="text" name="searchSerie" class="form-control" placeholder="Número de Serie" value="@ViewBag.SearchSerie" />
+            </div>
+            <div class="col-md-2">
+                <input type="text" name="searchTipo" class="form-control" placeholder="Tipo" value="@ViewBag.SearchTipo" />
+            </div>
+            <div class="col-md-2">
+                <select name="searchEstado" class="form-select">
+                    <option value="">Todos los estados</option>
+                    <option value="Nuevo" selected="@(ViewBag.SearchEstado == "Nuevo")">Nuevo</option>
+                    <option value="En uso" selected="@(ViewBag.SearchEstado == "En uso")">En uso</option>
+                    <option value="Obsoleto" selected="@(ViewBag.SearchEstado == "Obsoleto")">Obsoleto</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary-custom w-100">
+                    <i class="bi bi-search"></i> Buscar
+                </button>
+            </div>
+        </div>
+        <div class="mt-2">
+            <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-x-circle"></i> Limpiar Filtros
+            </a>
+        </div>
 
-<form method="get" class="mb-3">
-    <div class="row">
-        <div class="col-md-2">
-            <input type="text" name="searchCode" class="form-control" placeholder="Código" value="@ViewBag.SearchCode" />
-        </div>
-        <div class="col-md-2">
-            <input type="text" name="searchSerie" class="form-control" placeholder="Serie" value="@ViewBag.SearchSerie" />
-        </div>
-        <div class="col-md-2">
-            <input type="text" name="searchTipo" class="form-control" placeholder="Tipo" value="@ViewBag.SearchTipo" />
-        </div>
-        <div class="col-md-2">
-            <select name="searchEstado" class="form-control">
-                <option value="" selected="@(ViewBag.SearchEstado == null || ViewBag.SearchEstado == "")">Todos los estados</option>
-                <option value="Activo" selected="@(ViewBag.SearchEstado == "Activo")">Activo</option>
-                <option value="Inactivo" selected="@(ViewBag.SearchEstado == "Inactivo")">Inactivo</option>
-                <option value="En Reparación" selected="@(ViewBag.SearchEstado == "En Reparación")">En Reparación</option>
-            </select>
-        </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-primary">Buscar</button>
-            <a asp-action="Index" class="btn btn-secondary">Limpiar</a>
+    </form>
+</div>
+
+<!-- Tabla de dispositivos -->
+<div class="table-responsive">
+    <table class="table table-custom table-hover">
+        <thead>
+            <tr>
+                <th><i class="bi bi-tag"></i> Nombre</th>
+                <th><i class="bi bi-card-text"></i> Descripción</th>
+                <th><i class="bi bi-upc"></i> Código</th>
+                <th><i class="bi bi-hash"></i> Serie</th>
+                <th><i class="bi bi-circle-fill"></i> Estado</th>
+                <th><i class="bi bi-calendar"></i> Fecha Alta</th>
+                <th><i class="bi bi-boxes"></i> Stock</th>
+                <th><i class="bi bi-bookmark"></i> Marca</th>
+                <th><i class="bi bi-cpu"></i> Tipo</th>
+                <th class="text-center"><i class="bi bi-gear"></i> Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td class="fw-bold">@item.Nombre</td>
+                    <td>@(item.Descripcion ?? "Sin descripción")</td>
+                    <td><span class="badge bg-secondary">@(item.CodigoInventario ?? "N/A")</span></td>
+                    <td>@(item.NroSerie ?? "N/A")</td>
+                    <td>
+                        @if (item.Estado == "Nuevo")
+                        {
+                            <span class="badge badge-custom" style="background-color: var(--success-color);">
+                                <i class="bi bi-star-fill"></i> @item.Estado
+                            </span>
+                        }
+                        else if (item.Estado == "En uso")
+                        {
+                            <span class="badge badge-custom" style="background-color: var(--secondary-color);">
+                                <i class="bi bi-check-circle-fill"></i> @item.Estado
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-custom" style="background-color: var(--warning-color);">
+                                <i class="bi bi-exclamation-circle-fill"></i> @item.Estado
+                            </span>
+                        }
+                    </td>
+                    <td>@(item.FechaAlta?.ToString("dd/MM/yyyy") ?? "N/A")</td>
+                    <td>
+                        <span class="badge @(item.StockActual < item.StockMinimo ? "bg-danger" : "bg-success")">
+                            @item.StockActual unidades
+                        </span>
+                    </td>
+                    <td>@(item.IdMarcaNavigation?.Nombre ?? "Sin marca")</td>
+                    <td>@(item.IdTipoNavigation?.Descripcion ?? "Sin tipo")</td>
+                    <td class="text-center">
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="abrirModalDetalle(@item.IdDispositivo)" title="Ver Detalles">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-warning-custom" onclick="abrirModalEditar(@item.IdDispositivo)" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger-custom" onclick="abrirModalEliminar(@item.IdDispositivo, '@item.Nombre')" title="Eliminar">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info text-center">
+        <i class="bi bi-info-circle"></i> No se encontraron dispositivos con los criterios de búsqueda especificados.
+    </div>
+}
+
+<!-- Modal Crear/Editar -->
+<div class="modal fade" id="modalFormulario" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header modal-header-custom">
+                <h5 class="modal-title" id="modalTitulo">
+                    <i class="bi bi-plus-circle"></i> Nuevo Dispositivo
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="modalContenido">
+                <!-- Aquí se cargará el contenido dinámicamente -->
+            </div>
         </div>
     </div>
-</form>
+</div>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>@Html.DisplayNameFor(model => model.Nombre)</th>
-            <th>@Html.DisplayNameFor(model => model.Descripcion)</th>
-            <th>@Html.DisplayNameFor(model => model.CodigoInventario)</th>
-            <th>@Html.DisplayNameFor(model => model.NroSerie)</th>
-            <th>@Html.DisplayNameFor(model => model.Estado)</th>
-            <th>@Html.DisplayNameFor(model => model.FechaAlta)</th>
-            
-            <th>Stock Actual</th> 
-            
-            <th>Marca</th>
-            <th>Tipo</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@Html.DisplayFor(modelItem => item.Nombre)</td>
-                <td>@Html.DisplayFor(modelItem => item.Descripcion)</td>
-                <td>@Html.DisplayFor(modelItem => item.CodigoInventario)</td>
-                <td>@Html.DisplayFor(modelItem => item.NroSerie)</td>
-                <td>@Html.DisplayFor(modelItem => item.Estado)</td>
-                <td>@Html.DisplayFor(modelItem => item.FechaAlta)</td>
-              
-                <td>
-                   
-                        @Html.DisplayFor(modelItem => item.StockActual)
-                    
-                </td>
-               
-                
-                <td>@(item.IdMarcaNavigation?.Nombre ?? "Sin marca")</td>
-                <td>@(item.IdTipoNavigation?.Descripcion ?? "Sin tipo")</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.IdDispositivo">Edit</a> |
-                    <a asp-action="Details" asp-route-id="@item.IdDispositivo">Details</a> |
-                    <a asp-action="Delete" asp-route-id="@item.IdDispositivo">Delete</a>
-                </td>
-            </tr>
+<!-- Modal Detalle -->
+<div class="modal fade" id="modalDetalle" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header modal-header-custom">
+                <h5 class="modal-title">
+                    <i class="bi bi-info-circle"></i> Detalles del Dispositivo
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="modalDetalleContenido">
+                <!-- Aquí se cargará el contenido dinámicamente -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Eliminar -->
+<div class="modal fade" id="modalEliminar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header modal-header-custom">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle"></i> Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro que desea eliminar el dispositivo <strong id="nombreDispositivo"></strong>?</p>
+                <p class="text-muted small">Esta acción realizará un borrado lógico del registro.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger-custom" id="btnConfirmarEliminar">
+                    <i class="bi bi-trash"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let dispositivoIdEliminar = null;
+
+        function abrirModalCrear() {
+            $('#modalTitulo').html('<i class="bi bi-plus-circle"></i> Nuevo Dispositivo');
+            $.get('@Url.Action("Create", "Dispositivo")', function(data) {
+                $('#modalContenido').html(data);
+                $('#modalFormulario').modal('show');
+            }).fail(function() {
+                alert('Error al cargar el formulario');
+            });
         }
-    </tbody>
-</table>
+
+        function abrirModalEditar(id) {
+            $('#modalTitulo').html('<i class="bi bi-pencil"></i> Editar Dispositivo');
+            $.get('@Url.Action("Edit", "Dispositivo")/' + id, function(data) {
+                $('#modalContenido').html(data);
+                $('#modalFormulario').modal('show');
+            }).fail(function() {
+                alert('Error al cargar el formulario');
+            });
+        }
+
+        function abrirModalDetalle(id) {
+            $.get('@Url.Action("Details", "Dispositivo")/' + id, function(data) {
+                $('#modalDetalleContenido').html(data);
+                $('#modalDetalle').modal('show');
+            }).fail(function() {
+                alert('Error al cargar los detalles');
+            });
+        }
+
+        function abrirModalEliminar(id, nombre) {
+            dispositivoIdEliminar = id;
+            $('#nombreDispositivo').text(nombre);
+            $('#modalEliminar').modal('show');
+        }
+
+        $('#btnConfirmarEliminar').click(function() {
+            if (dispositivoIdEliminar) {
+                $.ajax({
+                    url: '@Url.Action("Delete", "Dispositivo")/' + dispositivoIdEliminar,
+                    type: 'POST',
+                    data: {
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val(),
+                        id: dispositivoIdEliminar
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $('#modalEliminar').modal('hide');
+                            location.reload();
+                        }
+                    },
+                    error: function() {
+                        alert('Error al eliminar el dispositivo');
+                    }
+                });
+            }
+        });
+
+        // Manejar envío de formularios en modal
+        $(document).on('submit', '#formDispositivo', function(e) {
+            e.preventDefault();
+            var form = $(this);
+
+            $.ajax({
+                url: form.attr('action'),
+                type: 'POST',
+                data: form.serialize(),
+                success: function(response) {
+                    if (response.success) {
+                        $('#modalFormulario').modal('hide');
+                        location.reload();
+                    } else {
+                        $('#modalContenido').html(response);
+                    }
+                },
+                error: function() {
+                    alert('Error al procesar la solicitud');
+                }
+            });
+        });
+    </script>
+}

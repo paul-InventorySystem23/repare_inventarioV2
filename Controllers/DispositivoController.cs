@@ -49,7 +49,7 @@ namespace inventario_coprotab.Controllers
             return View(dispositivos);
         }
 
-        // GET: Dispositivo/Details/5
+        // GET: Dispositivo/Details/5 - Para modal
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -61,35 +61,34 @@ namespace inventario_coprotab.Controllers
                 .Include(d => d.IdMarcaNavigation)
                 .Include(d => d.IdTipoNavigation)
                 .FirstOrDefaultAsync(m => m.IdDispositivo == id);
+
             if (dispositivo == null)
             {
                 return NotFound();
             }
 
-            return View(dispositivo);
+            return PartialView("_DetailsPartial", dispositivo);
         }
 
-        // GET: Dispositivo/Create
+        // GET: Dispositivo/Create - Para modal
         public IActionResult Create()
         {
             ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre");
             ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion");
-
-            // ✅ Agregar estados disponibles al ViewBag
             ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
 
             var viewModel = new DispositivoCreateViewModel
             {
-                IdTipo = 1 // ✅ Preseleccionar "Hardware" (ID = 1)
+                IdTipo = 1 // Preseleccionar "Hardware" (ID = 1)
             };
 
-            return View(viewModel);
+            return PartialView("_CreatePartial", viewModel);
         }
 
-        // POST: Dispositivo/Create
+        // POST: Dispositivo/CreateModal - Nuevo método para AJAX
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(DispositivoCreateViewModel model)
+        public async Task<IActionResult> CreateModal(DispositivoCreateViewModel model)
         {
             if (ModelState.IsValid)
             {
@@ -101,17 +100,14 @@ namespace inventario_coprotab.Controllers
                     IdTipo = model.IdTipo,
                     CodigoInventario = model.CodigoInventario,
                     NroSerie = model.NroSerie,
-                    Estado = model.Estado ?? "Activo",
+                    Estado = model.Estado ?? "Nuevo",
                     FechaAlta = DateOnly.FromDateTime(DateTime.Now),
                     EstadoRegistro = true,
-                    StockMinimo = 0 // Por defecto
+                    StockMinimo = 0
                 };
 
-                // Obtener el tipo para saber si es hardware o consumible
-                var tipo = await _context.TipoHardwares.FindAsync(model.IdTipo);
-
-                // ✅ Mejor: usar el ID directamente (más seguro)
-                if (model.IdTipo == 2) // Cambia 2 por el ID real de "Consumible"
+                // Si es consumible (IdTipo == 2), usar la cantidad inicial
+                if (model.IdTipo == 2)
                 {
                     dispositivo.StockActual = model.CantidadInicial ?? 0;
                 }
@@ -123,16 +119,17 @@ namespace inventario_coprotab.Controllers
                 _context.Add(dispositivo);
                 await _context.SaveChangesAsync();
 
-                return RedirectToAction(nameof(Index));
+                return Json(new { success = true });
             }
 
             ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", model.IdMarca);
             ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", model.IdTipo);
+            ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
 
-            return View(model);
+            return PartialView("_CreatePartial", model);
         }
 
-        // GET: Dispositivo/Edit/5
+        // GET: Dispositivo/Edit/5 - Para modal
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -146,7 +143,6 @@ namespace inventario_coprotab.Controllers
                 return NotFound();
             }
 
-            // Convertir Dispositivo a ViewModel
             var viewModel = new DispositivoEditViewModel
             {
                 IdDispositivo = dispositivo.IdDispositivo,
@@ -161,34 +157,29 @@ namespace inventario_coprotab.Controllers
                 FechaBaja = dispositivo.FechaBaja,
                 StockActual = dispositivo.StockActual,
                 StockMinimo = dispositivo.StockMinimo,
-                
                 CantidadInicial = dispositivo.StockActual
             };
 
-            // ✅ Verificar que haya datos antes de crear SelectList
             var marcas = await _context.Marcas.OrderBy(m => m.Nombre).ToListAsync();
             var tipos = await _context.TipoHardwares.OrderBy(t => t.Descripcion).ToListAsync();
 
             if (!marcas.Any() || !tipos.Any())
             {
-                // Opcional: Mostrar mensaje de error o redirigir
                 TempData["ErrorMessage"] = "No hay marcas o tipos disponibles. Por favor, agregue al menos uno.";
                 return RedirectToAction(nameof(Index));
             }
 
             ViewData["IdMarca"] = new SelectList(marcas, "IdMarca", "Nombre", viewModel.IdMarca);
             ViewData["IdTipo"] = new SelectList(tipos, "IdTipo", "Descripcion", viewModel.IdTipo);
-
-            // ✅ Agregar estados disponibles al ViewBag
             ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
 
-            return View(viewModel);
+            return PartialView("_EditPartial", viewModel);
         }
 
-        // POST: Dispositivo/Edit/5
+        // POST: Dispositivo/EditModal - Nuevo método para AJAX
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, DispositivoEditViewModel model)
+        public async Task<IActionResult> EditModal(int id, DispositivoEditViewModel model)
         {
             if (id != model.IdDispositivo)
             {
@@ -205,18 +196,15 @@ namespace inventario_coprotab.Controllers
                         return NotFound();
                     }
 
-                    // Mapear ViewModel a Entidad
-                    // ✅ CS8601 resuelto
                     dispositivo.Nombre = model.Nombre ?? "Sin nombre";
                     dispositivo.Descripcion = model.Descripcion;
-                    dispositivo.IdMarca = model.IdMarca ?? 0; // ✅ Usa ?? para proporcionar un valor predeterminado
-                    dispositivo.IdTipo = model.IdTipo ?? 0;   // ✅ Usa ?? para proporcionar un valor predeterminado
+                    dispositivo.IdMarca = model.IdMarca ?? 0;
+                    dispositivo.IdTipo = model.IdTipo ?? 0;
                     dispositivo.CodigoInventario = model.CodigoInventario;
                     dispositivo.NroSerie = model.NroSerie;
                     dispositivo.Estado = model.Estado;
                     dispositivo.FechaBaja = model.FechaBaja;
-                    dispositivo.StockMinimo = model.StockMinimo ?? 0; // ✅ Usa ?? para proporcionar un valor predeterminado
-                    
+                    dispositivo.StockMinimo = model.StockMinimo ?? 0;
 
                     // Solo actualizar StockActual si es consumible
                     var tipo = await _context.TipoHardwares.FindAsync(model.IdTipo);
@@ -227,6 +215,8 @@ namespace inventario_coprotab.Controllers
 
                     _context.Update(dispositivo);
                     await _context.SaveChangesAsync();
+
+                    return Json(new { success = true });
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -239,49 +229,31 @@ namespace inventario_coprotab.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
             }
 
             ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", model.IdMarca);
             ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", model.IdTipo);
+            ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
 
-            return View(model);
+            return PartialView("_EditPartial", model);
         }
 
-        // GET: Dispositivo/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var dispositivo = await _context.Dispositivos
-                .Include(d => d.IdMarcaNavigation)
-                .Include(d => d.IdTipoNavigation)
-                .FirstOrDefaultAsync(m => m.IdDispositivo == id);
-            if (dispositivo == null)
-            {
-                return NotFound();
-            }
-
-            return View(dispositivo);
-        }
-
-        // POST: Dispositivo/Delete/5
-        [HttpPost, ActionName("Delete")]
+        // POST: Dispositivo/Delete/5 - Para modal con AJAX
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             var dispositivo = await _context.Dispositivos.FindAsync(id);
             if (dispositivo != null)
             {
                 dispositivo.EstadoRegistro = false; // Borrado lógico
                 await _context.SaveChangesAsync();
+                return Json(new { success = true });
             }
-            return RedirectToAction(nameof(Index));
+            return Json(new { success = false });
         }
 
+        // Método privado para verificar si existe un dispositivo
         private bool DispositivoExists(int id)
         {
             return _context.Dispositivos.Any(e => e.IdDispositivo == id);
