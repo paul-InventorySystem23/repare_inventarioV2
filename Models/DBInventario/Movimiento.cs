@@ -20,11 +20,11 @@ public partial class Movimiento
 
     public string? Observaciones { get; set; }
 
-    public virtual Dispositivo IdDispositivoNavigation { get; set; } = null!;
+    public virtual Dispositivo oDispositivo { get; set; } = null!;
 
-    public virtual Responsable? IdResponsableNavigation { get; set; }
+    public virtual Responsable? oResponsable { get; set; }
 
-    public virtual Ubicacione? IdUbicacionNavigation { get; set; }
+    public virtual Ubicacione? oUbicaion { get; set; }
 
  
 }

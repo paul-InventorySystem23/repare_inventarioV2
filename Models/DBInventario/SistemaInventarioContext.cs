@@ -136,16 +136,16 @@ public partial class SistemaInventarioContext : DbContext
                 .IsUnicode(false)
                 .HasColumnName("tipo_movimiento");
 
-            entity.HasOne(d => d.IdDispositivoNavigation).WithMany(p => p.Movimientos)
+            entity.HasOne(d => d.oDispositivo).WithMany(p => p.Movimientos)
                 .HasForeignKey(d => d.IdDispositivo)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Mov_Dispositivo");
 
-            entity.HasOne(d => d.IdResponsableNavigation).WithMany(p => p.Movimientos)
+            entity.HasOne(d => d.oResponsable).WithMany(p => p.Movimientos)
                 .HasForeignKey(d => d.IdResponsable)
                 .HasConstraintName("FK_Mov_Responsable");
 
-            entity.HasOne(d => d.IdUbicacionNavigation).WithMany(p => p.Movimientos)
+            entity.HasOne(d => d.oUbicaion).WithMany(p => p.Movimientos)
                 .HasForeignKey(d => d.IdUbicacion)
                 .HasConstraintName("FK_Mov_Ubicacion");
         });

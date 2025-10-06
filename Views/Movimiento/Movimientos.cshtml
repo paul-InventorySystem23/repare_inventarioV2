@@ -10,7 +10,7 @@
     <a class="btn btn-primary" asp-controller="Movimiento" asp-action="Create">Nuevo</a>
 </p>
 
-<table class="table table-striped">
+<table class="table table-custom table-hover">
     <thead>
         <tr>
             <th>Dispositivo</th>
@@ -29,19 +29,26 @@
         @foreach (var item in Model)
         {
 
-            <tr id="movimiento-@item.IdMovimiento">
-                <td>@item.IdDispositivo</td>
+            <tr>
+                <td>@item.oDispositivo?.Nombre</td>
                 <td>@item.TipoMovimiento</td>
                 <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
-                <td>@item.IdUbicacion</td>
-                <td>@item.IdResponsable</td>
+                <td>@(item.oUbicaion?.Nombre ?? "En Sistema")</td> 
+                <td>@(item.oResponsable?.Nombre ?? "Sistema")</td>
                 <td>@item.Cantidad</td>
                 <td>@item.Observaciones</td>
-                <td>
-                    <a href="javascript:void(0)" class="btn btn-sm btn-warning editMovimiento" data-id="@item.IdMovimiento">Editar</a>
-                    <a asp-action="Details" asp-route-id="@item.IdDispositivo">Details</a> |
-                    <a asp-action="Delete" asp-route-id="@item.IdDispositivo">Delete</a>
-                </td>
+                <td class="text-center">
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="abrirModalDetalle(@item.IdMovimiento)" title="Ver Detalles">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-warning-custom" onclick="abrirModalEditar(@item.IdMovimiento)" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger-custom" onclick="abrirModalEliminar(@item.IdMovimiento)" title="Eliminar">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        </div>
 
             </tr>
         }

@@ -1,0 +1,61 @@
+﻿@model List<inventario_coprotab.Models.DBInventario.Movimiento>
+
+@{
+    ViewData["Title"] = "Ubicacion";
+}
+
+<h2>Ubicaciones</h2>
+
+<div class="card-custom p-4 mb-4">
+    <h5 class="mb-3"><i class="bi bi-funnel"></i> Filtros de Búsqueda</h5>
+    <form method="get" id="formFiltros">
+        @Html.AntiForgeryToken()
+        <div class="row g-3">
+            <div class="col-md-3">
+                <input type="text" name="searchUbicacion" class="form-control" placeholder="Ubicacion" value="@ViewBag.SearchUbicacion" />
+            </div>
+            <div class="col-md-3">
+                <input type="text" name="searchDispositivo" class="form-control" placeholder="Dispositivos" value="@ViewBag.SearchDispositivo" />
+            </div>
+            <div class="col-md-2">
+                <input type="text" name="searchResponsable" class="form-control" placeholder="Responsable" value="@ViewBag.SearchResponsable" />
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary-custom w-100">
+                    <i class="bi bi-search"></i> Buscar
+                </button>
+            </div>
+        </div>
+        <div class="mt-2">
+            <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-x-circle"></i> Limpiar Filtros
+            </a>
+        </div>
+
+    </form>
+</div>
+
+<table class="table table-custom table-hover">
+    <thead>
+        <tr>
+            <th><i class="bi bi-geo-alt"></i> Ubicacion</th>
+            <th><i class="bi bi-tag"></i> Dispositivo</th>
+            <th><i class="bi bi-card-text"></i> Descripcion</th>
+            <th><i class="bi bi-person-raised-hand"></i> Responsable</th>
+            <th><i class="bi bi-calendar"></i> Fecha</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+
+            <tr>
+                <td>@item.oUbicaion?.Nombre </td>
+                <td>@item.oDispositivo.Nombre</td>
+                <td>@item.Observaciones </td>
+                <td>@item.oResponsable?.Nombre </td>
+                <td>@item.Fecha</td>
+            </tr>
+        }
+    </tbody>
+</table>

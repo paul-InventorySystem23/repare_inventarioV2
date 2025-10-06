@@ -81,11 +81,11 @@ namespace inventario_coprotab.Controllers
 
         public async Task<IActionResult> Movimientos()
         {
-            var movimientos = new List<Movimiento>();
-
-             movimientos =  _context.Movimientos.ToList();
-
-            return View(movimientos);
+            List<Movimiento> Lista = _context.Movimientos.Include(d => d.oUbicaion)
+                .Include(d => d.oDispositivo)
+                .Include(d => d.oResponsable)
+                .ToList();
+            return View(Lista);
         }
 
         // GET: Movimiento/Edit
@@ -118,6 +118,7 @@ namespace inventario_coprotab.Controllers
             ViewBag.Responsables = _context.Responsables.ToList();
 
             return PartialView("_EditMovimiento", vm);
+            return View(Movimientos);
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
