@@ -21,9 +21,11 @@ public partial class Dispositivo
 
     public string? Estado { get; set; }
 
-    public DateOnly? FechaAlta { get; set; }
+    // ✅ Cambiado de DateOnly? a DateTime?
+    public DateTime? FechaAlta { get; set; }
 
-    public DateOnly? FechaBaja { get; set; }
+    // ✅ Cambiado de DateOnly? a DateTime?
+    public DateTime? FechaBaja { get; set; }
 
     public int? StockActual { get; set; }
 

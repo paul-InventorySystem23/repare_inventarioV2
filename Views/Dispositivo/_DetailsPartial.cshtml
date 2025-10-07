@@ -1,90 +1,211 @@
 ﻿@model inventario_coprotab.Models.DBInventario.Dispositivo
 
-@{
-    ViewData["Title"] = "Details";
-}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Información Principal -->
+        <div class="col-md-6">
+            <div class="card-custom p-3 mb-3">
+                <h6 class="fw-bold mb-3" style="color: var(--secondary-color);">
+                    <i class="bi bi-info-circle"></i> Información Principal
+                </h6>
+                <table class="table table-sm table-borderless">
+                    <tr>
+                        <td class="fw-bold text-muted" style="width: 40%;">
+                            <i class="bi bi-tag"></i> Nombre:
+                        </td>
+                        <td>@Model.Nombre</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold text-muted">
+                            <i class="bi bi-bookmark"></i> Marca:
+                        </td>
+                        <td>
+                            <span class="badge" style="background-color: var(--secondary-color);">
+                                @(Model.IdMarcaNavigation?.Nombre ?? "Sin marca")
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold text-muted">
+                            <i class="bi bi-cpu"></i> Tipo:
+                        </td>
+                        <td>
+                            <span class="badge" style="background-color: var(--primary-color);">
+                                @(Model.IdTipoNavigation?.Descripcion ?? "Sin tipo")
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold text-muted">
+                            <i class="bi bi-circle-fill"></i> Estado:
+                        </td>
+                        <td>
+                            @if (Model.Estado == "Nuevo")
+                            {
+                                <span class="badge badge-custom" style="background-color: var(--success-color);">
+                                    <i class="bi bi-star-fill"></i> @Model.Estado
+                                </span>
+                            }
+                            else if (Model.Estado == "En uso")
+                            {
+                                <span class="badge badge-custom" style="background-color: var(--secondary-color);">
+                                    <i class="bi bi-check-circle-fill"></i> @Model.Estado
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-custom" style="background-color: var(--warning-color);">
+                                    <i class="bi bi-exclamation-circle-fill"></i> @Model.Estado
+                                </span>
+                            }
+                        </td>
+                    </tr>
+                </table>
+            </div>
 
-<h1>Details</h1>
+            <!-- Descripción -->
+            @if (!string.IsNullOrEmpty(Model.Descripcion))
+            {
+                <div class="card-custom p-3 mb-3">
+                    <h6 class="fw-bold mb-2" style="color: var(--secondary-color);">
+                        <i class="bi bi-card-text"></i> Descripción
+                    </h6>
+                    <p class="mb-0 text-muted">@Model.Descripcion</p>
+                </div>
+            }
+        </div>
 
-<div>
-    <h4>Dispositivo</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Nombre)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Nombre)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Descripcion)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Descripcion)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CodigoInventario)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CodigoInventario)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.NroSerie)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.NroSerie)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Estado)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Estado)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FechaAlta)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FechaAlta)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FechaBaja)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FechaBaja)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.StockActual)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.StockActual)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.StockMinimo)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.StockMinimo)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.EstadoRegistro)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.EstadoRegistro)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.IdMarcaNavigation)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.IdMarcaNavigation.IdMarca)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.IdTipoNavigation)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.IdTipoNavigation.IdTipo)
-        </dd>
-    </dl>
+        <!-- Códigos e Identificación -->
+        <div class="col-md-6">
+            <div class="card-custom p-3 mb-3">
+                <h6 class="fw-bold mb-3" style="color: var(--secondary-color);">
+                    <i class="bi bi-upc-scan"></i> Códigos e Identificación
+                </h6>
+                <table class="table table-sm table-borderless">
+                    <tr>
+                        <td class="fw-bold text-muted" style="width: 50%;">
+                            <i class="bi bi-upc"></i> Código Inventario:
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(Model.CodigoInventario))
+                            {
+                                <span class="badge bg-secondary">@Model.CodigoInventario</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">No asignado</span>
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold text-muted">
+                            <i class="bi bi-hash"></i> Número de Serie:
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(Model.NroSerie))
+                            {
+                                <code>@Model.NroSerie</code>
+                            }
+                            else
+                            {
+                                <span class="text-muted">No asignado</span>
+                            }
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Stock e Inventario -->
+            <div class="card-custom p-3 mb-3">
+                <h6 class="fw-bold mb-3" style="color: var(--secondary-color);">
+                    <i class="bi bi-boxes"></i> Stock e Inventario
+                </h6>
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="p-3 rounded" style="background-color: rgba(39,174,96,0.1);">
+                            <i class="bi bi-box-seam" style="font-size: 2rem; color: var(--success-color);"></i>
+                            <h4 class="mt-2 mb-0 fw-bold">@(Model.StockActual ?? 0)</h4>
+                            <small class="text-muted">Stock Actual</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 rounded" style="background-color: rgba(243,156,18,0.1);">
+                            <i class="bi bi-exclamation-triangle" style="font-size: 2rem; color: var(--warning-color);"></i>
+                            <h4 class="mt-2 mb-0 fw-bold">@(Model.StockMinimo ?? 0)</h4>
+                            <small class="text-muted">Stock Mínimo</small>
+                        </div>
+                    </div>
+                </div>
+                @if (Model.StockActual < Model.StockMinimo)
+                {
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <strong>¡Alerta!</strong> El stock actual está por debajo del mínimo requerido.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Fechas -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card-custom p-3">
+                <h6 class="fw-bold mb-3" style="color: var(--secondary-color);">
+                    <i class="bi bi-calendar-event"></i> Fechas Importantes
+                </h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle p-2 me-3" style="background-color: rgba(52,152,219,0.1);">
+                                <i class="bi bi-calendar-check" style="color: var(--secondary-color);"></i>
+                            </div>
+                            <div>
+                                <small class="text-muted">Fecha de Alta</small>
+                                <p class="mb-0 fw-bold">
+                                    @if (Model.FechaAlta.HasValue)
+                                    {
+                                        @Model.FechaAlta.Value.ToString("dd/MM/yyyy HH:mm")
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No registrada</span>
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle p-2 me-3" style="background-color: rgba(231,76,60,0.1);">
+                                <i class="bi bi-calendar-x" style="color: var(--accent-color);"></i>
+                            </div>
+                            <div>
+                                <small class="text-muted">Fecha de Baja</small>
+                                <p class="mb-0 fw-bold">
+                                    @if (Model.FechaBaja.HasValue)
+                                    {
+                                        @Model.FechaBaja.Value.ToString("dd/MM/yyyy HH:mm")
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">Activo</span>
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.IdDispositivo">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+
+<div class="modal-footer border-0 pt-4">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+        <i class="bi bi-x-circle"></i> Cerrar
+    </button>
+    <button type="button" class="btn btn-warning-custom" onclick="$('#modalDetalle').modal('hide'); abrirModalEditar(@Model.IdDispositivo);">
+        <i class="bi bi-pencil"></i> Editar
+    </button>
 </div>

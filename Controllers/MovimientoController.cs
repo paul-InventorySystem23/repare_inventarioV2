@@ -49,7 +49,7 @@ namespace inventario_coprotab.Controllers
                 {
                     IdDispositivo = model.IdDispositivo,
                     TipoMovimiento = model.TipoMovimiento ?? "Sin nombre",
-                    Fecha = DateOnly.FromDateTime(DateTime.Now),
+                    Fecha = DateTime.Now,
                     IdUbicacion = model.IdUbicacion,
                     IdResponsable = model.IdResponsable,
                     Cantidad = model.Cantidad,

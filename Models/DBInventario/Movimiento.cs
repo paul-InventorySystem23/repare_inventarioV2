@@ -10,7 +10,8 @@ public partial class Movimiento
 
     public string TipoMovimiento { get; set; } = null!;
 
-    public DateOnly Fecha { get; set; }
+    // ✅ Cambiado de DateOnly a DateTime
+    public DateTime Fecha { get; set; }
 
     public int? IdUbicacion { get; set; }
 

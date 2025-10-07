@@ -69,8 +69,16 @@ public partial class SistemaInventarioContext : DbContext
             entity.Property(e => e.EstadoRegistro)
                 .HasDefaultValue(true)
                 .HasColumnName("estado_registro");
-            entity.Property(e => e.FechaAlta).HasColumnName("fecha_alta");
-            entity.Property(e => e.FechaBaja).HasColumnName("fecha_baja");
+
+            // ✅ CAMBIO: Ahora son DateTime en lugar de DateOnly
+            entity.Property(e => e.FechaAlta)
+                .HasColumnType("datetime")
+                .HasColumnName("fecha_alta");
+
+            entity.Property(e => e.FechaBaja)
+                .HasColumnType("datetime")
+                .HasColumnName("fecha_baja");
+
             entity.Property(e => e.IdMarca).HasColumnName("id_marca");
             entity.Property(e => e.IdTipo).HasColumnName("id_tipo");
             entity.Property(e => e.Nombre)

@@ -9,9 +9,11 @@ public partial class Reparacione
 
     public int IdDispositivo { get; set; }
 
-    public DateOnly FechaInicio { get; set; }
+    // ✅ Cambiado de DateOnly a DateTime
+    public DateTime FechaInicio { get; set; }
 
-    public DateOnly? FechaFinalizacion { get; set; }
+    // ✅ Cambiado de DateOnly? a DateTime?
+    public DateTime? FechaFinalizacion { get; set; }
 
     public string TipoReparacion { get; set; } = null!;
 
