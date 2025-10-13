@@ -30,11 +30,11 @@
         {
 
             <tr>
-                <td>@item.oDispositivo?.Nombre</td>
+                <td>@item.IdDispositivoNavigation?.Nombre</td>
                 <td>@item.TipoMovimiento</td>
                 <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
-                <td>@(item.oUbicaion?.Nombre ?? "En Sistema")</td> 
-                <td>@(item.oResponsable?.Nombre ?? "Sistema")</td>
+                <td>@(item.IdUbicacionNavigation?.Nombre ?? "En Sistema")</td> 
+                <td>@(item.IdResponsableNavigation?.Nombre ?? "Sistema")</td>
                 <td>@item.Cantidad</td>
                 <td>@item.Observaciones</td>
                 <td class="text-center">

@@ -9,10 +9,8 @@ public partial class Reparacione
 
     public int IdDispositivo { get; set; }
 
-    // ✅ Cambiado de DateOnly a DateTime
     public DateTime FechaInicio { get; set; }
 
-    // ✅ Cambiado de DateOnly? a DateTime?
     public DateTime? FechaFinalizacion { get; set; }
 
     public string TipoReparacion { get; set; } = null!;
@@ -27,5 +25,5 @@ public partial class Reparacione
 
     public virtual Responsable? IdResponsableNavigation { get; set; }
 
-    public virtual ICollection<ReparacionConsumible> ReparacionConsumibles { get; set; } = new List<ReparacionConsumible>();
+    public virtual ICollection<ReparacionDetalle> ReparacionDetalles { get; set; } = new List<ReparacionDetalle>();
 }

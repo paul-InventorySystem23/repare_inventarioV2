@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace inventario_coprotab.Models.DBInventario;
 
-public partial class Dispositivo
+public partial class Componente
 {
-    public int IdDispositivo { get; set; }
+    public int IdComponente { get; set; }
 
     public string Nombre { get; set; } = null!;
 
@@ -15,19 +15,11 @@ public partial class Dispositivo
 
     public int? IdTipo { get; set; }
 
-    public string? CodigoInventario { get; set; }
-
     public string? NroSerie { get; set; }
 
     public string? Estado { get; set; }
 
-    public DateTime? FechaAlta { get; set; }
-
-    public DateTime? FechaBaja { get; set; }
-
-    public int? StockActual { get; set; }
-
-    public int? StockMinimo { get; set; }
+    public DateTime? FechaInstalacion { get; set; }
 
     public bool EstadoRegistro { get; set; }
 
@@ -35,11 +27,7 @@ public partial class Dispositivo
 
     public virtual TipoHardware? IdTipoNavigation { get; set; }
 
-    public virtual ICollection<Movimiento> Movimientos { get; set; } = new List<Movimiento>();
-
     public virtual ICollection<RelacionDispositivoComponente> RelacionDispositivoComponentes { get; set; } = new List<RelacionDispositivoComponente>();
 
     public virtual ICollection<ReparacionDetalle> ReparacionDetalles { get; set; } = new List<ReparacionDetalle>();
-
-    public virtual ICollection<Reparacione> Reparaciones { get; set; } = new List<Reparacione>();
 }

@@ -18,27 +18,27 @@ namespace inventario_coprotab.Controllers
         }
         public async Task<IActionResult> Index(string searchUbicacion, string searchDispositivo, string searchResponsable)
         {
-            var Lista = _context.Movimientos
-                .Include(d => d.oUbicaion)
-                .Include(d => d.oDispositivo)
-                .Include(d => d.oResponsable)
-                .Where(d => d.oUbicaion != null)
-                .ToList();
+            var Lista = await _context.Movimientos
+                .Include(d => d.IdUbicacionNavigation)
+                .Include(d => d.IdDispositivoNavigation)
+                .Include(d => d.IdResponsableNavigation)
+                .Where(d => d.IdUbicacionNavigation != null)
+                .ToListAsync();
 
             if (!string.IsNullOrEmpty(searchUbicacion))
-                Lista = Lista.Where(d => d.oUbicaion != null && 
-                                         d.oUbicaion.Nombre != null &&
-                                         d.oUbicaion.Nombre.Contains(searchUbicacion)).ToList();
+                Lista = Lista.Where(d => d.IdUbicacionNavigation != null && 
+                                         d.IdUbicacionNavigation.Nombre != null &&
+                                         d.IdUbicacionNavigation.Nombre.Contains(searchUbicacion)).ToList();
 
             if (!string.IsNullOrEmpty(searchDispositivo))
-                Lista = Lista.Where(d => d.oDispositivo != null &&
-                                         d.oDispositivo.Nombre != null &&
-                                         d.oDispositivo.Nombre.Contains (searchDispositivo)).ToList();
+                Lista = Lista.Where(d => d.IdDispositivoNavigation != null &&
+                                         d.IdDispositivoNavigation.Nombre != null &&
+                                         d.IdDispositivoNavigation.Nombre.Contains (searchDispositivo)).ToList();
 
             if (!string.IsNullOrEmpty(searchResponsable))
-                Lista = Lista.Where(d => d.oResponsable != null && 
-                                         d.oResponsable.Nombre != null &&
-                                         d.oResponsable.Nombre.Contains(searchResponsable)).ToList();
+                Lista = Lista.Where(d => d.IdResponsableNavigation != null && 
+                                         d.IdResponsableNavigation.Nombre != null &&
+                                         d.IdResponsableNavigation.Nombre.Contains(searchResponsable)).ToList();
 
 
             var ListaFiltrada =  Lista;

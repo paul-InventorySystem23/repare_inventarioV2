@@ -81,10 +81,10 @@ namespace inventario_coprotab.Controllers
 
         public async Task<IActionResult> Movimientos()
         {
-            List<Movimiento> Lista = _context.Movimientos.Include(d => d.oUbicaion)
-                .Include(d => d.oDispositivo)
-                .Include(d => d.oResponsable)
-                .ToList();
+            List<Movimiento> Lista = await _context.Movimientos.Include(d => d.IdUbicacionNavigation)
+                .Include(d => d.IdDispositivoNavigation)
+                .Include(d => d.IdResponsableNavigation)
+                .ToListAsync();
             return View(Lista);
         }
 
@@ -118,7 +118,7 @@ namespace inventario_coprotab.Controllers
             ViewBag.Responsables = _context.Responsables.ToList();
 
             return PartialView("_EditMovimiento", vm);
-            return View(Movimientos);
+            
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -131,7 +131,7 @@ namespace inventario_coprotab.Controllers
             if (movimiento == null)
                 return Json(new { success = false, message = "Movimiento no encontrado" });
 
-            movimiento.TipoMovimiento = model.TipoMovimiento;
+            movimiento.TipoMovimiento = model.TipoMovimiento ?? "Desconocido";
             movimiento.Cantidad = model.Cantidad;
             movimiento.IdUbicacion = model.IdUbicacion;
             movimiento.IdResponsable = model.IdResponsable;
