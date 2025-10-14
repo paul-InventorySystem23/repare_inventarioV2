@@ -376,6 +376,8 @@
                         if (response.success) {
                             $('#modalEliminar').modal('hide');
                             location.reload();
+                        } else {
+                            alert('Error al eliminar el dispositivo');
                         }
                     },
                     error: function() {
@@ -385,6 +387,7 @@
             }
         });
 
+        // Manejar submit del formulario de creación de dispositivos
         $(document).on('submit', '#formDispositivo', function(e) {
             e.preventDefault();
             var form = $(this);
@@ -402,6 +405,31 @@
                 },
                 error: function() {
                     alert('Error al procesar la solicitud');
+                }
+            });
+        });
+
+        // Manejar submit del formulario de edición de dispositivos
+        $(document).on('submit', '#formDispositivoEdit', function(e) {
+            e.preventDefault();
+            var form = $(this);
+
+            $.ajax({
+                url: '@Url.Action("Edit", "Dispositivo")',
+                type: 'POST',
+                data: form.serialize(),
+                success: function(response) {
+                    if (response.success) {
+                        $('#modalFormulario').modal('hide');
+                        location.reload();
+                    } else {
+                        $('#modalContenido').html(response);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    console.log('Response:', xhr.responseText);
+                    alert('Error al procesar la solicitud de edición');
                 }
             });
         });
@@ -458,6 +486,53 @@
                 });
             }
         }
+
+        // Manejar submit del formulario de componentes (crear)
+        $(document).on('submit', '#formComponente', function(e) {
+            e.preventDefault();
+            var form = $(this);
+            $.ajax({
+                url: form.attr('action'),
+                type: 'POST',
+                data: form.serialize(),
+                success: function(response) {
+                    if (response.success) {
+                        $('#modalComponente').modal('hide');
+                        location.reload();
+                    } else {
+                        $('#modalComponenteContenido').html(response);
+                    }
+                },
+                error: function() {
+                    alert('Error al procesar la solicitud');
+                }
+            });
+        });
+
+        // Manejar submit del formulario de edición de componentes
+        $(document).on('submit', '#formComponenteEdit', function(e) {
+            e.preventDefault();
+            var form = $(this);
+
+            $.ajax({
+                url: '@Url.Action("Edit", "Componente")',
+                type: 'POST',
+                data: form.serialize(),
+                success: function(response) {
+                    if (response.success) {
+                        $('#modalComponente').modal('hide');
+                        location.reload();
+                    } else {
+                        $('#modalComponenteContenido').html(response);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    console.log('Response:', xhr.responseText);
+                    alert('Error al procesar la solicitud de edición');
+                }
+            });
+        });
 
         // Modal Equipo
         $('#createEquipoModal').on('show.bs.modal', function () {

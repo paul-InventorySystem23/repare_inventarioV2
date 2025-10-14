@@ -1,0 +1,119 @@
+﻿@model inventario_coprotab.ViewModels.ComponenteEditViewModel
+
+<form method="post" id="formComponenteEdit">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="IdComponente" />
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="Nombre" class="form-label fw-bold">
+                <i class="bi bi-tag"></i> Nombre del Componente
+            </label>
+            <input asp-for="Nombre" class="form-control" placeholder="Ej: Procesador Intel Core i7" />
+            <span asp-validation-for="Nombre" class="text-danger small"></span>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="IdMarca" class="form-label fw-bold">
+                <i class="bi bi-bookmark"></i> Marca
+            </label>
+            <select asp-for="IdMarca" class="form-select" asp-items="ViewBag.IdMarca"></select>
+            <span asp-validation-for="IdMarca" class="text-danger small"></span>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="IdTipo" class="form-label fw-bold">
+                <i class="bi bi-cpu"></i> Tipo de Componente
+            </label>
+            <select asp-for="IdTipo" class="form-select" asp-items="ViewBag.IdTipo"></select>
+            <span asp-validation-for="IdTipo" class="text-danger small"></span>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="Cantidad" class="form-label fw-bold">
+                <i class="bi bi-box-seam"></i> Cantidad
+            </label>
+            <input asp-for="Cantidad" class="form-control" type="number" min="1" />
+            <span asp-validation-for="Cantidad" class="text-danger small"></span>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Descripcion" class="form-label fw-bold">
+            <i class="bi bi-card-text"></i> Descripción
+        </label>
+        <textarea asp-for="Descripcion" class="form-control" rows="3" placeholder="Descripción detallada del componente..."></textarea>
+        <span asp-validation-for="Descripcion" class="text-danger small"></span>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="NroSerie" class="form-label fw-bold">
+                <i class="bi bi-hash"></i> Número de Serie
+            </label>
+            <input asp-for="NroSerie" class="form-control" />
+            <span asp-validation-for="NroSerie" class="text-danger small"></span>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="FechaInstalacion" class="form-label fw-bold">
+                <i class="bi bi-calendar"></i> Fecha de Instalación
+            </label>
+            <input asp-for="FechaInstalacion" class="form-control" type="date"
+                   value="@(Model.FechaInstalacion?.ToString("yyyy-MM-dd"))" />
+            <span asp-validation-for="FechaInstalacion" class="text-danger small"></span>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Estado" class="form-label fw-bold">
+            <i class="bi bi-circle-fill"></i> Estado
+        </label>
+        <select asp-for="Estado" class="form-select" asp-items="@(new SelectList(ViewBag.EstadosDisponibles, Model.Estado))">
+            <option value="">-- Seleccionar Estado --</option>
+        </select>
+        <span asp-validation-for="Estado" class="text-danger small"></span>
+    </div>
+
+    <div class="modal-footer border-0 pt-4">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle"></i> Cancelar
+        </button>
+        <button type="submit" class="btn btn-success-custom">
+            <i class="bi bi-save"></i> Guardar Cambios
+        </button>
+    </div>
+</form>
+
+<script>
+    $(function () {
+        var form = $('#formComponenteEdit');
+        if (form.length) {
+            $.validator.unobtrusive.parse(form);
+        }
+    });
+
+    $(document).on('submit', '#formComponenteEdit', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        $.ajax({
+            url: form.attr('action'),
+            type: 'POST',
+            data: form.serialize(),
+            success: function(response) {
+                if (response.success) {
+                    $('#modalComponente').modal('hide');
+                    location.reload();
+                } else {
+                    $('#modalComponenteContenido').html(response);
+                }
+            },
+            error: function() {
+                alert('Error al procesar la solicitud');
+            }
+        });
+    });
+</script>

@@ -1,6 +1,6 @@
 ﻿@model inventario_coprotab.ViewModels.DispositivoEditViewModel
 
-<form asp-action="EditModal" asp-controller="Dispositivo" method="post" id="formDispositivo">
+<form method="post" id="formDispositivoEdit">
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="IdDispositivo" />
     <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
@@ -33,11 +33,11 @@
         </div>
 
         <div class="col-md-6 mb-3" id="campo-cantidad-edit" style="display: @(Model.IdTipo == 2 ? "block" : "none");">
-            <label asp-for="CantidadInicial" class="form-label fw-bold">
-                <i class="bi bi-boxes"></i> Cantidad Actual
+            <label asp-for="StockActual" class="form-label fw-bold">
+                <i class="bi bi-boxes"></i> Stock Actual
             </label>
-            <input asp-for="CantidadInicial" class="form-control" type="number" min="1" />
-            <span asp-validation-for="CantidadInicial" class="text-danger small"></span>
+            <input asp-for="StockActual" class="form-control" type="number" min="0" />
+            <span asp-validation-for="StockActual" class="text-danger small"></span>
         </div>
     </div>
 
@@ -92,14 +92,15 @@
             <label class="form-label fw-bold">
                 <i class="bi bi-calendar"></i> Fecha de Alta
             </label>
-            <input type="text" class="form-control" value="@Model.FechaAlta?.ToString("dd/MM/yyyy")" readonly />
+            <input type="text" class="form-control" value="@Model.FechaAlta?.ToString("dd/MM/yyyy")" readonly style="background-color: #f8f9fa;" />
         </div>
 
         <div class="col-md-6 mb-3">
             <label asp-for="FechaBaja" class="form-label fw-bold">
                 <i class="bi bi-calendar-x"></i> Fecha de Baja
             </label>
-            <input asp-for="FechaBaja" class="form-control" type="date" />
+            <input asp-for="FechaBaja" class="form-control" type="date"
+                   value="@(Model.FechaBaja?.ToString("yyyy-MM-dd"))" />
             <span asp-validation-for="FechaBaja" class="text-danger small"></span>
         </div>
     </div>
@@ -135,9 +136,33 @@
         actualizarFormularioEdit();
 
         // Validación jQuery Unobtrusive
-        var form = $('#formDispositivo');
+        var form = $('#formDispositivoEdit');
         if (form.length > 0) {
             $.validator.unobtrusive.parse(form);
         }
     }, 100);
+
+    $(document).on('submit', '#formDispositivoEdit', function(e) {
+        e.preventDefault();
+        var form = $(this);
+
+        $.ajax({
+            url: '@Url.Action("Edit", "Dispositivo")',
+            type: 'POST',
+            data: form.serialize(),
+            success: function(response) {
+                if (response.success) {
+                    $('#modalFormulario').modal('hide');
+                    location.reload();
+                } else {
+                    $('#modalContenido').html(response);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                console.log('Response:', xhr.responseText);
+                alert('Error al procesar la solicitud');
+            }
+        });
+    });
 </script>

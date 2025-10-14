@@ -55,6 +55,7 @@ namespace inventario_coprotab.Controllers
             var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
             return Json(new { success = false, errors = errors });
         }
+
     }
 
 }
