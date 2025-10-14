@@ -2,11 +2,12 @@
 @Html.AntiForgeryToken()
 
 @{
-    ViewData["Title"] = "Gestión de Dispositivos";
+    ViewData["Title"] = "Gestión de Dispositivos y Componentes";
+    var componentes = ViewBag.Componentes as IEnumerable<inventario_coprotab.Models.DBInventario.Componente>;
 }
 
 <div class="page-header d-flex justify-content-between align-items-center">
-    <h1><i class="bi bi-laptop"></i> Gestión de Dispositivos</h1>
+    <h1><i class="bi bi-laptop"></i> Gestión de Inventario</h1>
     <div class="d-flex gap-2">
         <button class="btn btn-primary-custom" onclick="abrirModalCrear()">
             <i class="bi bi-plus-circle"></i> Nuevo Dispositivo
@@ -14,9 +15,11 @@
         <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#createEquipoModal">
             <i class="bi bi-cpu"></i> Nuevo Equipo
         </button>
+        <button class="btn btn-success-custom" onclick="abrirModalCrearComponente()">
+            <i class="bi bi-gear"></i> Nuevo Componente
+        </button>
     </div>
 </div>
-
 
 <!-- Filtros de búsqueda -->
 <div class="card-custom p-4 mb-4">
@@ -52,91 +55,194 @@
                 <i class="bi bi-x-circle"></i> Limpiar Filtros
             </a>
         </div>
-
     </form>
 </div>
 
-<!-- Tabla de dispositivos -->
-<div class="table-responsive">
-    <table class="table table-custom table-hover">
-        <thead>
-            <tr>
-                <th><i class="bi bi-tag"></i> Nombre</th>
-                <th><i class="bi bi-card-text"></i> Descripción</th>
-                <th><i class="bi bi-upc"></i> Código</th>
-                <th><i class="bi bi-hash"></i> Serie</th>
-                <th><i class="bi bi-circle-fill"></i> Estado</th>
-                <th><i class="bi bi-calendar"></i> Fecha Alta</th>
-                <th><i class="bi bi-boxes"></i> Stock</th>
-                <th><i class="bi bi-bookmark"></i> Marca</th>
-                <th><i class="bi bi-cpu"></i> Tipo</th>
-                <th class="text-center"><i class="bi bi-gear"></i> Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
+<!-- ============================= SECCIÓN DISPOSITIVOS ============================= -->
+<div class="card-custom p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0" style="color: var(--primary-color);">
+            <i class="bi bi-laptop"></i> Dispositivos (Hardware y Consumibles)
+        </h3>
+        <span class="badge bg-primary" style="font-size: 1rem;">@Model.Count() registros</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-custom table-hover">
+            <thead>
                 <tr>
-                    <td class="fw-bold">@item.Nombre</td>
-                    <td>@(item.Descripcion ?? "Sin descripción")</td>
-                    <td><span class="badge bg-secondary">@(item.CodigoInventario ?? "N/A")</span></td>
-                    <td>@(item.NroSerie ?? "N/A")</td>
-                    <td>
-                        @if (item.Estado == "Nuevo")
-                        {
-                            <span class="badge badge-custom" style="background-color: var(--success-color);">
-                                <i class="bi bi-star-fill"></i> @item.Estado
-                            </span>
-                        }
-                        else if (item.Estado == "En uso")
-                        {
-                            <span class="badge badge-custom" style="background-color: var(--secondary-color);">
-                                <i class="bi bi-check-circle-fill"></i> @item.Estado
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="badge badge-custom" style="background-color: var(--warning-color);">
-                                <i class="bi bi-exclamation-circle-fill"></i> @item.Estado
-                            </span>
-                        }
-                    </td>
-                    <td>@(item.FechaAlta?.ToString("dd/MM/yyyy") ?? "N/A")</td>
-                    <td>
-                        <span class="badge @(item.StockActual < item.StockMinimo ? "bg-danger" : "bg-success")">
-                            @item.StockActual unidades
-                        </span>
-                    </td>
-                    <td>@(item.IdMarcaNavigation?.Nombre ?? "Sin marca")</td>
-                    <td>@(item.IdTipoNavigation?.Descripcion ?? "Sin tipo")</td>
-                    <td class="text-center">
-                        <div class="btn-group" role="group">
-                            <button class="btn btn-sm btn-outline-primary" onclick="abrirModalDetalle(@item.IdDispositivo)" title="Ver Detalles">
-                                <i class="bi bi-eye"></i>
-                            </button>
-                            <button class="btn btn-sm btn-warning-custom" onclick="abrirModalEditar(@item.IdDispositivo)" title="Editar">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button class="btn btn-sm btn-danger-custom" onclick="abrirModalEliminar(@item.IdDispositivo, '@item.Nombre')" title="Eliminar">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </td>
+                    <th><i class="bi bi-tag"></i> Nombre</th>
+                    <th><i class="bi bi-card-text"></i> Descripción</th>
+                    <th><i class="bi bi-upc"></i> Código</th>
+                    <th><i class="bi bi-hash"></i> Serie</th>
+                    <th><i class="bi bi-circle-fill"></i> Estado</th>
+                    <th><i class="bi bi-calendar"></i> Fecha Alta</th>
+                    <th><i class="bi bi-boxes"></i> Stock</th>
+                    <th><i class="bi bi-bookmark"></i> Marca</th>
+                    <th><i class="bi bi-cpu"></i> Tipo</th>
+                    <th class="text-center"><i class="bi bi-gear"></i> Acciones</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="fw-bold">@item.Nombre</td>
+                        <td>@(item.Descripcion ?? "Sin descripción")</td>
+                        <td><span class="badge bg-secondary">@(item.CodigoInventario ?? "N/A")</span></td>
+                        <td>@(item.NroSerie ?? "N/A")</td>
+                        <td>
+                            @if (item.Estado == "Nuevo")
+                            {
+                                <span class="badge badge-custom" style="background-color: var(--success-color);">
+                                    <i class="bi bi-star-fill"></i> @item.Estado
+                                </span>
+                            }
+                            else if (item.Estado == "En uso")
+                            {
+                                <span class="badge badge-custom" style="background-color: var(--secondary-color);">
+                                    <i class="bi bi-check-circle-fill"></i> @item.Estado
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-custom" style="background-color: var(--warning-color);">
+                                    <i class="bi bi-exclamation-circle-fill"></i> @item.Estado
+                                </span>
+                            }
+                        </td>
+                        <td>@(item.FechaAlta?.ToString("dd/MM/yyyy") ?? "N/A")</td>
+                        <td>
+                            <span class="badge @(item.StockActual < item.StockMinimo ? "bg-danger" : "bg-success")">
+                                @item.StockActual unidades
+                            </span>
+                        </td>
+                        <td>@(item.IdMarcaNavigation?.Nombre ?? "Sin marca")</td>
+                        <td>@(item.IdTipoNavigation?.Descripcion ?? "Sin tipo")</td>
+                        <td class="text-center">
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="abrirModalDetalle(@item.IdDispositivo)" title="Ver Detalles">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-warning-custom" onclick="abrirModalEditar(@item.IdDispositivo)" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger-custom" onclick="abrirModalEliminar(@item.IdDispositivo, '@item.Nombre')" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center">
+            <i class="bi bi-info-circle"></i> No se encontraron dispositivos con los criterios de búsqueda especificados.
+        </div>
+    }
 </div>
 
-
-@if (!Model.Any())
-{
-    <div class="alert alert-info text-center">
-        <i class="bi bi-info-circle"></i> No se encontraron dispositivos con los criterios de búsqueda especificados.
+<!-- ============================= SECCIÓN COMPONENTES ============================= -->
+<div class="card-custom p-4 mb-4" style="border-left: 4px solid var(--success-color);">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0" style="color: var(--success-color);">
+            <i class="bi bi-gear-fill"></i> Componentes (Hardware Interno)
+        </h3>
+        <span class="badge bg-success" style="font-size: 1rem;">@(componentes?.Count() ?? 0) registros</span>
     </div>
-}
 
-<!-- Modal Crear/Editar -->
+    <div class="table-responsive">
+        <table class="table table-custom table-hover">
+            <thead style="background: var(--success-color);">
+                <tr>
+                    <th><i class="bi bi-tag"></i> Nombre</th>
+                    <th><i class="bi bi-card-text"></i> Descripción</th>
+                    <th><i class="bi bi-hash"></i> Nro. Serie</th>
+                    <th><i class="bi bi-circle-fill"></i> Estado</th>
+                    <th><i class="bi bi-bookmark"></i> Marca</th>
+                    <th><i class="bi bi-cpu"></i> Tipo</th>
+                    <th><i class="bi bi-calendar"></i> Fecha Instalación</th>
+                    <th><i class="bi bi-box-seam"></i> Cantidad</th>
+                    <th class="text-center"><i class="bi bi-gear"></i> Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (componentes != null && componentes.Any())
+                {
+                    @foreach (var comp in componentes)
+                    {
+                        <tr>
+                            <td class="fw-bold">@comp.Nombre</td>
+                            <td>@(comp.Descripcion ?? "Sin descripción")</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(comp.NroSerie))
+                                {
+                                    <code>@comp.NroSerie</code>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">N/A</span>
+                                }
+                            </td>
+                            <td>
+                                @if (comp.Estado == "Nuevo")
+                                {
+                                    <span class="badge badge-custom" style="background-color: var(--success-color);">
+                                        <i class="bi bi-star-fill"></i> @comp.Estado
+                                    </span>
+                                }
+                                else if (comp.Estado == "En uso")
+                                {
+                                    <span class="badge badge-custom" style="background-color: var(--secondary-color);">
+                                        <i class="bi bi-check-circle-fill"></i> @comp.Estado
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-custom" style="background-color: var(--warning-color);">
+                                        <i class="bi bi-exclamation-circle-fill"></i> @(comp.Estado ?? "N/A")
+                                    </span>
+                                }
+                            </td>
+                            <td>@(comp.IdMarcaNavigation?.Nombre ?? "Sin marca")</td>
+                            <td>@(comp.IdTipoNavigation?.Descripcion ?? "Sin tipo")</td>
+                            <td>@(comp.FechaInstalacion?.ToString("dd/MM/yyyy") ?? "N/A")</td>
+                            <td>
+                                <span class="badge bg-info">@comp.Cantidad</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="abrirModalDetalleComponente(@comp.IdComponente)" title="Ver Detalles">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-warning-custom" onclick="abrirModalEditarComponente(@comp.IdComponente)" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger-custom" onclick="abrirModalEliminarComponente(@comp.IdComponente, '@comp.Nombre')" title="Eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (componentes == null || !componentes.Any())
+    {
+        <div class="alert alert-info text-center">
+            <i class="bi bi-info-circle"></i> No se encontraron componentes con los criterios de búsqueda especificados.
+        </div>
+    }
+</div>
+
+<!-- Modal Crear/Editar Dispositivos -->
 <div class="modal fade" id="modalFormulario" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -146,14 +252,12 @@
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" id="modalContenido">
-                <!-- Aquí se cargará el contenido dinámicamente -->
-            </div>
+            <div class="modal-body" id="modalContenido"></div>
         </div>
     </div>
 </div>
 
-<!-- Modal Detalle -->
+<!-- Modal Detalle Dispositivos -->
 <div class="modal fade" id="modalDetalle" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -163,14 +267,12 @@
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" id="modalDetalleContenido">
-                <!-- Aquí se cargará el contenido dinámicamente -->
-            </div>
+            <div class="modal-body" id="modalDetalleContenido"></div>
         </div>
     </div>
 </div>
 
-<!-- Modal Eliminar -->
+<!-- Modal Eliminar Dispositivos -->
 <div class="modal fade" id="modalEliminar" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -193,60 +295,39 @@
         </div>
     </div>
 </div>
-<!-- Modal vacío -->
+
+<!-- Modal Crear Equipo -->
 <div class="modal fade" id="createEquipoModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header modal-header-custom">
                 <h5 class="modal-title">Nuevo Equipo</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <!-- Se llenará con AJAX -->
-            </div>
+            <div class="modal-body"></div>
         </div>
     </div>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const modal = document.getElementById('createEquipoModal');
+<!-- Modal Componentes (Crear/Editar/Detalle/Eliminar) -->
+<div class="modal fade" id="modalComponente" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: var(--success-color); color: white;">
+                <h5 class="modal-title" id="modalComponenteTitulo"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: brightness(0) invert(1);"></button>
+            </div>
+            <div class="modal-body" id="modalComponenteContenido"></div>
+        </div>
+    </div>
+</div>
 
-        modal.addEventListener('show.bs.modal', function () {
-            const body = this.querySelector('.modal-body');
-            body.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div><p>Cargando formulario...</p></div>';
-
-            fetch('/Dispositivo/CreateEquipo')
-                .then(response => {
-                    if (!response.ok) throw new Error('Error al cargar el formulario');
-                    return response.text();
-                })
-                .then(html => {
-                    body.innerHTML = html;
-                    // Re-inicializar validación si usas jQuery Unobtrusive
-                    if (typeof $.validator !== 'undefined') {
-                        const form = body.querySelector('form');
-                        if (form) {
-                            $.validator.unobtrusive.parse(form);
-                        }
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                    body.innerHTML = '<div class="alert alert-danger">Error al cargar el formulario. Por favor, intente nuevamente.</div>';
-                });
-        });
-
-        // Opcional: limpiar al cerrar
-        modal.addEventListener('hidden.bs.modal', function () {
-            this.querySelector('.modal-body').innerHTML = '';
-        });
-    });
-</script>
 @section Scripts {
     <script>
         let dispositivoIdEliminar = null;
+        let componenteIdEliminar = null;
 
+        // ==================== FUNCIONES DISPOSITIVOS ====================
         function abrirModalCrear() {
             $('#modalTitulo').html('<i class="bi bi-plus-circle"></i> Nuevo Dispositivo');
             $.get('@Url.Action("Create", "Dispositivo")', function(data) {
@@ -304,11 +385,9 @@
             }
         });
 
-        // Manejar envío de formularios en modal
         $(document).on('submit', '#formDispositivo', function(e) {
             e.preventDefault();
             var form = $(this);
-
             $.ajax({
                 url: form.attr('action'),
                 type: 'POST',
@@ -326,17 +405,69 @@
                 }
             });
         });
-    </script>
-    <script>
-        // Cargar contenido del modal de "Nuevo Equipo" al abrirlo
+
+        // ==================== FUNCIONES COMPONENTES ====================
+        function abrirModalCrearComponente() {
+            $('#modalComponenteTitulo').html('<i class="bi bi-plus-circle"></i> Nuevo Componente');
+            $.get('@Url.Action("Create", "Componente")', function(data) {
+                $('#modalComponenteContenido').html(data);
+                $('#modalComponente').modal('show');
+            }).fail(function() {
+                alert('Error al cargar el formulario de componente');
+            });
+        }
+
+        function abrirModalEditarComponente(id) {
+            $('#modalComponenteTitulo').html('<i class="bi bi-pencil"></i> Editar Componente');
+            $.get('@Url.Action("Edit", "Componente")/' + id, function(data) {
+                $('#modalComponenteContenido').html(data);
+                $('#modalComponente').modal('show');
+            }).fail(function() {
+                alert('Error al cargar el formulario de edición');
+            });
+        }
+
+        function abrirModalDetalleComponente(id) {
+            $('#modalComponenteTitulo').html('<i class="bi bi-info-circle"></i> Detalles del Componente');
+            $.get('@Url.Action("Details", "Componente")/' + id, function(data) {
+                $('#modalComponenteContenido').html(data);
+                $('#modalComponente').modal('show');
+            }).fail(function() {
+                alert('Error al cargar los detalles');
+            });
+        }
+
+        function abrirModalEliminarComponente(id, nombre) {
+            if (confirm('¿Está seguro que desea eliminar el componente "' + nombre + '"?')) {
+                $.ajax({
+                    url: '@Url.Action("Delete", "Componente")/' + id,
+                    type: 'POST',
+                    data: {
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert('Error al eliminar el componente');
+                        }
+                    },
+                    error: function() {
+                        alert('Error al procesar la solicitud');
+                    }
+                });
+            }
+        }
+
+        // Modal Equipo
         $('#createEquipoModal').on('show.bs.modal', function () {
             var modal = $(this);
+            modal.find('.modal-body').html('<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>');
             $.get('/Dispositivo/CreateEquipo', function (data) {
                 modal.find('.modal-body').html(data);
             });
         });
 
-        // Opcional: limpiar el modal al cerrarlo
         $('#createEquipoModal').on('hidden.bs.modal', function () {
             $(this).find('.modal-body').empty();
         });

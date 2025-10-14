@@ -50,25 +50,46 @@ namespace inventario_coprotab.Controllers
         // GET: Dispositivo
         public async Task<IActionResult> Index(string searchCode, string searchSerie, string searchTipo, string searchEstado)
         {
-            var query = _context.Dispositivos
+            // DISPOSITIVOS (Hardware y Consumible)
+            var queryDispositivos = _context.Dispositivos
                 .Include(d => d.IdMarcaNavigation)
                 .Include(d => d.IdTipoNavigation)
                 .Where(d => d.EstadoRegistro);
 
             if (!string.IsNullOrEmpty(searchCode))
-                query = query.Where(d => d.CodigoInventario != null && d.CodigoInventario.Contains(searchCode));
+                queryDispositivos = queryDispositivos.Where(d => d.CodigoInventario != null && d.CodigoInventario.Contains(searchCode));
 
             if (!string.IsNullOrEmpty(searchSerie))
-                query = query.Where(d => d.NroSerie != null && d.NroSerie.Contains(searchSerie));
+                queryDispositivos = queryDispositivos.Where(d => d.NroSerie != null && d.NroSerie.Contains(searchSerie));
 
             if (!string.IsNullOrEmpty(searchTipo))
-                query = query.Where(d => d.IdTipoNavigation != null && d.IdTipoNavigation.Descripcion.Contains(searchTipo));
+                queryDispositivos = queryDispositivos.Where(d => d.IdTipoNavigation != null && d.IdTipoNavigation.Descripcion.Contains(searchTipo));
 
             if (!string.IsNullOrEmpty(searchEstado))
-                query = query.Where(d => d.Estado == searchEstado);
+                queryDispositivos = queryDispositivos.Where(d => d.Estado == searchEstado);
 
-            var dispositivos = await query.ToListAsync();
+            var dispositivos = await queryDispositivos.ToListAsync();
 
+            // COMPONENTES
+            var queryComponentes = _context.Componentes
+                .Include(c => c.IdMarcaNavigation)
+                .Include(c => c.IdTipoNavigation)
+                .Where(c => c.EstadoRegistro);
+
+            // Aplicar filtros similares para componentes
+            if (!string.IsNullOrEmpty(searchSerie))
+                queryComponentes = queryComponentes.Where(c => c.NroSerie != null && c.NroSerie.Contains(searchSerie));
+
+            if (!string.IsNullOrEmpty(searchTipo))
+                queryComponentes = queryComponentes.Where(c => c.IdTipoNavigation != null && c.IdTipoNavigation.Descripcion.Contains(searchTipo));
+
+            if (!string.IsNullOrEmpty(searchEstado))
+                queryComponentes = queryComponentes.Where(c => c.Estado == searchEstado);
+
+            var componentes = await queryComponentes.ToListAsync();
+
+            // Pasar ambas listas a la vista
+            ViewBag.Componentes = componentes;
             ViewBag.SearchCode = searchCode;
             ViewBag.SearchSerie = searchSerie;
             ViewBag.SearchTipo = searchTipo;
@@ -76,7 +97,6 @@ namespace inventario_coprotab.Controllers
 
             return View(dispositivos);
         }
-        
         // GET: Dispositivo/Details/5
         public async Task<IActionResult> Details(int? id)
         {

@@ -47,10 +47,13 @@ public partial class SistemaInventarioContext : DbContext
             entity.HasKey(e => e.IdComponente).HasName("PK__componen__B5F34A8AFEA2C121");
 
             entity.ToTable("componentes");
-
+            
             entity.HasIndex(e => e.NroSerie, "UQ__componen__AD64A161BC78FB82").IsUnique();
 
             entity.Property(e => e.IdComponente).HasColumnName("id_componente");
+            entity.Property(e => e.Cantidad)
+                .HasDefaultValue(1)
+                .HasColumnName("cantidad");
             entity.Property(e => e.Descripcion)
                 .IsUnicode(false)
                 .HasColumnName("descripcion");
@@ -130,8 +133,7 @@ public partial class SistemaInventarioContext : DbContext
                 .HasColumnName("stock_actual");
             entity.Property(e => e.StockMinimo)
                 .HasDefaultValue(0)
-                .HasColumnName("stock_minimo");            
-                
+                .HasColumnName("stock_minimo");
 
             entity.HasOne(d => d.IdMarcaNavigation).WithMany(p => p.Dispositivos)
                 .HasForeignKey(d => d.IdMarca)

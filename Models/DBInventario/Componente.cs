@@ -23,6 +23,8 @@ public partial class Componente
 
     public bool EstadoRegistro { get; set; }
 
+    public int Cantidad { get; set; }
+
     public virtual Marca? IdMarcaNavigation { get; set; }
 
     public virtual TipoHardware? IdTipoNavigation { get; set; }
