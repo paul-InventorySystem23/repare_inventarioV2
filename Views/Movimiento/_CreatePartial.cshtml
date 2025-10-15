@@ -1,0 +1,101 @@
+﻿@model inventario_coprotab.ViewModels.MovimientoViewModel
+
+<form asp-action="CreateModal" asp-controller="Movimiento" method="post" id="formMovimiento">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="IdDispositivo" class="form-label fw-bold">
+                <i class="bi bi-tag"></i> Dispositivos
+            </label>
+            <input asp-for="IdDispositivo" class="form-control" placeholder="Ej: Computadora" />
+            <span asp-validation-for="IdDispositivo" class="text-danger small"></span>
+        </div> 
+
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="TipoMovimiento" class="form-label fw-bold">
+                <i class="bi bi-tag"></i> Tipo de Movimientos
+            </label>
+            <input asp-for="TipoMovimiento" class="form-control" placeholder="Ej: Salida" />
+            <span asp-validation-for="TipoMovimiento" class="text-danger small"></span>
+        </div>
+
+        
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="Cantidad" class="form-label fw-bold">
+                <i class="bi bi-box-seam"></i> Cantidad
+            </label>
+            <input asp-for="Cantidad" class="form-control" type="number" min="1" value="1" />
+            <span asp-validation-for="Cantidad" class="text-danger small"></span>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-3">
+        <label asp-for="IdUbicacion" class="form-label fw-bold">
+            <i class="bi bi-tag"></i> Nombre de la Ubicacion
+        </label>
+        <input asp-for="IdUbicacion" class="form-control" placeholder="Ej: Sector 1" />
+        <span asp-validation-for="IdUbicacion" class="text-danger small"></span>
+    </div>
+
+    <div class="col-md-6 mb-3">
+        <label asp-for="IdResponsable" class="form-label fw-bold">
+            <i class="bi bi-tag"></i> Nombre del Responsable
+        </label>
+        <input asp-for="IdResponsable" class="form-control" placeholder="Ej: Angel" />
+        <span asp-validation-for="IdResponsable" class="text-danger small"></span>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="Observaciones" class="form-label fw-bold">
+                <i class="bi bi-tag"></i> Observaciones
+            </label>
+            <input asp-for="Observaciones" class="form-control" placeholder="Ej: Cambio de Computadora" />
+            <span asp-validation-for="Observaciones" class="text-danger small"></span>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="Fecha" class="form-label fw-bold">
+                <i class="bi bi-calendar"></i> Fecha del Movimiento
+            </label>
+            <input asp-for="Fecha" class="form-control" type="date" />
+            <span asp-validation-for="Fecha" class="text-danger small"></span>
+        </div>
+    </div>
+</form>
+
+<script>
+    $(function () {
+        var form = $('#formMovimiento');
+        if (form.length) {
+            $.validator.unobtrusive.parse(form);
+        }
+    });
+
+    $(document).on('submit', '#formMovimiento', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        $.ajax({
+            url: form.attr('action'),
+            type: 'POST',
+            data: form.serialize(),
+            success: function(response) {
+                if (response.success) {
+                    $('#modalMovimiento').modal('hide');
+                    location.reload();
+                } else {
+                    $('#modalMovimientoContenido').html(response);
+                }
+            },
+            error: function() {
+                alert('Error al procesar la solicitud');
+            }
+        });
+    });
+</script>

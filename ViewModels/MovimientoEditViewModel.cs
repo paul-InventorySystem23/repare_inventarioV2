@@ -2,8 +2,11 @@
 
 namespace inventario_coprotab.ViewModels
 {
-    public class MovimientoViewModel
+    public class MovimientoEditViewModel
     {
+        [Required(ErrorMessage = "El dispositivo es obligatorio")]
+        public int IdMovimiento { get; set; }
+
         [Required(ErrorMessage = "El dispositivo es obligatorio")]
         public int IdDispositivo { get; set; }
 
@@ -18,16 +21,8 @@ namespace inventario_coprotab.ViewModels
         public int? IdUbicacion { get; set; }
         public int? IdResponsable { get; set; }
         public string? Observaciones { get; set; }
-        public int IdMovimiento { get; set; }
 
         public DateTime Fecha { get; set; }
 
-
-        // Para mostrar info del dispositivo
-        public string? NombreDispositivo { get; set; }
-        public string? TipoDispositivo { get; set; }
-        public string? Marca { get; set; }
-        public int StockActual { get; set; }
-        public int StockMinimo { get; set; }
     }
 }
