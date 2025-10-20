@@ -53,7 +53,7 @@ namespace inventario_coprotab.Controllers
             return PartialView("_CreatePartial", viewModel);
         }
 
-        // ✅ NUEVO: GET: Movimiento/CreateForDispositivo/5
+        // ✅ GET: Movimiento/CreateForDispositivo/5
         public async Task<IActionResult> CreateForDispositivo(int id)
         {
             var dispositivo = await _context.Dispositivos.FindAsync(id);
@@ -62,15 +62,25 @@ namespace inventario_coprotab.Controllers
                 return NotFound();
             }
 
-            ViewData["IdResponsable"] = new SelectList(_context.Responsables.OrderBy(m => m.Nombre), "IdResponsable", "Nombre");
-            ViewData["IdUbicacion"] = new SelectList(_context.Ubicaciones.OrderBy(m => m.Nombre), "IdUbicacion", "Nombre");
+            // ✅ Cargar las listas para los dropdowns
+            ViewData["IdResponsable"] = new SelectList(
+                _context.Responsables.OrderBy(m => m.Nombre),
+                "IdResponsable",
+                "Nombre"
+            );
+            ViewData["IdUbicacion"] = new SelectList(
+                _context.Ubicaciones.OrderBy(m => m.Nombre),
+                "IdUbicacion",
+                "Nombre"
+            );
             ViewBag.TipoDisponibles = new List<string> { "Entrada", "Salida", "Traslado" };
             ViewBag.DispositivoNombre = dispositivo.Nombre;
 
             var viewModel = new MovimientoViewModel
             {
                 IdDispositivo = id,
-                Fecha = DateTime.Now
+                Fecha = DateTime.Now,
+                Cantidad = 1
             };
 
             return PartialView("_CreatePartial", viewModel);
@@ -157,7 +167,7 @@ namespace inventario_coprotab.Controllers
             return PartialView("_CreatePartial", model);
         }
 
-        // ✅ NUEVO: GET: Movimiento/CreateForComponente/5
+        // ✅ GET: Movimiento/CreateForComponente/5
         public async Task<IActionResult> CreateForComponente(int id)
         {
             var componente = await _context.Componentes.FindAsync(id);
@@ -166,8 +176,17 @@ namespace inventario_coprotab.Controllers
                 return NotFound();
             }
 
-            ViewData["IdResponsable"] = new SelectList(_context.Responsables.OrderBy(m => m.Nombre), "IdResponsable", "Nombre");
-            ViewData["IdUbicacion"] = new SelectList(_context.Ubicaciones.OrderBy(m => m.Nombre), "IdUbicacion", "Nombre");
+            // ✅ Cargar las listas para los dropdowns
+            ViewData["IdResponsable"] = new SelectList(
+                _context.Responsables.OrderBy(m => m.Nombre),
+                "IdResponsable",
+                "Nombre"
+            );
+            ViewData["IdUbicacion"] = new SelectList(
+                _context.Ubicaciones.OrderBy(m => m.Nombre),
+                "IdUbicacion",
+                "Nombre"
+            );
             ViewBag.TipoDisponibles = new List<string> { "Entrada", "Salida", "Traslado" };
             ViewBag.ComponenteNombre = componente.Nombre;
             ViewBag.StockActual = componente.Cantidad;
@@ -175,11 +194,13 @@ namespace inventario_coprotab.Controllers
             var viewModel = new MovimientoComponenteViewModel
             {
                 IdComponente = id,
-                Fecha = DateTime.Now
+                Fecha = DateTime.Now,
+                Cantidad = 1
             };
 
             return PartialView("_CreateComponentePartial", viewModel);
         }
+        
 
         // ✅ NUEVO: POST: Movimiento/CreateComponenteModal
         [HttpPost]

@@ -799,59 +799,7 @@
             }
         }
 
-        // Manejar submit del formulario de Movimiento para DISPOSITIVOS
-        $(document).on('submit', '#formMovimiento', function(e) {
-            e.preventDefault();
-            var form = $(this);
-            console.log('Enviando formulario de movimiento dispositivo'); // Debug
-
-            $.ajax({
-                url: form.attr('action'),
-                type: 'POST',
-                data: form.serialize(),
-                success: function(response) {
-                    console.log('Respuesta:', response); // Debug
-                    if (response.success) {
-                        $('#modalMovimiento').modal('hide');
-                        location.reload();
-                    } else {
-                        $('#modalMovimientoContenido').html(response);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error:', error);
-                    console.log('Response:', xhr.responseText);
-                    alert('Error al procesar la solicitud');
-                }
-            });
-        });
-
-        // ✅ Manejar submit del formulario de Movimiento para COMPONENTES
-        $(document).on('submit', '#formMovimientoComponente', function(e) {
-            e.preventDefault();
-            var form = $(this);
-            console.log('Enviando formulario de movimiento componente'); // Debug
-
-            $.ajax({
-                url: form.attr('action'),
-                type: 'POST',
-                data: form.serialize(),
-                success: function(response) {
-                    console.log('Respuesta:', response); // Debug
-                    if (response.success) {
-                        $('#modalMovimiento').modal('hide');
-                        location.reload();
-                    } else {
-                        $('#modalMovimientoContenido').html(response);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error:', error);
-                    console.log('Response:', xhr.responseText);
-                    alert('Error al procesar la solicitud');
-                }
-            });
-        });
+        
 
         // Manejar submit del formulario de edición de Movimiento
         $(document).on('submit', '#formMovimientoEdit', function(e) {
