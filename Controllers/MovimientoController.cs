@@ -2,10 +2,11 @@
 using inventario_coprotab.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
+
 namespace inventario_coprotab.Controllers
 {
     public class MovimientoController : Controller
@@ -17,7 +18,7 @@ namespace inventario_coprotab.Controllers
             _context = context;
         }
 
-        // GET: Componente/Details/5
+        // GET: Movimiento/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -27,6 +28,7 @@ namespace inventario_coprotab.Controllers
 
             var movimiento = await _context.Movimientos
                 .Include(c => c.IdDispositivoNavigation)
+                .Include(c => c.IdComponenteNavigation) // ✅ NUEVO: Incluir componente
                 .Include(c => c.IdResponsableNavigation)
                 .Include(c => c.IdUbicacionNavigation)
                 .FirstOrDefaultAsync(m => m.IdMovimiento == id);
@@ -39,55 +41,227 @@ namespace inventario_coprotab.Controllers
             return PartialView("_DetailsPartial", movimiento);
         }
 
-        // GET: Componente/Create
+        // GET: Movimiento/Create
         public IActionResult Create()
         {
             ViewData["IdDispositivo"] = new SelectList(_context.Dispositivos.OrderBy(m => m.Nombre), "IdDispositivo", "Nombre");
             ViewData["IdResponsable"] = new SelectList(_context.Responsables.OrderBy(m => m.Nombre), "IdResponsable", "Nombre");
             ViewData["IdUbicacion"] = new SelectList(_context.Ubicaciones.OrderBy(m => m.Nombre), "IdUbicacion", "Nombre");
-           
+            ViewBag.TipoDisponibles = new List<string> { "Entrada", "Salida", "Traslado" };
 
             var viewModel = new MovimientoViewModel();
             return PartialView("_CreatePartial", viewModel);
         }
 
-        // POST: Componente/CreateModal
+        // ✅ NUEVO: GET: Movimiento/CreateForDispositivo/5
+        public async Task<IActionResult> CreateForDispositivo(int id)
+        {
+            var dispositivo = await _context.Dispositivos.FindAsync(id);
+            if (dispositivo == null)
+            {
+                return NotFound();
+            }
+
+            ViewData["IdResponsable"] = new SelectList(_context.Responsables.OrderBy(m => m.Nombre), "IdResponsable", "Nombre");
+            ViewData["IdUbicacion"] = new SelectList(_context.Ubicaciones.OrderBy(m => m.Nombre), "IdUbicacion", "Nombre");
+            ViewBag.TipoDisponibles = new List<string> { "Entrada", "Salida", "Traslado" };
+            ViewBag.DispositivoNombre = dispositivo.Nombre;
+
+            var viewModel = new MovimientoViewModel
+            {
+                IdDispositivo = id,
+                Fecha = DateTime.Now
+            };
+
+            return PartialView("_CreatePartial", viewModel);
+        }
+
+        // ✅ ACTUALIZADO: POST: Movimiento/CreateModal con descuento automático
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateModal(MovimientoViewModel model)
         {
             if (ModelState.IsValid)
             {
+                // ✅ Obtener el dispositivo para actualizar stock
+                var dispositivo = await _context.Dispositivos.FindAsync(model.IdDispositivo);
+                if (dispositivo == null)
+                {
+                    ModelState.AddModelError("", "El dispositivo no existe.");
+
+                    ViewData["IdResponsable"] = new SelectList(_context.Responsables.OrderBy(m => m.Nombre), "IdResponsable", "Nombre");
+                    ViewData["IdUbicacion"] = new SelectList(_context.Ubicaciones.OrderBy(m => m.Nombre), "IdUbicacion", "Nombre");
+                    ViewBag.TipoDisponibles = new List<string> { "Entrada", "Salida", "Traslado" };
+
+                    var dispositivoTemp = await _context.Dispositivos.FindAsync(model.IdDispositivo);
+                    ViewBag.DispositivoNombre = dispositivoTemp?.Nombre ?? "Desconocido";
+
+                    return PartialView("_CreatePartial", model);
+                }
+
+                // ✅ Validar stock disponible en caso de salida
+                if (model.TipoMovimiento == "Salida")
+                {
+                    if (dispositivo.StockActual < model.Cantidad)
+                    {
+                        ModelState.AddModelError("Cantidad", $"Stock insuficiente. Disponible: {dispositivo.StockActual}");
+
+                        ViewData["IdResponsable"] = new SelectList(_context.Responsables.OrderBy(m => m.Nombre), "IdResponsable", "Nombre");
+                        ViewData["IdUbicacion"] = new SelectList(_context.Ubicaciones.OrderBy(m => m.Nombre), "IdUbicacion", "Nombre");
+                        ViewBag.TipoDisponibles = new List<string> { "Entrada", "Salida", "Traslado" };
+
+                        var dispositivoNombre = await _context.Dispositivos.FindAsync(model.IdDispositivo);
+                        ViewBag.DispositivoNombre = dispositivoNombre?.Nombre ?? "Desconocido";
+
+                        return PartialView("_CreatePartial", model);
+                    }
+                }
+
                 var movimiento = new Movimiento
                 {
                     IdDispositivo = model.IdDispositivo,
-                    TipoMovimiento = model.TipoMovimiento,
+                    TipoMovimiento = model.TipoMovimiento ?? throw new ArgumentNullException(nameof(model.TipoMovimiento)),
                     Cantidad = model.Cantidad,
                     IdUbicacion = model.IdUbicacion,
-                    IdResponsable= model.IdResponsable,
+                    IdResponsable = model.IdResponsable,
                     Observaciones = model.Observaciones,
-                    Fecha = model.Fecha,
+                    Fecha = DateTime.Now // Siempre usa la fecha y hora actual
                 };
 
                 _context.Add(movimiento);
+
+                // ✅ Actualizar stock automáticamente
+                if (model.TipoMovimiento == "Entrada")
+                {
+                    dispositivo.StockActual += model.Cantidad;
+                }
+                else if (model.TipoMovimiento == "Salida")
+                {
+                    dispositivo.StockActual -= model.Cantidad;
+                }
+
                 await _context.SaveChangesAsync();
 
                 return Json(new { success = true });
             }
 
-            ViewData["IdDispositivo"] = new SelectList(_context.Dispositivos.OrderBy(m => m.Nombre), "IdDispositivo", "Nombre");
+            // ✅ Si el ModelState no es válido, recargar datos y devolver la vista
             ViewData["IdResponsable"] = new SelectList(_context.Responsables.OrderBy(m => m.Nombre), "IdResponsable", "Nombre");
             ViewData["IdUbicacion"] = new SelectList(_context.Ubicaciones.OrderBy(m => m.Nombre), "IdUbicacion", "Nombre");
-            
+            ViewBag.TipoDisponibles = new List<string> { "Entrada", "Salida", "Traslado" };
 
+            // Obtener el nombre del dispositivo
+            var dispositivoFinal = await _context.Dispositivos.FindAsync(model.IdDispositivo);
+            ViewBag.DispositivoNombre = dispositivoFinal?.Nombre ?? "Desconocido";
 
             return PartialView("_CreatePartial", model);
-
-
         }
 
+        // ✅ NUEVO: GET: Movimiento/CreateForComponente/5
+        public async Task<IActionResult> CreateForComponente(int id)
+        {
+            var componente = await _context.Componentes.FindAsync(id);
+            if (componente == null)
+            {
+                return NotFound();
+            }
 
-        // GET: Componente/Edit/5
+            ViewData["IdResponsable"] = new SelectList(_context.Responsables.OrderBy(m => m.Nombre), "IdResponsable", "Nombre");
+            ViewData["IdUbicacion"] = new SelectList(_context.Ubicaciones.OrderBy(m => m.Nombre), "IdUbicacion", "Nombre");
+            ViewBag.TipoDisponibles = new List<string> { "Entrada", "Salida", "Traslado" };
+            ViewBag.ComponenteNombre = componente.Nombre;
+            ViewBag.StockActual = componente.Cantidad;
+
+            var viewModel = new MovimientoComponenteViewModel
+            {
+                IdComponente = id,
+                Fecha = DateTime.Now
+            };
+
+            return PartialView("_CreateComponentePartial", viewModel);
+        }
+
+        // ✅ NUEVO: POST: Movimiento/CreateComponenteModal
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateComponenteModal(MovimientoComponenteViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                // ✅ Obtener el componente para actualizar cantidad
+                var componente = await _context.Componentes.FindAsync(model.IdComponente);
+                if (componente == null)
+                {
+                    ModelState.AddModelError("", "El componente no existe.");
+
+                    ViewData["IdResponsable"] = new SelectList(_context.Responsables.OrderBy(m => m.Nombre), "IdResponsable", "Nombre");
+                    ViewData["IdUbicacion"] = new SelectList(_context.Ubicaciones.OrderBy(m => m.Nombre), "IdUbicacion", "Nombre");
+                    ViewBag.TipoDisponibles = new List<string> { "Entrada", "Salida", "Traslado" };
+                    ViewBag.ComponenteNombre = "Desconocido";
+                    ViewBag.StockActual = 0;
+
+                    return PartialView("_CreateComponentePartial", model);
+                }
+
+                // ✅ Validar stock disponible en caso de salida
+                if (model.TipoMovimiento == "Salida")
+                {
+                    if (componente.Cantidad < model.Cantidad)
+                    {
+                        ModelState.AddModelError("Cantidad", $"Stock insuficiente. Disponible: {componente.Cantidad}");
+
+                        ViewData["IdResponsable"] = new SelectList(_context.Responsables.OrderBy(m => m.Nombre), "IdResponsable", "Nombre");
+                        ViewData["IdUbicacion"] = new SelectList(_context.Ubicaciones.OrderBy(m => m.Nombre), "IdUbicacion", "Nombre");
+                        ViewBag.TipoDisponibles = new List<string> { "Entrada", "Salida", "Traslado" };
+                        ViewBag.ComponenteNombre = componente.Nombre;
+                        ViewBag.StockActual = componente.Cantidad;
+
+                        return PartialView("_CreateComponentePartial", model);
+                    }
+                }
+
+                // ✅ Crear movimiento con id_componente (usando la nueva estructura de BD)
+                var movimiento = new Movimiento
+                {
+                    IdComponente = model.IdComponente,  // ✅ Usar el campo correcto
+                    IdDispositivo = null,               // ✅ Null porque es un componente
+                    TipoMovimiento = model.TipoMovimiento ?? throw new ArgumentNullException(nameof(model.TipoMovimiento)),
+                    Cantidad = model.Cantidad,
+                    IdUbicacion = model.IdUbicacion,
+                    IdResponsable = model.IdResponsable,
+                    Observaciones = model.Observaciones,
+                    Fecha = DateTime.Now
+                };
+
+                _context.Add(movimiento);
+
+                // ✅ Actualizar cantidad automáticamente
+                if (model.TipoMovimiento == "Entrada")
+                {
+                    componente.Cantidad += model.Cantidad;
+                }
+                else if (model.TipoMovimiento == "Salida")
+                {
+                    componente.Cantidad -= model.Cantidad;
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true });
+            }
+
+            ViewData["IdResponsable"] = new SelectList(_context.Responsables.OrderBy(m => m.Nombre), "IdResponsable", "Nombre", model.IdResponsable);
+            ViewData["IdUbicacion"] = new SelectList(_context.Ubicaciones.OrderBy(m => m.Nombre), "IdUbicacion", "Nombre", model.IdUbicacion);
+            ViewBag.TipoDisponibles = new List<string> { "Entrada", "Salida", "Traslado" };
+
+            var comp = await _context.Componentes.FindAsync(model.IdComponente);
+            ViewBag.ComponenteNombre = comp?.Nombre ?? "Desconocido";
+            ViewBag.StockActual = comp?.Cantidad ?? 0;
+
+            return PartialView("_CreateComponentePartial", model);
+        }
+
+        // GET: Movimiento/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -104,7 +278,7 @@ namespace inventario_coprotab.Controllers
             var model = new MovimientoEditViewModel
             {
                 IdMovimiento = movimiento.IdMovimiento,
-                IdDispositivo = movimiento.IdDispositivo,
+                IdDispositivo = movimiento.IdDispositivo ?? 0, // ✅ Manejar nullable
                 TipoMovimiento = movimiento.TipoMovimiento,
                 Cantidad = movimiento.Cantidad,
                 IdUbicacion = movimiento.IdUbicacion,
@@ -126,12 +300,12 @@ namespace inventario_coprotab.Controllers
             ViewData["IdDispositivo"] = new SelectList(_context.Dispositivos.OrderBy(m => m.Nombre), "IdDispositivo", "Nombre");
             ViewData["IdResponsable"] = new SelectList(_context.Responsables.OrderBy(m => m.Nombre), "IdResponsable", "Nombre");
             ViewData["IdUbicacion"] = new SelectList(_context.Ubicaciones.OrderBy(m => m.Nombre), "IdUbicacion", "Nombre");
-            
+            ViewBag.TipoDisponibles = new List<string> { "Entrada", "Salida", "Traslado" };
 
             return PartialView("_EditPartial", model);
         }
 
-        // POST: Componente/EditModal
+        // POST: Movimiento/Edit
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(MovimientoEditViewModel model)
@@ -150,7 +324,7 @@ namespace inventario_coprotab.Controllers
                 ViewData["IdDispositivo"] = new SelectList(_context.Dispositivos.OrderBy(m => m.Nombre), "IdDispositivo", "Nombre");
                 ViewData["IdResponsable"] = new SelectList(_context.Responsables.OrderBy(m => m.Nombre), "IdResponsable", "Nombre");
                 ViewData["IdUbicacion"] = new SelectList(_context.Ubicaciones.OrderBy(m => m.Nombre), "IdUbicacion", "Nombre");
-               
+                ViewBag.TipoDisponibles = new List<string> { "Entrada", "Salida", "Traslado" };
 
                 return PartialView("_EditPartial", model);
             }
@@ -163,7 +337,7 @@ namespace inventario_coprotab.Controllers
 
             // Actualizar campos
             movimiento.IdDispositivo = model.IdDispositivo;
-            movimiento.TipoMovimiento = model.TipoMovimiento;
+            movimiento.TipoMovimiento = model.TipoMovimiento ?? throw new ArgumentNullException(nameof(model.TipoMovimiento));
             movimiento.Cantidad = model.Cantidad;
             movimiento.IdUbicacion = model.IdUbicacion;
             movimiento.IdResponsable = model.IdResponsable;
@@ -184,14 +358,14 @@ namespace inventario_coprotab.Controllers
                 ViewData["IdDispositivo"] = new SelectList(_context.Dispositivos.OrderBy(m => m.Nombre), "IdDispositivo", "Nombre");
                 ViewData["IdResponsable"] = new SelectList(_context.Responsables.OrderBy(m => m.Nombre), "IdResponsable", "Nombre");
                 ViewData["IdUbicacion"] = new SelectList(_context.Ubicaciones.OrderBy(m => m.Nombre), "IdUbicacion", "Nombre");
-                
+                ViewBag.TipoDisponibles = new List<string> { "Entrada", "Salida", "Traslado" };
 
                 ModelState.AddModelError("", "Ocurrió un error al guardar los cambios.");
                 return PartialView("_EditPartial", model);
             }
         }
 
-        // POST: Componente/Delete/5
+        // POST: Movimiento/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
@@ -199,152 +373,11 @@ namespace inventario_coprotab.Controllers
             var movimiento = await _context.Movimientos.FindAsync(id);
             if (movimiento != null)
             {
+                _context.Movimientos.Remove(movimiento); // ✅ CORREGIDO: Faltaba esto
                 await _context.SaveChangesAsync();
                 return Json(new { success = true });
             }
             return Json(new { success = false });
         }
-
-        // GET: Movimiento/Create
-        //public IActionResult Create()
-        //{
-        //    ViewBag.Dispositivos = _context.Dispositivos.Where(d => d.EstadoRegistro).ToList();
-        //    ViewBag.Ubicaciones = _context.Ubicaciones.ToList();
-        //    ViewBag.Responsables = _context.Responsables.ToList();
-        //    return View();
-        //}
-
-        //// POST: Movimiento/Create
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Create(MovimientoViewModel model)
-        //{
-        //    if (ModelState.IsValid)
-        //    {
-        //        var dispositivo = await _context.Dispositivos.FindAsync(model.IdDispositivo);
-        //        if (dispositivo == null)
-        //        {
-        //            ModelState.AddModelError("IdDispositivo", "Dispositivo no encontrado");
-        //            return View(model);
-        //        }
-
-        //        // Validar que el stock no quede negativo en salidas
-        //        if (model.TipoMovimiento == "Salida" && dispositivo.StockActual < model.Cantidad)
-        //        {
-        //            ModelState.AddModelError("Cantidad", $"No hay suficiente stock. Stock actual: {dispositivo.StockActual}");
-        //            return View(model);
-        //        }
-
-        //        var movimiento = new Movimiento
-        //        {
-        //            IdDispositivo = model.IdDispositivo,
-        //            TipoMovimiento = model.TipoMovimiento ?? "Sin nombre",
-        //            Fecha = DateTime.Now,
-        //            IdUbicacion = model.IdUbicacion,
-        //            IdResponsable = model.IdResponsable,
-        //            Cantidad = model.Cantidad,
-        //            Observaciones = model.Observaciones
-        //        };
-
-        //        _context.Movimientos.Add(movimiento);
-
-        //        // Actualizar stock
-        //        if (model.TipoMovimiento == "Entrada")
-        //        {
-        //            dispositivo.StockActual += model.Cantidad;
-        //        }
-        //        else if (model.TipoMovimiento == "Salida")
-        //        {
-        //            dispositivo.StockActual -= model.Cantidad;
-        //        }
-
-        //        await _context.SaveChangesAsync();
-
-        //        return RedirectToAction(nameof(Index), "Dispositivo");
-        //    }
-
-        //    ViewBag.Dispositivos = _context.Dispositivos.Where(d => d.EstadoRegistro).ToList();
-        //    ViewBag.Ubicaciones = _context.Ubicaciones.ToList();
-        //    ViewBag.Responsables = _context.Responsables.ToList();
-        //    return View(model);
-        //}
-
-        //public async Task<IActionResult> Movimientos()
-        //{
-        //    List<Movimiento> Lista = await _context.Movimientos.Include(d => d.IdUbicacionNavigation)
-        //        .Include(d => d.IdDispositivoNavigation)
-        //        .Include(d => d.IdResponsableNavigation)
-        //        .ToListAsync();
-        //    return View(Lista);
-        //}
-
-        //// GET: Movimiento/Edit
-        //public async Task<IActionResult> Edit(int id)
-        //{
-        //    var movimiento = await _context.Movimientos.FindAsync(id);
-        //    if (movimiento == null)
-        //        return NotFound();
-
-        //    var vm = new MovimientoViewModel
-        //    {
-        //        IdMovimiento = movimiento.IdMovimiento,
-        //        IdDispositivo = movimiento.IdDispositivo,
-        //        TipoMovimiento = movimiento.TipoMovimiento,
-        //        Cantidad = movimiento.Cantidad,
-        //        IdUbicacion = movimiento.IdUbicacion,
-        //        IdResponsable = movimiento.IdResponsable,
-        //        Observaciones = movimiento.Observaciones,
-        //        NombreDispositivo = _context.Dispositivos
-        //                 .Where(d => d.IdDispositivo == movimiento.IdDispositivo)
-        //                 .Select(d => d.Nombre).FirstOrDefault(),
-        //        StockActual = _context.Dispositivos
-        //                 .Where(d => d.IdDispositivo == movimiento.IdDispositivo)
-        //                 .Select(d => (int?)d.StockActual).FirstOrDefault() ?? 0
-        //    };
-
-
-        //    ViewBag.Dispositivos = _context.Dispositivos.Where(d => d.EstadoRegistro).ToList();
-        //    ViewBag.Ubicaciones = _context.Ubicaciones.ToList();
-        //    ViewBag.Responsables = _context.Responsables.ToList();
-
-        //    return PartialView("_EditMovimiento", vm);
-
-        //}
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Edit(int id, MovimientoViewModel model)
-        //{
-        //    if (!ModelState.IsValid)
-        //        return PartialView("_EditMovimiento", model);
-
-        //    var movimiento = await _context.Movimientos.FindAsync(id);
-        //    if (movimiento == null)
-        //        return Json(new { success = false, message = "Movimiento no encontrado" });
-
-        //    movimiento.TipoMovimiento = model.TipoMovimiento ?? "Desconocido";
-        //    movimiento.Cantidad = model.Cantidad;
-        //    movimiento.IdUbicacion = model.IdUbicacion;
-        //    movimiento.IdResponsable = model.IdResponsable;
-        //    movimiento.Observaciones = model.Observaciones;
-
-        //    _context.Update(movimiento);
-        //    await _context.SaveChangesAsync();
-
-        //    return Json(new
-        //    {
-        //        success = true,
-        //        movimiento = new
-        //        {
-        //            id = movimiento.IdMovimiento,
-        //            tipo = movimiento.TipoMovimiento,
-        //            fecha = movimiento.Fecha.ToString("dd/MM/yyyy"),
-        //            ubicacion = movimiento.IdUbicacion,
-        //            responsable = movimiento.IdResponsable,
-        //            cantidad = movimiento.Cantidad,
-        //            observaciones = movimiento.Observaciones
-        //        }
-        //    });
-        //}
-
     }
 }

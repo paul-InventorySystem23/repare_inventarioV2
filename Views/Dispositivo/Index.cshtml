@@ -23,9 +23,7 @@
         <button class="btn btn-success-custom" onclick="abrirModalCrearComponente()">
             <i class="bi bi-gear"></i> Nuevo Componente
         </button>
-        <button class="btn btn-success-custom" onclick="abrirModalMovimiento()">
-            <i class="bi bi-gear"></i> Nuevo Movimiento
-        </button>
+        
 
     </div>
 </div>
@@ -71,14 +69,15 @@
 <div class="card-custom p-4 mb-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="mb-0" style="color: var(--primary-color);">
-            <i class="bi bi-laptop"></i> Dispositivos (Hardware y Consumibles)
+            <i class="bi bi-laptop"></i> Últimos 5 Dispositivos (Hardware y Consumibles)
         </h3>
         <span class="badge bg-primary" style="font-size: 1rem;">@Model.Count() registros</span>
     </div>
 
-    <div class="table-responsive">
+    <!-- ✅ Contenedor con scroll -->
+    <div class="table-responsive" style="max-height: 400px; overflow-y: auto; overflow-x: auto;">
         <table class="table table-custom table-hover">
-            <thead>
+            <thead style="position: sticky; top: 0; z-index: 10; background: var(--primary-color);">
                 <tr>
                     <th><i class="bi bi-tag"></i> Nombre</th>
                     <th><i class="bi bi-card-text"></i> Descripción</th>
@@ -87,7 +86,7 @@
                     <th><i class="bi bi-circle-fill"></i> Estado</th>
                     <th><i class="bi bi-calendar"></i> Fecha Alta</th>
                     <th><i class="bi bi-boxes"></i> Stock</th>
-                    <th><i class="bi bi-bookmark"></i> Marca</th> 
+                    <th><i class="bi bi-bookmark"></i> Marca</th>
                     <th><i class="bi bi-cpu"></i> Tipo</th>
                     <th class="text-center"><i class="bi bi-gear"></i> Acciones</th>
                 </tr>
@@ -126,7 +125,7 @@
                                 @item.StockActual unidades
                             </span>
                         </td>
-                       <td>@(item.IdMarcaNavigation?.Nombre ?? "Sin marca")</td>
+                        <td>@(item.IdMarcaNavigation?.Nombre ?? "Sin marca")</td>
                         <td>@(item.IdTipoNavigation?.Descripcion ?? "Sin tipo")</td>
                         <td class="text-center">
                             <div class="btn-group" role="group">
@@ -135,6 +134,9 @@
                                 </button>
                                 <button class="btn btn-sm btn-warning-custom" onclick="abrirModalEditar(@item.IdDispositivo)" title="Editar">
                                     <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-info" onclick="abrirModalMovimientoDispositivo(@item.IdDispositivo)" title="Crear Movimiento">
+                                    <i class="bi bi-arrow-left-right"></i>
                                 </button>
                                 <button class="btn btn-sm btn-danger-custom" onclick="abrirModalEliminar(@item.IdDispositivo, '@item.Nombre')" title="Eliminar">
                                     <i class="bi bi-trash"></i>
@@ -159,21 +161,22 @@
 <div class="card-custom p-4 mb-4" style="border-left: 4px solid var(--success-color);">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="mb-0" style="color: var(--success-color);">
-            <i class="bi bi-gear-fill"></i> Componentes (Hardware Interno)
+            <i class="bi bi-gear-fill"></i> Últimos 5 Componentes (Hardware Interno)
         </h3>
         <span class="badge bg-success" style="font-size: 1rem;">@(componentes?.Count() ?? 0) registros</span>
     </div>
 
-    <div class="table-responsive">
+    <!-- ✅ Contenedor con scroll -->
+    <div class="table-responsive" style="max-height: 400px; overflow-y: auto; overflow-x: auto;">
         <table class="table table-custom table-hover">
-            <thead style="background: var(--success-color);">
+            <thead style="position: sticky; top: 0; z-index: 10; background: var(--success-color);">
                 <tr>
                     <th><i class="bi bi-tag"></i> Nombre</th>
                     <th><i class="bi bi-card-text"></i> Descripción</th>
                     <th><i class="bi bi-hash"></i> Nro. Serie</th>
                     <th><i class="bi bi-circle-fill"></i> Estado</th>
                     <th><i class="bi bi-bookmark"></i> Marca</th>
-                    <th><i class="bi bi-cpu"></i> Tipo</th> 
+                    <th><i class="bi bi-cpu"></i> Tipo</th>
                     <th><i class="bi bi-calendar"></i> Fecha Instalación</th>
                     <th><i class="bi bi-box-seam"></i> Cantidad</th>
                     <th class="text-center"><i class="bi bi-gear"></i> Acciones</th>
@@ -218,7 +221,7 @@
                                 }
                             </td>
                             <td>@(comp.IdMarcaNavigation?.Nombre ?? "Sin marca")</td>
-                            <td>@(comp.IdTipoNavigation?.Descripcion ?? "Sin tipo")</td> 
+                            <td>@(comp.IdTipoNavigation?.Descripcion ?? "Sin tipo")</td>
                             <td>@(comp.FechaInstalacion?.ToString("dd/MM/yyyy") ?? "N/A")</td>
                             <td>
                                 <span class="badge bg-info">@comp.Cantidad</span>
@@ -230,6 +233,10 @@
                                     </button>
                                     <button class="btn btn-sm btn-warning-custom" onclick="abrirModalEditarComponente(@comp.IdComponente)" title="Editar">
                                         <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <!-- ✅ NUEVO: Botón de movimiento para componentes -->
+                                    <button class="btn btn-sm btn-info" onclick="abrirModalMovimientoComponente(@comp.IdComponente)" title="Crear Movimiento">
+                                        <i class="bi bi-arrow-left-right"></i>
                                     </button>
                                     <button class="btn btn-sm btn-danger-custom" onclick="abrirModalEliminarComponente(@comp.IdComponente, '@comp.Nombre')" title="Eliminar">
                                         <i class="bi bi-trash"></i>
@@ -251,20 +258,21 @@
     }
 </div>
 
-@* //Seccion de Movimientos *@
-<div class="card-custom p-4 mb-4" style="border-left: 4px solid var(--success-color);">
+<!-- Sección de Movimientos de Dispositivos -->
+<div class="card-custom p-4 mb-4" style="border-left: 4px solid var(--secondary-color);">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="mb-0" style="color: var(--success-color);">
-            <i class="bi bi-gear-fill"></i> Movimientos
+        <h3 class="mb-0" style="color: var(--secondary-color);">
+            <i class="bi bi-arrow-left-right"></i> Últimos 5 Movimientos de Dispositivos
         </h3>
-        <span class="badge bg-success" style="font-size: 1rem;">@(movimientos?.Count() ?? 0) registros</span>
+        <span class="badge bg-info" style="font-size: 1rem;">@(movimientos?.Count() ?? 0) registros</span>
     </div>
 
-    <div class="table-responsive">
+    <!-- ✅ Contenedor con scroll -->
+    <div class="table-responsive" style="max-height: 400px; overflow-y: auto; overflow-x: auto;">
         <table class="table table-custom table-hover">
-            <thead style="background: var(--success-color);">
+            <thead style="position: sticky; top: 0; z-index: 10; background: var(--secondary-color);">
                 <tr>
-                    <th><i class="bi bi-tag"></i> Nombre de Dipositivo</th>
+                    <th><i class="bi bi-tag"></i> Nombre de Dispositivo</th>
                     <th><i class="bi bi-card-text"></i> Tipo de Movimiento</th>
                     <th><i class="bi bi-hash"></i> Cantidad</th>
                     <th><i class="bi bi-circle-fill"></i> Ubicacion</th>
@@ -277,25 +285,44 @@
             <tbody>
                 @if (movimientos != null && movimientos.Any())
                 {
-                    @foreach (var comp in movimientos)
+                    @foreach (var movi in movimientos)
                     {
                         <tr>
-                            <td class="fw-bold">@comp.IdDispositivoNavigation</td>
-                            <td>@(comp.TipoMovimiento)</td>
-                            <td>@(comp.Cantidad)</td>
-                            <td>@(comp.IdUbicacionNavigation.Nombre)</td>
-                            <td>@(comp.IdResponsableNavigation.Nombre)</td>
-                            <td>@(comp.Observaciones)</td>
-                            <td>@(comp.Fecha.ToString("dd/MM/yyyy") ?? "N/A")</td>
+                            <td class="fw-bold">@movi.IdDispositivoNavigation.Nombre</td>
+                            <td>
+                                @if (movi.TipoMovimiento == "Entrada")
+                                {
+                                    <span class="badge badge-custom" style="background-color: var(--success-color);">
+                                        <i class="bi bi-box-arrow-in-down"></i> @movi.TipoMovimiento
+                                    </span>
+                                }
+                                else if (movi.TipoMovimiento == "Salida")
+                                {
+                                    <span class="badge badge-custom" style="background-color: var(--accent-color);">
+                                        <i class="bi bi-box-arrow-up"></i> @movi.TipoMovimiento
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-custom" style="background-color: var(--warning-color);">
+                                        <i class="bi bi-arrow-left-right"></i> @(movi.TipoMovimiento ?? "N/A")
+                                    </span>
+                                }
+                            </td>
+                            <td>@(movi.Cantidad)</td>
+                            <td>@(movi.IdUbicacionNavigation?.Nombre ?? "N/A")</td>
+                            <td>@(movi.IdResponsableNavigation?.Nombre ?? "N/A")</td>
+                            <td>@(movi.Observaciones ?? "N/A")</td>
+                            <td>@(movi.Fecha.ToString("dd/MM/yyyy HH:mm"))</td>
                             <td class="text-center">
                                 <div class="btn-group" role="group">
-                                    <button class="btn btn-sm btn-outline-primary" onclick="abrirModalDetalleMovimiento(@comp.IdMovimiento)" title="Ver Detalles">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="abrirModalDetalleMovimiento(@movi.IdMovimiento)" title="Ver Detalles">
                                         <i class="bi bi-eye"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-warning-custom" onclick="abrirModalEditarMovimiento(@comp.IdMovimiento)" title="Editar">
+                                    <button class="btn btn-sm btn-warning-custom" onclick="abrirModalEditarMovimiento(@movi.IdMovimiento)" title="Editar">
                                         <i class="bi bi-pencil"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-danger-custom" onclick="abrirModalEliminarMovimiento(@comp.IdMovimiento)" title="Eliminar">
+                                    <button class="btn btn-sm btn-danger-custom" onclick="abrirModalEliminarMovimiento(@movi.IdMovimiento, '@movi.IdDispositivoNavigation.Nombre')" title="Eliminar">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
@@ -310,11 +337,88 @@
     @if (movimientos == null || !movimientos.Any())
     {
         <div class="alert alert-info text-center">
-            <i class="bi bi-info-circle"></i> No se encontraron componentes con los criterios de búsqueda especificados.
+            <i class="bi bi-info-circle"></i> No se encontraron movimientos de dispositivos registrados.
         </div>
     }
 </div>
 
+<!-- ✅ NUEVA SECCIÓN: Movimientos de Componentes -->
+@{
+    var movimientosComponentes = ViewBag.MovimientosComponentes as IEnumerable<inventario_coprotab.Models.DBInventario.Movimiento>;
+}
+@if (movimientosComponentes != null && movimientosComponentes.Any())
+{
+    <div class="card-custom p-4 mb-4" style="border-left: 4px solid var(--success-color);">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="mb-0" style="color: var(--success-color);">
+                <i class="bi bi-gear-fill"></i> Últimos 5 Movimientos de Componentes
+            </h3>
+            <span class="badge bg-success" style="font-size: 1rem;">@movimientosComponentes.Count() registros</span>
+        </div>
+
+        <div class="table-responsive" style="max-height: 400px; overflow-y: auto; overflow-x: auto;">
+            <table class="table table-custom table-hover">
+                <thead style="position: sticky; top: 0; z-index: 10; background: var(--success-color);">
+                    <tr>
+                        <th><i class="bi bi-gear"></i> Componente</th>
+                        <th><i class="bi bi-card-text"></i> Tipo de Movimiento</th>
+                        <th><i class="bi bi-hash"></i> Cantidad</th>
+                        <th><i class="bi bi-circle-fill"></i> Ubicacion</th>
+                        <th><i class="bi bi-bookmark"></i> Responsable</th>
+                        <th><i class="bi bi-cpu"></i> Observaciones</th>
+                        <th><i class="bi bi-calendar"></i> Fecha</th>
+                        <th class="text-center"><i class="bi bi-gear"></i> Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var movi in movimientosComponentes)
+                    {
+                        <tr>
+                            <td class="fw-bold">
+                                @(movi.IdComponenteNavigation?.Nombre ?? "Sin nombre")
+                            </td>
+                            <td>
+                                @if (movi.TipoMovimiento == "Entrada")
+                                {
+                                    <span class="badge badge-custom" style="background-color: var(--success-color);">
+                                        <i class="bi bi-box-arrow-in-down"></i> @movi.TipoMovimiento
+                                    </span>
+                                }
+                                else if (movi.TipoMovimiento == "Salida")
+                                {
+                                    <span class="badge badge-custom" style="background-color: var(--accent-color);">
+                                        <i class="bi bi-box-arrow-up"></i> @movi.TipoMovimiento
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-custom" style="background-color: var(--warning-color);">
+                                        <i class="bi bi-arrow-left-right"></i> @movi.TipoMovimiento
+                                    </span>
+                                }
+                            </td>
+                            <td>@movi.Cantidad</td>
+                            <td>@(movi.IdUbicacionNavigation?.Nombre ?? "N/A")</td>
+                            <td>@(movi.IdResponsableNavigation?.Nombre ?? "N/A")</td>
+                            <td>@(movi.Observaciones ?? "N/A")</td>
+                            <td>@movi.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="abrirModalDetalleMovimiento(@movi.IdMovimiento)" title="Ver Detalles">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger-custom" onclick="abrirModalEliminarMovimiento(@movi.IdMovimiento)" title="Eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
 <!-- Modal Crear/Editar Dispositivos -->
 <div class="modal fade" id="modalFormulario" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -395,12 +499,13 @@
     </div>
 </div>
 
+<!-- Modal Movimiento -->
 <div class="modal fade" id="modalMovimiento" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header" style="background: var(--success-color); color: white;">
-                <h5 class="modal-title" id="modalComponenteTitulo"></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: brightness(0) invert(1);"></button>
+                <h5 class="modal-title" id="modalMovimientoTitulo"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="modalMovimientoContenido"></div>
         </div>
@@ -411,6 +516,7 @@
     <script>
         let dispositivoIdEliminar = null;
         let componenteIdEliminar = null;
+        let movimientoIdEliminar = null;
 
         // ==================== FUNCIONES DISPOSITIVOS ====================
         function abrirModalCrear() {
@@ -619,13 +725,35 @@
             });
         });
 
-        function abrirModalMovimiento() {
-            $('#modalMovimientoTitulo').html('<i class="bi bi-plus-circle"></i> Nuevo Movimiento');
-            $.get('@Url.Action("Create", "Movimiento")', function(data) {
+        // ==================== FUNCIONES MOVIMIENTOS ====================
+
+        // ✅ PARA DISPOSITIVOS
+        function abrirModalMovimientoDispositivo(idDispositivo) {
+            console.log('Abriendo modal para dispositivo:', idDispositivo); // Debug
+            $('#modalMovimientoTitulo').html('<i class="bi bi-arrow-left-right"></i> Nuevo Movimiento - Dispositivo');
+
+            $.get('@Url.Action("CreateForDispositivo", "Movimiento")/' + idDispositivo, function(data) {
                 $('#modalMovimientoContenido').html(data);
                 $('#modalMovimiento').modal('show');
-            }).fail(function() {
-                alert('Error al cargar el formulario de Movimiento');
+            }).fail(function(xhr, status, error) {
+                console.error('Error:', error);
+                console.log('Response:', xhr.responseText);
+                alert('Error al cargar el formulario de Movimiento para dispositivo');
+            });
+        }
+
+        // ✅ PARA COMPONENTES
+        function abrirModalMovimientoComponente(idComponente) {
+            console.log('Abriendo modal para componente:', idComponente); // Debug
+            $('#modalMovimientoTitulo').html('<i class="bi bi-arrow-left-right"></i> Nuevo Movimiento - Componente');
+
+            $.get('@Url.Action("CreateForComponente", "Movimiento")/' + idComponente, function(data) {
+                $('#modalMovimientoContenido').html(data);
+                $('#modalMovimiento').modal('show');
+            }).fail(function(xhr, status, error) {
+                console.error('Error:', error);
+                console.log('Response:', xhr.responseText);
+                alert('Error al cargar el formulario de Movimiento para componente');
             });
         }
 
@@ -649,8 +777,8 @@
             });
         }
 
-        function abrirModalEliminarMovimeinto(id) {
-            if (confirm('¿Está seguro que desea eliminar este Movimiento?')) {
+        function abrirModalEliminarMovimiento(id) {
+            if (confirm('¿Está seguro que desea eliminar este Movimiento? Esta acción no se puede deshacer.')) {
                 $.ajax({
                     url: '@Url.Action("Delete", "Movimiento")/' + id,
                     type: 'POST',
@@ -671,15 +799,18 @@
             }
         }
 
-        // Manejar submit del formulario de componentes (crear)
+        // Manejar submit del formulario de Movimiento para DISPOSITIVOS
         $(document).on('submit', '#formMovimiento', function(e) {
             e.preventDefault();
             var form = $(this);
+            console.log('Enviando formulario de movimiento dispositivo'); // Debug
+
             $.ajax({
                 url: form.attr('action'),
                 type: 'POST',
                 data: form.serialize(),
                 success: function(response) {
+                    console.log('Respuesta:', response); // Debug
                     if (response.success) {
                         $('#modalMovimiento').modal('hide');
                         location.reload();
@@ -687,13 +818,42 @@
                         $('#modalMovimientoContenido').html(response);
                     }
                 },
-                error: function() {
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    console.log('Response:', xhr.responseText);
                     alert('Error al procesar la solicitud');
                 }
             });
         });
 
-        // Manejar submit del formulario de edición de componentes
+        // ✅ Manejar submit del formulario de Movimiento para COMPONENTES
+        $(document).on('submit', '#formMovimientoComponente', function(e) {
+            e.preventDefault();
+            var form = $(this);
+            console.log('Enviando formulario de movimiento componente'); // Debug
+
+            $.ajax({
+                url: form.attr('action'),
+                type: 'POST',
+                data: form.serialize(),
+                success: function(response) {
+                    console.log('Respuesta:', response); // Debug
+                    if (response.success) {
+                        $('#modalMovimiento').modal('hide');
+                        location.reload();
+                    } else {
+                        $('#modalMovimientoContenido').html(response);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    console.log('Response:', xhr.responseText);
+                    alert('Error al procesar la solicitud');
+                }
+            });
+        });
+
+        // Manejar submit del formulario de edición de Movimiento
         $(document).on('submit', '#formMovimientoEdit', function(e) {
             e.preventDefault();
             var form = $(this);
@@ -718,7 +878,7 @@
             });
         });
 
-        // Modal Equipo
+        // ==================== MODAL EQUIPO ====================
         $('#createEquipoModal').on('show.bs.modal', function () {
             var modal = $(this);
             modal.find('.modal-body').html('<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>');
@@ -730,5 +890,11 @@
         $('#createEquipoModal').on('hidden.bs.modal', function () {
             $(this).find('.modal-body').empty();
         });
+
+        // ==================== DEBUG ====================
+        // Verificar que las funciones están disponibles
+        console.log('Funciones cargadas:');
+        console.log('- abrirModalMovimientoDispositivo:', typeof abrirModalMovimientoDispositivo);
+        console.log('- abrirModalMovimientoComponente:', typeof abrirModalMovimientoComponente);
     </script>
 }

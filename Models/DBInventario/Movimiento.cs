@@ -7,7 +7,11 @@ public partial class Movimiento
 {
     public int IdMovimiento { get; set; }
 
-    public int IdDispositivo { get; set; }
+    // ✅ Ahora es nullable - puede ser dispositivo O componente
+    public int? IdDispositivo { get; set; }
+
+    // ✅ NUEVO: Soporte para movimientos de componentes
+    public int? IdComponente { get; set; }
 
     public string TipoMovimiento { get; set; } = null!;
 
@@ -21,7 +25,11 @@ public partial class Movimiento
 
     public string? Observaciones { get; set; }
 
-    public virtual Dispositivo IdDispositivoNavigation { get; set; } = null!;
+    // Navegación
+    public virtual Dispositivo? IdDispositivoNavigation { get; set; }
+
+    // ✅ NUEVO: Navegación a componente
+    public virtual Componente? IdComponenteNavigation { get; set; }
 
     public virtual Responsable? IdResponsableNavigation { get; set; }
 

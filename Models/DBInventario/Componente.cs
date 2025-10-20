@@ -32,4 +32,7 @@ public partial class Componente
     public virtual ICollection<RelacionDispositivoComponente> RelacionDispositivoComponentes { get; set; } = new List<RelacionDispositivoComponente>();
 
     public virtual ICollection<ReparacionDetalle> ReparacionDetalles { get; set; } = new List<ReparacionDetalle>();
+
+    // ✅ NUEVO: Colección de movimientos
+    public virtual ICollection<Movimiento> Movimientos { get; set; } = new List<Movimiento>();
 }

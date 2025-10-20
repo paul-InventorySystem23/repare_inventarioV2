@@ -174,6 +174,10 @@ public partial class SistemaInventarioContext : DbContext
                 .HasColumnType("datetime")
                 .HasColumnName("fecha");
             entity.Property(e => e.IdDispositivo).HasColumnName("id_dispositivo");
+
+            // ✅ NUEVO: Propiedad para componente
+            entity.Property(e => e.IdComponente).HasColumnName("id_componente");
+
             entity.Property(e => e.IdResponsable).HasColumnName("id_responsable");
             entity.Property(e => e.IdUbicacion).HasColumnName("id_ubicacion");
             entity.Property(e => e.Observaciones)
@@ -184,10 +188,17 @@ public partial class SistemaInventarioContext : DbContext
                 .IsUnicode(false)
                 .HasColumnName("tipo_movimiento");
 
+            // ✅ Relación con Dispositivo (ahora opcional)
             entity.HasOne(d => d.IdDispositivoNavigation).WithMany(p => p.Movimientos)
                 .HasForeignKey(d => d.IdDispositivo)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Movimientos_Dispositivos");
+
+            // ✅ NUEVO: Relación con Componente
+            entity.HasOne(d => d.IdComponenteNavigation).WithMany(p => p.Movimientos)
+                .HasForeignKey(d => d.IdComponente)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Movimientos_Componentes");
 
             entity.HasOne(d => d.IdResponsableNavigation).WithMany(p => p.Movimientos)
                 .HasForeignKey(d => d.IdResponsable)
