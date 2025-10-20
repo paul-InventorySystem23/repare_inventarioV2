@@ -284,11 +284,11 @@
             </thead>
             <tbody>
                 @if (movimientos != null && movimientos.Any())
-                {
+                { 
                     @foreach (var movi in movimientos)
                     {
                         <tr>
-                            <td class="fw-bold">@movi.IdDispositivoNavigation.Nombre</td>
+                            <td class="fw-bold">@movi.IdDispositivoNavigation?.Nombre</td>
                             <td>
                                 @if (movi.TipoMovimiento == "Entrada")
                                 {
@@ -329,7 +329,7 @@
                             </td>
                         </tr>
                     }
-                }
+                 } 
             </tbody>
         </table>
     </div>

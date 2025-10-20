@@ -40,19 +40,22 @@
         <tr>
             <th><i class="bi bi-geo-alt"></i> Ubicacion</th>
             <th><i class="bi bi-tag"></i> Dispositivo</th>
-            <th><i class="bi bi-card-text"></i> Descripcion</th>
+            <th><i class="bi bi-tag"></i> Componente</th>
+            <th><i class="bi bi-card-text"></i> Tipo de Movimiento</th>
             <th><i class="bi bi-person-raised-hand"></i> Responsable</th>
             <th><i class="bi bi-calendar"></i> Fecha</th>
+
         </tr>
     </thead>
     <tbody>
         @foreach (var item in Model)
-        {
+        {   
 
             <tr>
-                <td>@item.IdUbicacionNavigation?.Nombre </td>
-                <td>@item.IdDispositivoNavigation.Nombre</td>
-                <td>@item.Observaciones </td>
+                <td>@item.IdUbicacionNavigation?.Nombre</td>
+                <td class="text-center">@(item.IdDispositivoNavigation?.Nombre?? "-")</td>
+                <td class="text-center">@(item.IdComponenteNavigation?.Nombre?? "-")</td>
+                <td>@item.TipoMovimiento</td>
                 <td>@item.IdResponsableNavigation?.Nombre </td>
                 <td>@item.Fecha</td>
             </tr>

@@ -16,12 +16,13 @@ namespace inventario_coprotab.Controllers
         {
             _context = context;
         }
-        public async Task<IActionResult> Index(string searchUbicacion, string searchDispositivo, string searchResponsable)
+        public async Task<IActionResult> Index(string searchUbicacion, string searchDispositivo, string searchResponsable, string searchComponente)
         {
             var Lista = await _context.Movimientos
                 .Include(d => d.IdUbicacionNavigation)
                 .Include(d => d.IdDispositivoNavigation)
                 .Include(d => d.IdResponsableNavigation)
+                .Include(d => d.IdComponenteNavigation)
                 .Where(d => d.IdUbicacionNavigation != null)
                 .ToListAsync();
 
@@ -39,6 +40,10 @@ namespace inventario_coprotab.Controllers
                 Lista = Lista.Where(d => d.IdResponsableNavigation != null && 
                                          d.IdResponsableNavigation.Nombre != null &&
                                          d.IdResponsableNavigation.Nombre.Contains(searchResponsable)).ToList();
+            if (!string.IsNullOrEmpty(searchComponente))
+                Lista = Lista.Where(d => d.IdComponenteNavigation != null &&
+                                         d.IdComponenteNavigation.Nombre != null &&
+                                         d.IdComponenteNavigation.Nombre.Contains(searchComponente)).ToList();
 
 
             var ListaFiltrada =  Lista;
@@ -46,7 +51,8 @@ namespace inventario_coprotab.Controllers
             ViewBag.SearchCode = searchUbicacion;
             ViewBag.SearchSerie = searchDispositivo;
             ViewBag.SearchTipo = searchResponsable;
-            
+            ViewBag.SearchSeriec = searchComponente;
+
 
             return View(ListaFiltrada);
         }

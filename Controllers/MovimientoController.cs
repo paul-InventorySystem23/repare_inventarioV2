@@ -151,8 +151,9 @@ namespace inventario_coprotab.Controllers
                 }
 
                 await _context.SaveChangesAsync();
+                return RedirectToAction("Index", "Dispositivo");
 
-                return Json(new { success = true });
+                //return Json(new { success = true });
             }
 
             // ✅ Si el ModelState no es válido, recargar datos y devolver la vista
@@ -221,7 +222,8 @@ namespace inventario_coprotab.Controllers
                     ViewBag.ComponenteNombre = "Desconocido";
                     ViewBag.StockActual = 0;
 
-                    return PartialView("_CreateComponentePartial", model);
+                    return RedirectToAction("Index", "Dispositivo");
+                    //return PartialView("_CreateComponentePartial", model);
                 }
 
                 // ✅ Validar stock disponible en caso de salida
@@ -268,7 +270,8 @@ namespace inventario_coprotab.Controllers
 
                 await _context.SaveChangesAsync();
 
-                return Json(new { success = true });
+                return RedirectToAction("Index", "Dispositivo");
+                //return Json(new { success = true });
             }
 
             ViewData["IdResponsable"] = new SelectList(_context.Responsables.OrderBy(m => m.Nombre), "IdResponsable", "Nombre", model.IdResponsable);
