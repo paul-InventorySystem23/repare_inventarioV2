@@ -436,7 +436,62 @@ namespace inventario_coprotab.Controllers
             var movimiento = await _context.Movimientos.FindAsync(id);
             if (movimiento != null)
             {
-                _context.Movimientos.Remove(movimiento); // ✅ CORREGIDO: Faltaba esto
+                // ✅ Si es un movimiento de SALIDA, restaurar el stock
+                if (movimiento.TipoMovimiento == "Salida")
+                {
+                    // Restaurar stock de DISPOSITIVO
+                    if (movimiento.IdDispositivo.HasValue)
+                    {
+                        var dispositivo = await _context.Dispositivos.FindAsync(movimiento.IdDispositivo.Value);
+                        if (dispositivo != null)
+                        {
+                            dispositivo.StockActual += movimiento.Cantidad;
+                        }
+                    }
+                    // Restaurar cantidad de COMPONENTE
+                    else if (movimiento.IdComponente.HasValue)
+                    {
+                        var componente = await _context.Componentes.FindAsync(movimiento.IdComponente.Value);
+                        if (componente != null)
+                        {
+                            componente.Cantidad += movimiento.Cantidad;
+                        }
+                    }
+                }
+                // ✅ Si es un movimiento de ENTRADA, descontar el stock
+                else if (movimiento.TipoMovimiento == "Entrada")
+                {
+                    // Descontar stock de DISPOSITIVO
+                    if (movimiento.IdDispositivo.HasValue)
+                    {
+                        var dispositivo = await _context.Dispositivos.FindAsync(movimiento.IdDispositivo.Value);
+                        if (dispositivo != null)
+                        {
+                            dispositivo.StockActual -= movimiento.Cantidad;
+                            // Evitar valores negativos
+                            if (dispositivo.StockActual < 0)
+                            {
+                                dispositivo.StockActual = 0;
+                            }
+                        }
+                    }
+                    // Descontar cantidad de COMPONENTE
+                    else if (movimiento.IdComponente.HasValue)
+                    {
+                        var componente = await _context.Componentes.FindAsync(movimiento.IdComponente.Value);
+                        if (componente != null)
+                        {
+                            componente.Cantidad -= movimiento.Cantidad;
+                            // Evitar valores negativos
+                            if (componente.Cantidad < 0)
+                            {
+                                componente.Cantidad = 0;
+                            }
+                        }
+                    }
+                }
+
+                _context.Movimientos.Remove(movimiento);
                 await _context.SaveChangesAsync();
                 return Json(new { success = true });
             }
