@@ -1,5 +1,112 @@
 ﻿@model inventario_coprotab.ViewModels.MovimientoComponenteViewModel
 
+form method="post" id="formMovimientoComponente" data-url="@Url.Action("CreateComponenteModal", "Movimiento")">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="IdComponente" />
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+
+    @* ✅ ALERTA DE STOCK EN CERO *@
+    @if (ViewBag.StockCero == true)
+    {
+        <div class="alert alert-warning mb-3" role="alert">
+            <h6 class="alert-heading mb-2">
+                <i class="bi bi-exclamation-triangle-fill"></i> Sin Stock Disponible
+            </h6>
+            <p class="mb-0">
+                <strong>@ViewBag.ComponenteNombre</strong> no tiene stock disponible. 
+                Solo se permite realizar un <strong>movimiento de ENTRADA</strong> hacia <strong>Deposito Central</strong>.
+            </p>
+        </div>
+    }
+    else
+    {
+        <!-- Mostrar nombre del componente y stock actual -->
+        <div class="alert alert-info mb-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Componente:</strong> @ViewBag.ComponenteNombre
+                </div>
+                <div>
+                    <span class="badge bg-primary" style="font-size: 1rem;">
+                        <i class="bi bi-box-seam"></i> Stock Actual: @ViewBag.StockActual
+                    </span>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="TipoMovimiento" class="form-label fw-bold">
+                <i class="bi bi-arrow-left-right"></i> Tipo de Movimiento
+            </label>
+        <select asp-for="TipoMovimiento" class="form-select" disabled="@(ViewBag.StockCero == true ? "disabled" : null)">
+                <option value="">-- Seleccionar --</option>
+                @foreach (var tipo in ViewBag.TipoDisponibles as List<string>)
+                {
+                    <option value="@tipo" selected="@(Model.TipoMovimiento == tipo)">@tipo</option>
+                }
+            </select>
+            @* ✅ Input oculto para enviar el valor cuando está disabled *@
+            @if (ViewBag.StockCero == true)
+            {
+                <input type="hidden" asp-for="TipoMovimiento" value="Entrada" />
+                <small class="text-muted">Solo se permite entrada cuando no hay stock</small>
+            }
+            <span asp-validation-for="TipoMovimiento" class="text-danger small"></span>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="Cantidad" class="form-label fw-bold">
+                <i class="bi bi-box-seam"></i> Cantidad
+            </label>
+            <input asp-for="Cantidad" class="form-control" type="number" min="1" value="1" />
+            <span asp-validation-for="Cantidad" class="text-danger small"></span>
+            @if (ViewBag.StockCero != true)
+            {
+                <small class="text-muted">Máximo disponible: @ViewBag.StockActual</small>
+            }
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="IdUbicacion" class="form-label fw-bold">
+                <i class="bi bi-geo-alt"></i> Ubicación
+            </label>
+            <select asp-for="IdUbicacion" class="form-select" asp-items="ViewBag.IdUbicacion" @(ViewBag.StockCero == true ? "disabled" : "")>
+                <option value="">-- Seleccionar Ubicación --</option>
+            </select>
+            @* ✅ Input oculto para enviar el valor cuando está disabled *@
+            @if (ViewBag.StockCero == true && Model.IdUbicacion.HasValue)
+            {
+                <input type="hidden" asp-for="IdUbicacion" value="@Model.IdUbicacion" />
+                <small class="text-muted">Solo se permite Deposito Central cuando no hay stock</small>
+            }
+            <span asp-validation-for="IdUbicacion" class="text-danger small"></span>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="IdResponsable" class="form-label fw-bold">
+                <i class="bi bi-person"></i> Responsable
+            </label>
+            <select asp-for="IdResponsable" class="form-select" asp-items="ViewBag.IdResponsable">
+                <option value="">-- Seleccionar Responsable --</option>
+            </select>
+            <span asp-validation-for="IdResponsable" class="text-danger small"></span>
+        </div>
+    </div>
+
+    <<div class="mb-3">
+        <label asp-for="Observaciones" class="form-label fw-bold">
+            <i class="bi bi-card-text"></i> Observaciones
+        </label>
+        <textarea asp-for="Observaciones" class="form-control" rows="3" placeholder="Observaciones adicionales..."></textarea>
+        <span asp-validation-for="Observaciones" class="text-danger small"></span>
+    </div>
+
 <form asp-action="CreateComponenteModal" asp-controller="Movimiento" method="post" id="formMovimientoComponente">
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="IdComponente" />
@@ -95,13 +202,13 @@
         // ✅ Vincular el evento submit directamente al formulario (sin delegación)
         form.off('submit').on('submit', function(e) {
             e.preventDefault();
-
+            
             var $form = $(this);
             var $submitBtn = $form.find('button[type="submit"]');
-
+            
             // Deshabilitar botón para evitar doble clic
             $submitBtn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Guardando...');
-
+            
             console.log('Enviando formulario de movimiento componente');
             console.log('Datos:', $form.serialize());
 
@@ -115,7 +222,7 @@
                     if (response.success) {
                         // Cerrar modal y recargar página
                         $('#modalMovimiento').modal('hide');
-
+                        
                         // ✅ Pequeño delay para asegurar que el modal se cierre
                         setTimeout(function() {
                             window.location.href = '@Url.Action("Index", "Dispositivo")';
@@ -129,10 +236,10 @@
                 error: function(xhr, status, error) {
                     console.error('Error:', error);
                     console.log('Response:', xhr.responseText);
-
+                    
                     // Rehabilitar botón
                     $submitBtn.prop('disabled', false).html('<i class="bi bi-save"></i> Guardar Movimiento');
-
+                    
                     alert('Error al procesar la solicitud: ' + error);
                 }
             });

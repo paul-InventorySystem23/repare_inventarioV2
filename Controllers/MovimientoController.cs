@@ -53,7 +53,7 @@ namespace inventario_coprotab.Controllers
             return PartialView("_CreatePartial", viewModel);
         }
 
-        // ✅ GET: Movimiento/CreateForDispositivo/5
+        // ✅ GET: Movimiento/CreateForDispositivo/5        
         public async Task<IActionResult> CreateForDispositivo(int id)
         {
             var dispositivo = await _context.Dispositivos.FindAsync(id);
@@ -201,7 +201,7 @@ namespace inventario_coprotab.Controllers
 
             return PartialView("_CreateComponentePartial", viewModel);
         }
-        
+
 
         // ✅ NUEVO: POST: Movimiento/CreateComponenteModal
         [HttpPost]
