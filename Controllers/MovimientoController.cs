@@ -62,6 +62,31 @@ namespace inventario_coprotab.Controllers
                 return NotFound();
             }
 
+            // ✅ Verificar si el stock es cero
+            bool stockCero = dispositivo.StockActual <= 0;
+
+            // ✅ Si hay stock cero, forzar valores predeterminados
+            var viewModel = new MovimientoViewModel
+            {
+                IdDispositivo = id,
+                Fecha = DateTime.Now,
+                Cantidad = 1
+            };
+
+            if (stockCero)
+            {
+                // Buscar "Deposito Central"
+                var depositoCentral = await _context.Ubicaciones
+                    .FirstOrDefaultAsync(u => u.Nombre.ToLower().Contains("deposito central") || u.Nombre.ToLower().Contains("depósito central"));
+
+                if (depositoCentral != null)
+                {
+                    viewModel.IdUbicacion = depositoCentral.IdUbicacion;
+                }
+
+                viewModel.TipoMovimiento = "Entrada";
+            }
+
             // ✅ Cargar las listas para los dropdowns
             ViewData["IdResponsable"] = new SelectList(
                 _context.Responsables.OrderBy(m => m.Nombre),
@@ -75,13 +100,8 @@ namespace inventario_coprotab.Controllers
             );
             ViewBag.TipoDisponibles = new List<string> { "Entrada", "Salida", "Traslado" };
             ViewBag.DispositivoNombre = dispositivo.Nombre;
-
-            var viewModel = new MovimientoViewModel
-            {
-                IdDispositivo = id,
-                Fecha = DateTime.Now,
-                Cantidad = 1
-            };
+            ViewBag.StockActual = dispositivo.StockActual;
+            ViewBag.StockCero = stockCero; // ✅ NUEVO: Indicador de stock en cero
 
             return PartialView("_CreatePartial", viewModel);
         }
@@ -177,6 +197,31 @@ namespace inventario_coprotab.Controllers
                 return NotFound();
             }
 
+            // ✅ Verificar si el stock es cero
+            bool stockCero = componente.Cantidad <= 0;
+
+            // ✅ Si hay stock cero, forzar valores predeterminados
+            var viewModel = new MovimientoComponenteViewModel
+            {
+                IdComponente = id,
+                Fecha = DateTime.Now,
+                Cantidad = 1
+            };
+
+            if (stockCero)
+            {
+                // Buscar "Deposito Central"
+                var depositoCentral = await _context.Ubicaciones
+                    .FirstOrDefaultAsync(u => u.Nombre.ToLower().Contains("deposito central") || u.Nombre.ToLower().Contains("depósito central"));
+
+                if (depositoCentral != null)
+                {
+                    viewModel.IdUbicacion = depositoCentral.IdUbicacion;
+                }
+
+                viewModel.TipoMovimiento = "Entrada";
+            }
+
             // ✅ Cargar las listas para los dropdowns
             ViewData["IdResponsable"] = new SelectList(
                 _context.Responsables.OrderBy(m => m.Nombre),
@@ -191,17 +236,11 @@ namespace inventario_coprotab.Controllers
             ViewBag.TipoDisponibles = new List<string> { "Entrada", "Salida", "Traslado" };
             ViewBag.ComponenteNombre = componente.Nombre;
             ViewBag.StockActual = componente.Cantidad;
-
-            var viewModel = new MovimientoComponenteViewModel
-            {
-                IdComponente = id,
-                Fecha = DateTime.Now,
-                Cantidad = 1
-            };
+            ViewBag.StockCero = stockCero; // ✅ NUEVO: Indicador de stock en cero
 
             return PartialView("_CreateComponentePartial", viewModel);
         }
-        
+
 
         // ✅ NUEVO: POST: Movimiento/CreateComponenteModal
         [HttpPost]
@@ -397,7 +436,62 @@ namespace inventario_coprotab.Controllers
             var movimiento = await _context.Movimientos.FindAsync(id);
             if (movimiento != null)
             {
-                _context.Movimientos.Remove(movimiento); // ✅ CORREGIDO: Faltaba esto
+                // ✅ Si es un movimiento de SALIDA, restaurar el stock
+                if (movimiento.TipoMovimiento == "Salida")
+                {
+                    // Restaurar stock de DISPOSITIVO
+                    if (movimiento.IdDispositivo.HasValue)
+                    {
+                        var dispositivo = await _context.Dispositivos.FindAsync(movimiento.IdDispositivo.Value);
+                        if (dispositivo != null)
+                        {
+                            dispositivo.StockActual += movimiento.Cantidad;
+                        }
+                    }
+                    // Restaurar cantidad de COMPONENTE
+                    else if (movimiento.IdComponente.HasValue)
+                    {
+                        var componente = await _context.Componentes.FindAsync(movimiento.IdComponente.Value);
+                        if (componente != null)
+                        {
+                            componente.Cantidad += movimiento.Cantidad;
+                        }
+                    }
+                }
+                // ✅ Si es un movimiento de ENTRADA, descontar el stock
+                else if (movimiento.TipoMovimiento == "Entrada")
+                {
+                    // Descontar stock de DISPOSITIVO
+                    if (movimiento.IdDispositivo.HasValue)
+                    {
+                        var dispositivo = await _context.Dispositivos.FindAsync(movimiento.IdDispositivo.Value);
+                        if (dispositivo != null)
+                        {
+                            dispositivo.StockActual -= movimiento.Cantidad;
+                            // Evitar valores negativos
+                            if (dispositivo.StockActual < 0)
+                            {
+                                dispositivo.StockActual = 0;
+                            }
+                        }
+                    }
+                    // Descontar cantidad de COMPONENTE
+                    else if (movimiento.IdComponente.HasValue)
+                    {
+                        var componente = await _context.Componentes.FindAsync(movimiento.IdComponente.Value);
+                        if (componente != null)
+                        {
+                            componente.Cantidad -= movimiento.Cantidad;
+                            // Evitar valores negativos
+                            if (componente.Cantidad < 0)
+                            {
+                                componente.Cantidad = 0;
+                            }
+                        }
+                    }
+                }
+
+                _context.Movimientos.Remove(movimiento);
                 await _context.SaveChangesAsync();
                 return Json(new { success = true });
             }
