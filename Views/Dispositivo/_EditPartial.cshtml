@@ -28,7 +28,11 @@
             <label asp-for="IdTipo" class="form-label fw-bold">
                 <i class="bi bi-cpu"></i> Tipo de Dispositivo
             </label>
-            <select asp-for="IdTipo" class="form-select" asp-items="ViewBag.IdTipo" id="IdTipoEdit" onchange="actualizarFormularioEdit()"></select>
+
+            <select asp-for="IdTipo" class="form-select" asp-items="ViewBag.IdTipo" id="IdTipoEdit" onchange="actualizarFormularioEdit()" disabled="@(Model.IdTipo == ViewBag.IdTipoHardware)">
+            </select>
+
+
             <span asp-validation-for="IdTipo" class="text-danger small"></span>
         </div>
 

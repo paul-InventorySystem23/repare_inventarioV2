@@ -48,7 +48,7 @@ namespace inventario_coprotab.Controllers
         }
 
         // GET: Dispositivo
-        public async Task<IActionResult> Index(string searchCode, string searchSerie, string searchTipo, string searchEstado)
+        public async Task<IActionResult> Index(string searchNombre,/* string searchCode,*/ string searchSerie, string searchTipo, string searchEstado)
         {
             // DISPOSITIVOS (Hardware y Consumible)
             var queryDispositivos = _context.Dispositivos
@@ -56,8 +56,14 @@ namespace inventario_coprotab.Controllers
                 .Include(d => d.IdTipoNavigation)
                 .Where(d => d.EstadoRegistro);
 
-            if (!string.IsNullOrEmpty(searchCode))
-                queryDispositivos = queryDispositivos.Where(d => d.CodigoInventario != null && d.CodigoInventario.Contains(searchCode));
+            if (!string.IsNullOrEmpty(searchNombre))
+                queryDispositivos = queryDispositivos
+                .Where(d => d.Nombre != null &&
+                EF.Functions.Like(d.Nombre.ToLower(), $"%{searchNombre.ToLower()}%"));
+
+
+            //if (!string.IsNullOrEmpty(searchCode))
+            //    queryDispositivos = queryDispositivos.Where(d => d.CodigoInventario != null && d.CodigoInventario.Contains(searchCode));
 
             if (!string.IsNullOrEmpty(searchSerie))
                 queryDispositivos = queryDispositivos.Where(d => d.NroSerie != null && d.NroSerie.Contains(searchSerie));
@@ -71,7 +77,6 @@ namespace inventario_coprotab.Controllers
             // ✅ Ordenar por fecha de alta descendente (más recientes primero) y tomar solo 5
             var dispositivos = await queryDispositivos
                 .OrderByDescending(d => d.FechaAlta)
-                .Take(5)
                 .ToListAsync();
 
             // COMPONENTES
@@ -81,6 +86,12 @@ namespace inventario_coprotab.Controllers
                 .Where(c => c.EstadoRegistro);
 
             // Aplicar filtros similares para componentes
+
+            if (!string.IsNullOrEmpty(searchNombre))
+                queryComponentes = queryComponentes
+                .Where(c => c.Nombre != null &&
+                EF.Functions.Like(c.Nombre.ToLower(), $"%{searchNombre.ToLower()}%"));
+
             if (!string.IsNullOrEmpty(searchSerie))
                 queryComponentes = queryComponentes.Where(c => c.NroSerie != null && c.NroSerie.Contains(searchSerie));
 
@@ -93,7 +104,6 @@ namespace inventario_coprotab.Controllers
             // ✅ Ordenar por fecha de instalación descendente y tomar solo 5
             var componentes = await queryComponentes
                 .OrderByDescending(c => c.FechaInstalacion)
-                .Take(5)
                 .ToListAsync();
 
             // ✅ Movimientos de DISPOSITIVOS (donde id_dispositivo NO es null)
@@ -105,7 +115,6 @@ namespace inventario_coprotab.Controllers
 
             var movimientos = await queryMovimientos
                 .OrderByDescending(m => m.Fecha)
-                .Take(5)
                 .ToListAsync();
 
             // ✅ Movimientos de COMPONENTES (donde id_componente NO es null)
@@ -124,7 +133,8 @@ namespace inventario_coprotab.Controllers
             ViewBag.Movimientos = movimientos;
             ViewBag.MovimientosComponentes = movimientosComponentes;
             ViewBag.Componentes = componentes;
-            ViewBag.SearchCode = searchCode;
+            ViewBag.searchNombre = searchNombre;
+            //ViewBag.SearchCode = searchCode;
             ViewBag.SearchSerie = searchSerie;
             ViewBag.SearchTipo = searchTipo;
             ViewBag.SearchEstado = searchEstado;
@@ -157,7 +167,9 @@ namespace inventario_coprotab.Controllers
         public IActionResult Create()
         {
             ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre");
-            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion");
+            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares
+                .Where(t => t.Descripcion == "Hardware")
+                .OrderBy(t => t.Descripcion), "IdTipo", "Descripcion");            
             ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
 
             var viewModel = new DispositivoCreateViewModel
@@ -355,11 +367,12 @@ namespace inventario_coprotab.Controllers
                 TempData["ErrorMessage"] = "No hay marcas o tipos disponibles.";
                 return RedirectToAction(nameof(Index));
             }
-
+            var tipoHardware = await _context.TipoHardwares
+                               .FirstOrDefaultAsync(t => t.Descripcion == "Hardware");
             ViewData["IdMarca"] = new SelectList(marcas, "IdMarca", "Nombre", Model.IdMarca);
             ViewData["IdTipo"] = new SelectList(tipos, "IdTipo", "Descripcion", Model.IdTipo);
             ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
-
+            ViewBag.IdTipoHardware = tipoHardware?.IdTipo;
             return PartialView("_EditPartial", Model);
         }
 
@@ -422,27 +435,27 @@ namespace inventario_coprotab.Controllers
         //    return PartialView("_EditPartial", model);
         //}
 
-        //// POST: Dispositivo/Delete/5
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Delete(int id)
-        //{
-        //    var dispositivo = await _context.Dispositivos.FindAsync(id);
-        //    if (dispositivo != null)
-        //    {
-        //        dispositivo.EstadoRegistro = false;
-        //        dispositivo.FechaBaja = DateTime.Now; // ✅ Registrar fecha y hora de baja
-        //        await _context.SaveChangesAsync();
-        //        return Json(new { success = true });
-        //    }
-        //    return Json(new { success = false });
-        //}
+        // POST: Dispositivo/Delete/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var dispositivo = await _context.Dispositivos.FindAsync(id);
+            if (dispositivo != null)
+            {
+                dispositivo.EstadoRegistro = false;
+                dispositivo.FechaBaja = DateTime.Now; // ✅ Registrar fecha y hora de baja
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+            return Json(new { success = false });
+        }
 
 
-        //private bool DispositivoExists(int id)
-        //{
-        //    return _context.Dispositivos.Any(e => e.IdDispositivo == id);
-        //}
+        private bool DispositivoExists(int id)
+        {
+            return _context.Dispositivos.Any(e => e.IdDispositivo == id);
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]

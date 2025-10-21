@@ -32,8 +32,14 @@
             <label asp-for="IdTipo" class="form-label fw-bold">
                 <i class="bi bi-cpu"></i> Tipo de Componente
             </label>
-            <select asp-for="IdTipo" class="form-select" asp-items="ViewBag.IdTipo"></select>
+            <div class="input-group">
+                <select asp-for="IdTipo" class="form-select" asp-items="ViewBag.IdTipo"></select>
+                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#createTipoModalComp">
+                    <i class="bi bi-plus"></i>
+                </button>
+            </div>
             <span asp-validation-for="IdTipo" class="text-danger small"></span>
+
         </div>
 
         <div class="col-md-6 mb-3">
@@ -182,6 +188,102 @@
         .catch(error => {
             console.error('Error:', error);
             alert('Error de red al crear la marca');
+        });
+    }
+</script>
+
+
+<!-- Modal para crear Tipo -->
+<div class="modal fade" id="createTipoModalComp" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header modal-header-custom">
+                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Nuevo Tipo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="nombreTipoComp" class="form-label fw-bold">Nombre del tipo</label>
+                    <input type="text" class="form-control" id="nombreTipoComp" placeholder="Ej: Cables,componentes,red..." required />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success-custom" onclick="crearTipoComponente()">
+                    <i class="bi bi-save"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        var form = $('#formComponente');
+        if (form.length) {
+            $.validator.unobtrusive.parse(form);
+        }
+    });
+
+    $(document).on('submit', '#formComponente', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        $.ajax({
+            url: form.attr('action'),
+            type: 'POST',
+            data: form.serialize(),
+            success: function(response) {
+                if (response.success) {
+                    $('#modalComponente').modal('hide');
+                    location.reload();
+                } else {
+                    $('#modalComponenteContenido').html(response);
+                }
+            },
+            error: function() {
+                alert('Error al procesar la solicitud');
+            }
+        });
+    });
+
+    function crearTipoComponente() {
+        var nombre = document.getElementById('nombreTipoComp').value.trim();
+        if (!nombre) {
+            alert('El nombre es obligatorio');
+            return;
+        }
+
+        var token = $('input[name="__RequestVerificationToken"]').val();
+
+        fetch('/Tipo/CreateAjax', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token
+            },
+            body: JSON.stringify({ nombre: nombre })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                var select = document.querySelector('#formComponente select[name="IdTipo"]');
+                var option = document.createElement('option');
+                option.value = data.id;
+                option.text = data.nombre;
+                option.selected = true;
+                select.appendChild(option);
+
+                $('#createTipoModalComp').modal('hide');
+                document.getElementById('nombreTipoComp').value = '';
+                alert('Tipo creado exitosamente');
+            } else {
+                var errorMsg = data.errors?.join('\n') || 'Error desconocido';
+                alert('Error al crear el tipo:\n' + errorMsg);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error de red al crear el tipo');
         });
     }
 </script>

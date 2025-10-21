@@ -43,9 +43,7 @@ namespace inventario_coprotab.Controllers
         public IActionResult Create()
         {
             ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre");
-            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares
-                .Where(t => t.Descripcion != "Hardware" && t.Descripcion != "Consumible")
-                .OrderBy(t => t.Descripcion), "IdTipo", "Descripcion");
+            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion");
             ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
 
             var viewModel = new ComponenteCreateViewModel();
@@ -80,7 +78,7 @@ namespace inventario_coprotab.Controllers
 
             ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", model.IdMarca);
             ViewData["IdTipo"] = new SelectList(_context.TipoHardwares
-                .Where(t => t.Descripcion != "Hardware" && t.Descripcion != "Consumible")
+                .Where(t => t.Descripcion != "Hardware")
                 .OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", model.IdTipo);
             ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
 
@@ -116,7 +114,7 @@ namespace inventario_coprotab.Controllers
 
             var marcas = await _context.Marcas.OrderBy(m => m.Nombre).ToListAsync();
             var tipos = await _context.TipoHardwares
-                .Where(t => t.Descripcion != "Hardware" && t.Descripcion != "Consumible")
+                .Where(t => t.Descripcion != "Hardware")
                 .OrderBy(t => t.Descripcion)
                 .ToListAsync();
 
@@ -146,11 +144,9 @@ namespace inventario_coprotab.Controllers
             if (!ModelState.IsValid)
             {
                 var marcas = await _context.Marcas.OrderBy(m => m.Nombre).ToListAsync();
-                var tipos = await _context.TipoHardwares
-                    .Where(t => t.Descripcion != "Hardware" && t.Descripcion != "Consumible")
-                    .OrderBy(t => t.Descripcion)
-                    .ToListAsync();
-
+                var tipos = new SelectList(_context.TipoHardwares
+                .Where(t => t.Descripcion != "Hardware")
+                .OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", model.IdTipo);
                 ViewData["IdMarca"] = new SelectList(marcas, "IdMarca", "Nombre", model.IdMarca);
                 ViewData["IdTipo"] = new SelectList(tipos, "IdTipo", "Descripcion", model.IdTipo);
                 ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };

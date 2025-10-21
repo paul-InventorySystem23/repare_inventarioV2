@@ -35,7 +35,7 @@
         @Html.AntiForgeryToken()
         <div class="row g-3">
             <div class="col-md-3">
-                <input type="text" name="searchCode" class="form-control" placeholder="Código de Inventario" value="@ViewBag.SearchCode" />
+                <input type="text" name="searchNombre" class="form-control" placeholder="Buscar por nombre.." value="@ViewBag.SearchNombre" />
             </div>
             <div class="col-md-3">
                 <input type="text" name="searchSerie" class="form-control" placeholder="Número de Serie" value="@ViewBag.SearchSerie" />
@@ -69,7 +69,7 @@
 <div class="card-custom p-4 mb-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="mb-0" style="color: var(--primary-color);">
-            <i class="bi bi-laptop"></i> Últimos 5 Dispositivos (Hardware y Consumibles)
+            <i class="bi bi-laptop"></i> Últimos 5 Dispositivos (Hardware)
         </h3>
         <span class="badge bg-primary" style="font-size: 1rem;">@Model.Count() registros</span>
     </div>
@@ -82,12 +82,12 @@
                     <th><i class="bi bi-tag"></i> Nombre</th>
                     <th><i class="bi bi-card-text"></i> Descripción</th>
                     <th><i class="bi bi-upc"></i> Código</th>
-                    <th><i class="bi bi-hash"></i> Serie</th>
+                    <th class="text-center"><i class="bi bi-hash"></i> Identificación única</th>
                     <th><i class="bi bi-circle-fill"></i> Estado</th>
-                    <th><i class="bi bi-calendar"></i> Fecha Alta</th>
+                    @* <th><i class="bi bi-calendar"></i> Fecha Alta</th> *@
                     <th><i class="bi bi-boxes"></i> Stock</th>
-                    <th><i class="bi bi-bookmark"></i> Marca</th>
-                    <th><i class="bi bi-cpu"></i> Tipo</th>
+                    @* <th><i class="bi bi-bookmark"></i> Marca</th>
+                    <th><i class="bi bi-cpu"></i> Tipo</th> *@
                     <th class="text-center"><i class="bi bi-gear"></i> Acciones</th>
                 </tr>
             </thead>
@@ -119,14 +119,14 @@
                                 </span>
                             }
                         </td>
-                        <td>@(item.FechaAlta?.ToString("dd/MM/yyyy") ?? "N/A")</td>
+                       @*  <td>@(item.FechaAlta?.ToString("dd/MM/yyyy") ?? "N/A")</td> *@
                         <td>
                             <span class="badge @(item.StockActual < item.StockMinimo ? "bg-danger" : "bg-success")">
                                 @item.StockActual unidades
                             </span>
                         </td>
-                        <td>@(item.IdMarcaNavigation?.Nombre ?? "Sin marca")</td>
-                        <td>@(item.IdTipoNavigation?.Descripcion ?? "Sin tipo")</td>
+                        @* <td>@(item.IdMarcaNavigation?.Nombre ?? "Sin marca")</td>
+                        <td>@(item.IdTipoNavigation?.Descripcion ?? "Sin tipo")</td> *@
                         <td class="text-center">
                             <div class="btn-group" role="group">
                                 <button class="btn btn-sm btn-outline-primary" onclick="abrirModalDetalle(@item.IdDispositivo)" title="Ver Detalles">
@@ -161,7 +161,7 @@
 <div class="card-custom p-4 mb-4" style="border-left: 4px solid var(--success-color);">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="mb-0" style="color: var(--success-color);">
-            <i class="bi bi-gear-fill"></i> Últimos 5 Componentes (Hardware Interno)
+            <i class="bi bi-gear-fill"></i> Últimos 5 Componentes (Hardware Interno, Insumos, Cables...)
         </h3>
         <span class="badge bg-success" style="font-size: 1rem;">@(componentes?.Count() ?? 0) registros</span>
     </div>
@@ -173,11 +173,11 @@
                 <tr>
                     <th><i class="bi bi-tag"></i> Nombre</th>
                     <th><i class="bi bi-card-text"></i> Descripción</th>
-                    <th><i class="bi bi-hash"></i> Nro. Serie</th>
+                    <th class="text-center"><i class="bi bi-hash"></i> Identificación única</th>
                     <th><i class="bi bi-circle-fill"></i> Estado</th>
-                    <th><i class="bi bi-bookmark"></i> Marca</th>
+                    @* <th><i class="bi bi-bookmark"></i> Marca</th> *@
                     <th><i class="bi bi-cpu"></i> Tipo</th>
-                    <th><i class="bi bi-calendar"></i> Fecha Instalación</th>
+                   @*  <th><i class="bi bi-calendar"></i> Fecha Instalación</th> *@
                     <th><i class="bi bi-box-seam"></i> Cantidad</th>
                     <th class="text-center"><i class="bi bi-gear"></i> Acciones</th>
                 </tr>
@@ -220,9 +220,9 @@
                                     </span>
                                 }
                             </td>
-                            <td>@(comp.IdMarcaNavigation?.Nombre ?? "Sin marca")</td>
+                            @* <td>@(comp.IdMarcaNavigation?.Nombre ?? "Sin marca")</td> *@
                             <td>@(comp.IdTipoNavigation?.Descripcion ?? "Sin tipo")</td>
-                            <td>@(comp.FechaInstalacion?.ToString("dd/MM/yyyy") ?? "N/A")</td>
+                           @*  <td>@(comp.FechaInstalacion?.ToString("dd/MM/yyyy") ?? "N/A")</td> *@
                             <td>
                                 <span class="badge bg-info">@comp.Cantidad</span>
                             </td>
