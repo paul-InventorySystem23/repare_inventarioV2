@@ -53,13 +53,38 @@ namespace inventario_coprotab.Controllers
             return PartialView("_CreatePartial", viewModel);
         }
 
-        // ✅ GET: Movimiento/CreateForDispositivo/5        
+        // ✅ GET: Movimiento/CreateForDispositivo/5
         public async Task<IActionResult> CreateForDispositivo(int id)
         {
             var dispositivo = await _context.Dispositivos.FindAsync(id);
             if (dispositivo == null)
             {
                 return NotFound();
+            }
+
+            // ✅ Verificar si el stock es cero
+            bool stockCero = dispositivo.StockActual <= 0;
+
+            // ✅ Si hay stock cero, forzar valores predeterminados
+            var viewModel = new MovimientoViewModel
+            {
+                IdDispositivo = id,
+                Fecha = DateTime.Now,
+                Cantidad = 1
+            };
+
+            if (stockCero)
+            {
+                // Buscar "Deposito Central"
+                var depositoCentral = await _context.Ubicaciones
+                    .FirstOrDefaultAsync(u => u.Nombre.ToLower().Contains("deposito central") || u.Nombre.ToLower().Contains("depósito central"));
+
+                if (depositoCentral != null)
+                {
+                    viewModel.IdUbicacion = depositoCentral.IdUbicacion;
+                }
+
+                viewModel.TipoMovimiento = "Entrada";
             }
 
             // ✅ Cargar las listas para los dropdowns
@@ -75,13 +100,8 @@ namespace inventario_coprotab.Controllers
             );
             ViewBag.TipoDisponibles = new List<string> { "Entrada", "Salida", "Traslado" };
             ViewBag.DispositivoNombre = dispositivo.Nombre;
-
-            var viewModel = new MovimientoViewModel
-            {
-                IdDispositivo = id,
-                Fecha = DateTime.Now,
-                Cantidad = 1
-            };
+            ViewBag.StockActual = dispositivo.StockActual;
+            ViewBag.StockCero = stockCero; // ✅ NUEVO: Indicador de stock en cero
 
             return PartialView("_CreatePartial", viewModel);
         }
@@ -177,6 +197,31 @@ namespace inventario_coprotab.Controllers
                 return NotFound();
             }
 
+            // ✅ Verificar si el stock es cero
+            bool stockCero = componente.Cantidad <= 0;
+
+            // ✅ Si hay stock cero, forzar valores predeterminados
+            var viewModel = new MovimientoComponenteViewModel
+            {
+                IdComponente = id,
+                Fecha = DateTime.Now,
+                Cantidad = 1
+            };
+
+            if (stockCero)
+            {
+                // Buscar "Deposito Central"
+                var depositoCentral = await _context.Ubicaciones
+                    .FirstOrDefaultAsync(u => u.Nombre.ToLower().Contains("deposito central") || u.Nombre.ToLower().Contains("depósito central"));
+
+                if (depositoCentral != null)
+                {
+                    viewModel.IdUbicacion = depositoCentral.IdUbicacion;
+                }
+
+                viewModel.TipoMovimiento = "Entrada";
+            }
+
             // ✅ Cargar las listas para los dropdowns
             ViewData["IdResponsable"] = new SelectList(
                 _context.Responsables.OrderBy(m => m.Nombre),
@@ -191,13 +236,7 @@ namespace inventario_coprotab.Controllers
             ViewBag.TipoDisponibles = new List<string> { "Entrada", "Salida", "Traslado" };
             ViewBag.ComponenteNombre = componente.Nombre;
             ViewBag.StockActual = componente.Cantidad;
-
-            var viewModel = new MovimientoComponenteViewModel
-            {
-                IdComponente = id,
-                Fecha = DateTime.Now,
-                Cantidad = 1
-            };
+            ViewBag.StockCero = stockCero; // ✅ NUEVO: Indicador de stock en cero
 
             return PartialView("_CreateComponentePartial", viewModel);
         }

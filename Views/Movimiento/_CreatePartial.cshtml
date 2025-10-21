@@ -5,36 +5,59 @@
     <input type="hidden" asp-for="IdDispositivo" />
     <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
-    <!-- Mostrar nombre del dispositivo -->
-    <div class="alert alert-info mb-3">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <i class="bi bi-info-circle"></i>
-                <strong>Dispositivo:</strong> @ViewBag.DispositivoNombre
-            </div>
-            @if (ViewBag.StockActual != null)
-            {
-                <div>
-                    <span class="badge bg-primary" style="font-size: 1rem;">
-                        <i class="bi bi-box-seam"></i> Stock Disponible: @ViewBag.StockActual
-                    </span>
-                </div>
-            }
+    @* ✅ ALERTA DE STOCK EN CERO - Con estilo de advertencia mejorado *@
+    @if (ViewBag.StockCero == true)
+    {
+        <div class="alert alert-warning mb-3" role="alert" style="border-left: 4px solid #f39c12;">
+            <h6 class="alert-heading mb-2">
+                <i class="bi bi-exclamation-triangle-fill"></i> Sin Stock Disponible
+            </h6>
+            <p class="mb-0">
+                <strong>@ViewBag.DispositivoNombre</strong> no tiene stock disponible. 
+                Solo se permite realizar un <strong>movimiento de ENTRADA</strong> hacia <strong>Deposito Central</strong>.
+            </p>
         </div>
-    </div>
+    }
+    else
+    {
+        <!-- Mostrar nombre del dispositivo y stock disponible -->
+        <div class="alert alert-info mb-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Dispositivo:</strong> @ViewBag.DispositivoNombre
+                </div>
+                @if (ViewBag.StockActual != null)
+                {
+                    <div>
+                        <span class="badge bg-primary" style="font-size: 1rem;">
+                            <i class="bi bi-box-seam"></i> Stock Disponible: @ViewBag.StockActual
+                        </span>
+                    </div>
+                }
+            </div>
+        </div>
+    }
 
     <div class="row">
         <div class="col-md-6 mb-3">
             <label asp-for="TipoMovimiento" class="form-label fw-bold">
                 <i class="bi bi-arrow-left-right"></i> Tipo de Movimiento
             </label>
-            <select asp-for="TipoMovimiento" class="form-select">
+            Partial.cshtml
+            <select asp-for="TipoMovimiento" class="form-select" disabled="@(ViewBag.StockCero == true ? "disabled" : null)">
                 <option value="">-- Seleccionar --</option>
                 @foreach (var tipo in ViewBag.TipoDisponibles as List<string>)
                 {
                     <option value="@tipo">@tipo</option>
                 }
             </select>
+            @* ✅ Input oculto para enviar el valor cuando está disabled *@
+            @if (ViewBag.StockCero == true)
+            {
+                <input type="hidden" asp-for="TipoMovimiento" value="Entrada" />
+                <small class="text-muted">Solo se permite entrada cuando no hay stock</small>
+            }
             <span asp-validation-for="TipoMovimiento" class="text-danger small"></span>
         </div>
 
@@ -44,6 +67,10 @@
             </label>
             <input asp-for="Cantidad" class="form-control" type="number" min="1" value="1" />
             <span asp-validation-for="Cantidad" class="text-danger small"></span>
+            @if (ViewBag.StockCero != true && ViewBag.StockActual != null)
+            {
+                <small class="text-muted">Máximo disponible: @ViewBag.StockActual</small>
+            }
         </div>
     </div>
 
@@ -52,9 +79,15 @@
             <label asp-for="IdUbicacion" class="form-label fw-bold">
                 <i class="bi bi-geo-alt"></i> Ubicación
             </label>
-            <select asp-for="IdUbicacion" class="form-select" asp-items="ViewBag.IdUbicacion">
+            <select asp-for="IdUbicacion" class="form-select" asp-items="ViewBag.IdUbicacion" disabled="@(ViewBag.StockCero == true ? "disabled" : null)">
                 <option value="">-- Seleccionar Ubicación --</option>
             </select>
+            @* ✅ Input oculto para enviar el valor cuando está disabled *@
+            @if (ViewBag.StockCero == true && Model.IdUbicacion.HasValue)
+            {
+                <input type="hidden" asp-for="IdUbicacion" value="@Model.IdUbicacion" />
+                <small class="text-muted">Solo se permite Deposito Central cuando no hay stock</small>
+            }
             <span asp-validation-for="IdUbicacion" class="text-danger small"></span>
         </div>
 
