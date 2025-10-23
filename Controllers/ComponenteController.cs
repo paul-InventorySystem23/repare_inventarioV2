@@ -67,13 +67,15 @@ namespace inventario_coprotab.Controllers
                     Estado = model.Estado ?? "Nuevo",
                     FechaInstalacion = model.FechaInstalacion,
                     EstadoRegistro = true,
-                    Cantidad = model.Cantidad ?? 1
+                    Cantidad = model.Cantidad ?? 1,
+                    StockMinimo = model.StockMinimo ?? 0
                 };
 
                 _context.Add(componente);
                 await _context.SaveChangesAsync();
 
-                return Json(new { success = true });
+                return RedirectToAction("Index", "Dispositivo");
+                //return Json(new { success = true });
             }
 
             ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", model.IdMarca);
@@ -109,7 +111,8 @@ namespace inventario_coprotab.Controllers
                 NroSerie = componente.NroSerie,
                 Estado = componente.Estado,
                 FechaInstalacion = componente.FechaInstalacion,
-                Cantidad = componente.Cantidad
+                Cantidad = componente.Cantidad,
+                StockMinimo = componente.StockMinimo
             };
 
             var marcas = await _context.Marcas.OrderBy(m => m.Nombre).ToListAsync();
@@ -169,6 +172,7 @@ namespace inventario_coprotab.Controllers
             componente.Estado = model.Estado;
             componente.FechaInstalacion = model.FechaInstalacion;
             componente.Cantidad = model.Cantidad;
+            componente.StockMinimo = model.StockMinimo ?? 1;
 
             try
             {

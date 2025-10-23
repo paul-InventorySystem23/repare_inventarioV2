@@ -25,6 +25,8 @@ public partial class Componente
 
     public int Cantidad { get; set; }
 
+    public int StockMinimo { get; set; }
+
     public virtual Marca? IdMarcaNavigation { get; set; }
 
     public virtual TipoHardware? IdTipoNavigation { get; set; }
@@ -35,4 +37,6 @@ public partial class Componente
 
     // ✅ NUEVO: Colección de movimientos
     public virtual ICollection<Movimiento> Movimientos { get; set; } = new List<Movimiento>();
+    public bool BajoStock => Cantidad <= StockMinimo;
+
 }

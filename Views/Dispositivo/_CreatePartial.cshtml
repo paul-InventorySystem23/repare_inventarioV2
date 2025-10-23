@@ -157,7 +157,7 @@
 
         var token = $('input[name="__RequestVerificationToken"]').val();
 
-        fetch('/Marca/CreateAjax', {
+        fetch(baseUrl+'Marca/CreateAjax', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

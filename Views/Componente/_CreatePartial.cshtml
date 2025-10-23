@@ -42,12 +42,33 @@
 
         </div>
 
-        <div class="col-md-6 mb-3">
-            <label asp-for="Cantidad" class="form-label fw-bold">
-                <i class="bi bi-box-seam"></i> Cantidad
-            </label>
-            <input asp-for="Cantidad" class="form-control" type="number" min="1" value="1" />
-            <span asp-validation-for="Cantidad" class="text-danger small"></span>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="IdTipo" class="form-label fw-bold">
+                    <i class="bi bi-cpu"></i> Tipo de Componente
+                </label>
+                <select asp-for="IdTipo" class="form-select" asp-items="ViewBag.IdTipo"></select>
+                <span asp-validation-for="IdTipo" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label asp-for="Cantidad" class="form-label fw-bold">
+                    <i class="bi bi-box-seam"></i> Cantidad
+                </label>
+                <input asp-for="Cantidad" class="form-control" type="number" min="1" value="1" />
+                <span asp-validation-for="Cantidad" class="text-danger small"></span>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12 mb-3">
+                <label asp-for="StockMinimo" class="form-label fw-bold">
+                    <i class="bi bi-exclamation-triangle"></i> Stock Mínimo
+                </label>
+                <input asp-for="StockMinimo" class="form-control" type="number" min="0" value="0" />
+                <span asp-validation-for="StockMinimo" class="text-danger small"></span>
+                <small class="text-muted">Cantidad mínima antes de generar alerta de bajo stock</small>
+            </div>
         </div>
     </div>
 
@@ -159,7 +180,7 @@
 
         var token = $('input[name="__RequestVerificationToken"]').val();
 
-        fetch('/Marca/CreateAjax', {
+        fetch(baseUrl+'Marca/CreateAjax', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -255,7 +276,7 @@
 
         var token = $('input[name="__RequestVerificationToken"]').val();
 
-        fetch('/Tipo/CreateAjax', {
+        fetch(baseUrl+'Tipo/CreateAjax', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

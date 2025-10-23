@@ -30,6 +30,10 @@ namespace inventario_coprotab.ViewModels
         [Display(Name = "Cantidad")]
         public int? Cantidad { get; set; }
 
+        [Display(Name = "Stock Mínimo")]
+        [Range(0, int.MaxValue, ErrorMessage = "El stock mínimo no puede ser negativo")]
+        public int? StockMinimo { get; set; }
+
         public List<string> EstadosDisponibles { get; set; } = new List<string> { "Nuevo", "En uso", "Obsoleto" };
     }
 }

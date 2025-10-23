@@ -60,7 +60,7 @@
                             }
                         </td>
                     </tr>
-                    <tr>
+                    @* <tr>
                         <td class="fw-bold text-muted">
                             <i class="bi bi-box-seam"></i> Cantidad:
                         </td>
@@ -69,7 +69,36 @@
                                 @Model.Cantidad unidades
                             </span>
                         </td>
-                    </tr>
+                    </tr> *@
+
+                    <div class="card-custom p-3 mb-3">
+                        <h6 class="fw-bold mb-3" style="color: var(--secondary-color);">
+                            <i class="bi bi-boxes"></i> Stock e Inventario
+                        </h6>
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="p-3 rounded" style="background-color: rgba(39,174,96,0.1);">
+                                    <i class="bi bi-box-seam" style="font-size: 2rem; color: var(--success-color);"></i>
+                                    <h4 class="mt-2 mb-0 fw-bold">@(Model.Cantidad )</h4>
+                                    <small class="text-muted">Stock Actual</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 rounded" style="background-color: rgba(243,156,18,0.1);">
+                                    <i class="bi bi-exclamation-triangle" style="font-size: 2rem; color: var(--warning-color);"></i>
+                                    <h4 class="mt-2 mb-0 fw-bold">@(Model.StockMinimo)</h4>
+                                    <small class="text-muted">Stock Mínimo</small>
+                                </div>
+                            </div>
+                        </div>
+                        @if (Model.Cantidad < Model.StockMinimo)
+                        {
+                            <div class="alert alert-warning mt-3 mb-0">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                <strong>¡Alerta!</strong> El stock actual está por debajo del mínimo requerido.
+                            </div>
+                        }
+                    </div>
                 </table>
             </div>
 
@@ -161,6 +190,8 @@
             </div>
         </div>
     </div>
+
+    
 
     <!-- Relaciones con Dispositivos -->
     @if (Model.RelacionDispositivoComponentes != null && Model.RelacionDispositivoComponentes.Any())

@@ -40,10 +40,10 @@
 
         var token = $('input[name="__RequestVerificationToken"]').val();
 
-        fetch('/Marca/CreateAjax', {
+        fetch(baseUrl+'Marca/CreateAjax', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': baseUrl+'application/json',
                 'RequestVerificationToken': token
             },
             body: JSON.stringify({ nombre: nombre })
@@ -68,7 +68,7 @@
 
     // Opcional: actualiza el <select> sin recargar la página
     function cargarMarcasEnSelect(nuevaMarcaId) {
-        fetch('/Marca/GetMarcas', {
+        fetch(baseUrl+'Marca/GetMarcas', {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' }
         })

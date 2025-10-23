@@ -54,6 +54,9 @@ public partial class SistemaInventarioContext : DbContext
             entity.Property(e => e.Cantidad)
                 .HasDefaultValue(1)
                 .HasColumnName("cantidad");
+            entity.Property(e => e.StockMinimo)
+                .HasDefaultValue(1)
+                .HasColumnName("stock_minimo");
             entity.Property(e => e.Descripcion)
                 .IsUnicode(false)
                 .HasColumnName("descripcion");

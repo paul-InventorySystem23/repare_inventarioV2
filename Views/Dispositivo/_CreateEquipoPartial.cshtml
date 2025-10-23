@@ -68,7 +68,7 @@
 <script>
     // Validación unobtrusive
     $(function () {
-        var form = $('#formEquipo');
+        var form = $(baseUrl+'#formEquipo');
         if (form.length) {
             $.validator.unobtrusive.parse(form);
         }

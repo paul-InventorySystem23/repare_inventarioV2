@@ -38,6 +38,11 @@
             </label>
             <input asp-for="Cantidad" class="form-control" type="number" min="1" />
             <span asp-validation-for="Cantidad" class="text-danger small"></span>
+            <label asp-for="StockMinimo" class="form-label fw-bold">
+                <i class="bi bi-boxes"></i> Stock Minimo
+            </label>
+            <input asp-for="StockMinimo" class="form-control" type="number" min="1" />
+            <span asp-validation-for="StockMinimo" class="text-danger small"></span>
         </div>
     </div>
 
