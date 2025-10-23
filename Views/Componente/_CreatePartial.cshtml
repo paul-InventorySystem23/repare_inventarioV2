@@ -28,27 +28,21 @@
     </div>
 
     <div class="row">
-        <div class="col-md-6 mb-3">
-            <label asp-for="IdTipo" class="form-label fw-bold">
-                <i class="bi bi-cpu"></i> Tipo de Componente
-            </label>
-            <div class="input-group">
-                <select asp-for="IdTipo" class="form-select" asp-items="ViewBag.IdTipo"></select>
-                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#createTipoModalComp">
-                    <i class="bi bi-plus"></i>
-                </button>
-            </div>
-            <span asp-validation-for="IdTipo" class="text-danger small"></span>
-
-        </div>
+        
 
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label asp-for="IdTipo" class="form-label fw-bold">
                     <i class="bi bi-cpu"></i> Tipo de Componente
                 </label>
-                <select asp-for="IdTipo" class="form-select" asp-items="ViewBag.IdTipo"></select>
+                <div class="input-group">
+                    <select asp-for="IdTipo" class="form-select" asp-items="ViewBag.IdTipo"></select>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#createTipoModalComp">
+                        <i class="bi bi-plus"></i>
+                    </button>
+                </div>
                 <span asp-validation-for="IdTipo" class="text-danger small"></span>
+
             </div>
 
             <div class="col-md-6 mb-3">

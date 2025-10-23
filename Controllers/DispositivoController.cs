@@ -48,7 +48,7 @@ namespace inventario_coprotab.Controllers
         }
 
         // GET: Dispositivo
-        public async Task<IActionResult> Index(string searchNombre,/* string searchCode,*/ string searchSerie, string searchTipo, string searchEstado, bool? mostrarAlertas)
+        public async Task<IActionResult> Index(string searchNombre, string searchSerie, string searchTipo, string searchEstado, bool? mostrarAlertas)
         {
             // DISPOSITIVOS (Hardware y Consumible)
             var queryDispositivos = _context.Dispositivos
@@ -61,10 +61,6 @@ namespace inventario_coprotab.Controllers
                 .Where(d => d.Nombre != null &&
                 EF.Functions.Like(d.Nombre.ToLower(), $"%{searchNombre.ToLower()}%"));
 
-
-            //if (!string.IsNullOrEmpty(searchCode))
-            //    queryDispositivos = queryDispositivos.Where(d => d.CodigoInventario != null && d.CodigoInventario.Contains(searchCode));
-
             if (!string.IsNullOrEmpty(searchSerie))
                 queryDispositivos = queryDispositivos.Where(d => d.NroSerie != null && d.NroSerie.Contains(searchSerie));
 
@@ -73,6 +69,7 @@ namespace inventario_coprotab.Controllers
 
             if (!string.IsNullOrEmpty(searchEstado))
                 queryDispositivos = queryDispositivos.Where(d => d.Estado == searchEstado);
+
             // ✅ NUEVO: Filtrar por alertas de bajo stock
             if (mostrarAlertas == true)
             {
@@ -82,9 +79,8 @@ namespace inventario_coprotab.Controllers
             // ✅ Ordenar por fecha de alta descendente (más recientes primero)
             var dispositivos = await queryDispositivos
                 .OrderByDescending(d => d.FechaAlta)
-                .Take(mostrarAlertas == true ? int.MaxValue : 5) // Mostrar todos si es alerta
+                .Take(mostrarAlertas == true ? int.MaxValue : 5)
                 .ToListAsync();
-            
 
             // COMPONENTES
             var queryComponentes = _context.Componentes
@@ -93,7 +89,6 @@ namespace inventario_coprotab.Controllers
                 .Where(c => c.EstadoRegistro);
 
             // Aplicar filtros similares para componentes
-
             if (!string.IsNullOrEmpty(searchNombre))
                 queryComponentes = queryComponentes
                 .Where(c => c.Nombre != null &&
@@ -108,28 +103,35 @@ namespace inventario_coprotab.Controllers
             if (!string.IsNullOrEmpty(searchEstado))
                 queryComponentes = queryComponentes.Where(c => c.Estado == searchEstado);
 
-            // ✅ Ordenar por fecha de instalación descendente y tomar solo 5
+            // ✅ NUEVO: Filtrar por alertas de bajo stock en componentes
+            if (mostrarAlertas == true)
+            {
+                queryComponentes = queryComponentes.Where(c => c.Cantidad <= c.StockMinimo);
+            }
+
+            // ✅ Ordenar por fecha de instalación descendente
             var componentes = await queryComponentes
                 .OrderByDescending(c => c.FechaInstalacion)
+                .Take(mostrarAlertas == true ? int.MaxValue : 5)
                 .ToListAsync();
 
-            // ✅ Movimientos de DISPOSITIVOS (donde id_dispositivo NO es null)
+            // Movimientos de DISPOSITIVOS
             var queryMovimientos = _context.Movimientos
                 .Include(c => c.IdDispositivoNavigation)
                 .Include(c => c.IdUbicacionNavigation)
                 .Include(c => c.IdResponsableNavigation)
-                .Where(m => m.IdDispositivo != null); // Solo dispositivos
+                .Where(m => m.IdDispositivo != null);
 
             var movimientos = await queryMovimientos
                 .OrderByDescending(m => m.Fecha)
                 .ToListAsync();
 
-            // ✅ Movimientos de COMPONENTES (donde id_componente NO es null)
+            // Movimientos de COMPONENTES
             var queryMovimientosComponentes = _context.Movimientos
                 .Include(c => c.IdComponenteNavigation)
                 .Include(c => c.IdUbicacionNavigation)
                 .Include(c => c.IdResponsableNavigation)
-                .Where(m => m.IdComponente != null); // Solo componentes
+                .Where(m => m.IdComponente != null);
 
             var movimientosComponentes = await queryMovimientosComponentes
                 .OrderByDescending(m => m.Fecha)
@@ -141,11 +143,10 @@ namespace inventario_coprotab.Controllers
             ViewBag.MovimientosComponentes = movimientosComponentes;
             ViewBag.Componentes = componentes;
             ViewBag.searchNombre = searchNombre;
-            //ViewBag.SearchCode = searchCode;
             ViewBag.SearchSerie = searchSerie;
             ViewBag.SearchTipo = searchTipo;
             ViewBag.SearchEstado = searchEstado;
-
+            ViewBag.MostrarAlertas = mostrarAlertas; // ✅ Agregar esta línea
 
             return View(dispositivos);
         }
