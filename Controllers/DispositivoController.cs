@@ -74,7 +74,7 @@ namespace inventario_coprotab.Controllers
             if (mostrarAlertas == true)
             {
                 queryDispositivos = queryDispositivos.Where(d => d.StockActual <= d.StockMinimo);
-            }
+                            }
 
             // ✅ Ordenar por fecha de alta descendente (más recientes primero)
             var dispositivos = await queryDispositivos
@@ -172,19 +172,31 @@ namespace inventario_coprotab.Controllers
         }
 
         // GET: Dispositivo/Create
+        //public IActionResult Create()
+        //{
+        //    ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre");
+        //    ViewData["IdTipo"] = new SelectList(_context.TipoHardwares
+        //        .Where(t => t.Descripcion == "Hardware")
+        //        .OrderBy(t => t.Descripcion), "IdTipo", "Descripcion");            
+        //    ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
+
+        //    var viewModel = new DispositivoCreateViewModel
+        //    {
+        //        IdTipo = 1
+        //    };
+
+        //    return PartialView("_CreatePartial", viewModel);
+        //}
+
+
+
         public IActionResult Create()
         {
             ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre");
-            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares
-                .Where(t => t.Descripcion == "Hardware")
-                .OrderBy(t => t.Descripcion), "IdTipo", "Descripcion");            
+            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion");
             ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
 
-            var viewModel = new DispositivoCreateViewModel
-            {
-                IdTipo = 1
-            };
-
+            var viewModel = new DispositivoCreateViewModel();
             return PartialView("_CreatePartial", viewModel);
         }
 
@@ -195,46 +207,145 @@ namespace inventario_coprotab.Controllers
         {
             if (ModelState.IsValid)
             {
-                // ✅ Generar código automáticamente
-                var codigoInventario = await GenerarCodigoInventario();
+                try 
+                { 
+                    // ✅ Validar si el número de serie ya existe (si se proporciona)
+                    if (!string.IsNullOrWhiteSpace(model.NroSerie))
+                    {
+                        var existeSerie = await _context.Dispositivos
+                            .AnyAsync(c => c.NroSerie == model.NroSerie && c.EstadoRegistro);
 
-                var dispositivo = new Dispositivo
-                {
-                    Nombre = model.Nombre,
-                    Descripcion = model.Descripcion,
-                    IdMarca = model.IdMarca,
-                    IdTipo = model.IdTipo,
-                    CodigoInventario = codigoInventario, // ✅ Código automático
-                    NroSerie = model.NroSerie,
-                    Estado = model.Estado ?? "Nuevo",
-                    FechaAlta = DateTime.Now, // ✅ DateTime con hora
-                    EstadoRegistro = true,
-                    StockMinimo = 0
-                };
+                            if (existeSerie)
+                            {
+                                ModelState.AddModelError("NroSerie", "Ya existe un Dispositivo con esta identificacion unica.");
 
-                if (model.IdTipo == 2)
-                {
-                    dispositivo.StockActual = model.CantidadInicial ?? 0;
+                                // Recargar datos para la vista
+                                ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", model.IdMarca);
+                                ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", model.IdTipo);
+                                ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
+
+                                return PartialView("_CreatePartial", model);
+                            }
+                    }
+
+                         var dispositivo = new Dispositivo
+                         {
+                                Nombre = model.Nombre,
+                                Descripcion = model.Descripcion,
+                                IdMarca = model.IdMarca,
+                                IdTipo = model.IdTipo,
+                                /*CodigoInventario = codigoInventario,*/ // ✅ Código automático
+                                NroSerie = model.NroSerie,
+                                Estado = model.Estado ?? "Nuevo",
+                             FechaAlta = DateTime.Now, // ✅ DateTime con hora
+                             EstadoRegistro = true,
+                             StockMinimo = 0
+                          };
+
+                            _context.Add(dispositivo);
+                            await _context.SaveChangesAsync();
+
+                            return Json(new { success = true });
                 }
-                else
+                catch (DbUpdateException ex)
                 {
-                    dispositivo.StockActual = 1;
+                        // ✅ Capturar errores de base de datos
+                        var errorMessage = "Error al guardar el dispositivo.";
+
+                        if (ex.InnerException != null)
+                        {
+                            var innerMessage = ex.InnerException.Message;
+
+                            if (innerMessage.Contains("UQ__componen__AD64A161") || innerMessage.Contains("nro_serie"))
+                            {
+                                errorMessage = "El número de serie ya existe en la base de datos.";
+                                ModelState.AddModelError("NroSerie", errorMessage);
+                            }
+                            else if (innerMessage.Contains("UNIQUE"))
+                            {
+                                errorMessage = "Ya existe un registro con estos datos únicos.";
+                                ModelState.AddModelError("", errorMessage);
+                            }
+                            else
+                            {
+                                errorMessage = "Error de base de datos: " + innerMessage;
+                                ModelState.AddModelError("", errorMessage);
+                            }
+                        }
+                        else
+                        {
+                            ModelState.AddModelError("", errorMessage);
+                        }
+
+                        // Recargar datos para la vista
+                        ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", model.IdMarca);
+                        ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", model.IdTipo);
+                        ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
+
+                        return PartialView("_CreatePartial", model);
                 }
+                catch (Exception ex)
+                {
+                        // ✅ Capturar cualquier otro error
+                        ModelState.AddModelError("", "Error inesperado: " + ex.Message);
 
-                _context.Add(dispositivo);
-                await _context.SaveChangesAsync();
+                    // Recargar datos para la vista
+                    ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", model.IdMarca);
+                    ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", model.IdTipo);
+                    ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
 
-                return Json(new { success = true });
+                    return PartialView("_CreatePartial", model);
+                }
             }
 
+            // ✅ Si hay errores de validación, recargar datos y devolver la vista parcial
             ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", model.IdMarca);
             ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", model.IdTipo);
             ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
 
             return PartialView("_CreatePartial", model);
         }
-        // GET: Dispositivo/CreateEquipo
-        public async Task<IActionResult> CreateEquipo()
+
+//        // ✅ Generar código automáticamente
+//        var codigoInventario = await GenerarCodigoInventario();
+
+//        var dispositivo = new Dispositivo
+//        {
+//            Nombre = model.Nombre,
+//            Descripcion = model.Descripcion,
+//            IdMarca = model.IdMarca,
+//            IdTipo = model.IdTipo,
+//            CodigoInventario = codigoInventario, // ✅ Código automático
+//            NroSerie = model.NroSerie,
+//            Estado = model.Estado ?? "Nuevo",
+//            FechaAlta = DateTime.Now, // ✅ DateTime con hora
+//            EstadoRegistro = true,
+//            StockMinimo = 0
+//        };
+
+//        if (model.IdTipo == 2)
+//        {
+//            dispositivo.StockActual = model.CantidadInicial ?? 0;
+//        }
+//        else
+//        {
+//            dispositivo.StockActual = 1;
+//        }
+
+//        _context.Add(dispositivo);
+//        await _context.SaveChangesAsync();
+
+//        return Json(new { success = true });
+//    }
+
+//    ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", model.IdMarca);
+//    ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", model.IdTipo);
+//    ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
+
+//    return PartialView("_CreatePartial", model);
+//}
+// GET: Dispositivo/CreateEquipo
+public async Task<IActionResult> CreateEquipo()
         {
             var viewModel = new EquipoCreateViewModel
             {
@@ -389,7 +500,7 @@ namespace inventario_coprotab.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, DispositivoEditViewModel model)
         {
-            if (id != model.IdDispositivo)
+            if (model.IdDispositivo <= 0)
             {
                 return NotFound();
             }
@@ -402,7 +513,7 @@ namespace inventario_coprotab.Controllers
                     if (dispositivo == null)
                     {
 
-                        dispositivo.Nombre = model.Nombre ?? "Sin nombre";
+                        dispositivo.Nombre = model.Nombre ?? "";
                         dispositivo.Descripcion = model.Descripcion;
                         dispositivo.IdMarca = model.IdMarca ?? 0;
                         dispositivo.IdTipo = model.IdTipo ?? 0;
@@ -412,7 +523,7 @@ namespace inventario_coprotab.Controllers
                         dispositivo.FechaBaja = model.FechaBaja;
                         dispositivo.StockMinimo = model.StockMinimo ?? 0;
                     }
-                    var tipo = await _context.TipoHardwares.FindAsync(model.IdTipo);
+                    var tipo = await _context.Dispositivos.FindAsync(model.IdTipo);
                     if (tipo?.Descripcion?.Trim().ToLower() == "consumible")
                     {
                         dispositivo.StockActual = model.CantidadInicial ?? dispositivo.StockActual;
@@ -421,7 +532,7 @@ namespace inventario_coprotab.Controllers
                     _context.Update(dispositivo);
                     await _context.SaveChangesAsync();
 
-                    return Json(new { success = true });
+                    return PartialView("_EditPartial", model);
                 }
                 catch (DbUpdateConcurrencyException)
                 {

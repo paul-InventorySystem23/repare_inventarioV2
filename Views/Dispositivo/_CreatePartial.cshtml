@@ -119,37 +119,36 @@
 </div>
 
 <script>
-    function actualizarFormularioCreate() {
-        var tipoSelect = document.getElementById('IdTipoCreate');
-        var cantidadDiv = document.getElementById('campo-cantidad-create');
-        var selectedValue = tipoSelect ? tipoSelect.value : '';
-
-        if (selectedValue === "2") {
-            cantidadDiv.style.display = 'block';
-            var input = cantidadDiv.querySelector('input');
-            if (input) input.required = true;
-        } else {
-            cantidadDiv.style.display = 'none';
-            var input = cantidadDiv.querySelector('input');
-            if (input) {
-                input.required = false;
-                input.value = '';
-            }
-        }
-    }
-
-    setTimeout(function() {
-        actualizarFormularioCreate();
-
-        // Validación jQuery Unobtrusive
+    $(function () {
         var form = $('#formDispositivo');
-        if (form.length > 0) {
+        if (form.length) {
             $.validator.unobtrusive.parse(form);
         }
-    }, 100);
+    });
 
-    function crearMarca() {
-        var nombre = document.getElementById('nombreMarca').value.trim();
+    $(document).on('submit', '#formDispositivo', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        $.ajax({
+            url: form.attr('action'),
+            type: 'POST',
+            data: form.serialize(),
+            success: function(response) {
+                if (response.success) {
+                    $('#modalDispositivo').modal('hide');
+                    location.reload();
+                } else {
+                    $('#modalDispositivoContenido').html(response);
+                }
+            },
+            error: function() {
+                alert('Error al procesar la solicitud');
+            }
+        });
+    });
+
+    function crearMarcaDispositivo() {
+        var nombre = document.getElementById('nombreMarcaDisp').value.trim();
         if (!nombre) {
             alert('El nombre es obligatorio');
             return;
@@ -168,15 +167,15 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                var select = document.getElementById('IdMarca');
+                var select = document.querySelector('#formDispositivo select[name="IdMarca"]');
                 var option = document.createElement('option');
                 option.value = data.id;
                 option.text = data.nombre;
                 option.selected = true;
                 select.appendChild(option);
 
-                $('#createMarcaModal').modal('hide');
-                document.getElementById('nombreMarca').value = '';
+                $('#createMarcaModalDisp').modal('hide');
+                document.getElementById('nombreMarcaDisp').value = '';
                 alert('Marca creada exitosamente');
             } else {
                 var errorMsg = data.errors?.join('\n') || 'Error desconocido';

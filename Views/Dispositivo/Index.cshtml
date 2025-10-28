@@ -15,8 +15,9 @@
     <h1><i class="bi bi-laptop"></i> Gestión de Inventario</h1>
     <div class="d-flex gap-2">
        
-        <button class="btn btn-primary-custom" onclick="abrirModalCrear()">
+        <button class="btn btn-primary-custom" onclick="abrirModalCrearDispositivo()">
             <i class="bi bi-plus-circle"></i> Nuevo Dispositivo
+            
         </button>
         <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#createEquipoModal">
             <i class="bi bi-cpu"></i> Nuevo Equipo
@@ -175,18 +176,19 @@
                         <td>@(item.IdTipoNavigation?.Descripcion ?? "Sin tipo")</td> *@
                         <td class="text-center">
                             <div class="btn-group" role="group">
-                                <button class="btn btn-sm btn-outline-primary" onclick="abrirModalDetalle(@item.IdDispositivo)" title="Ver Detalles">
+                                <button class="btn btn-sm btn-outline-primary" onclick="abrirModalDetalleDispositivo(@item.IdDispositivo)" title="Ver Detalles">
                                     <i class="bi bi-eye"></i>
                                 </button>
-                                <button class="btn btn-sm btn-warning-custom" onclick="abrirModalEditar(@item.IdDispositivo)" title="Editar">
+                                <button class="btn btn-sm btn-warning-custom" onclick="abrirModalEditarDispositivo(@item.IdDispositivo)" title="Editar">
                                     <i class="bi bi-pencil"></i>
                                 </button>
                                 <button class="btn btn-sm btn-info" onclick="abrirModalMovimientoDispositivo(@item.IdDispositivo)" title="Crear Movimiento">
                                     <i class="bi bi-arrow-left-right"></i>
                                 </button>
-                                <button class="btn btn-sm btn-danger-custom" onclick="abrirModalEliminar(@item.IdDispositivo, '@item.Nombre')" title="Eliminar">
+                                <button class="btn btn-sm btn-danger-custom" onclick="abrirModalEliminarDispositivo(@item.IdDispositivo, '@item.Nombre')" title="Eliminar">
                                     <i class="bi bi-trash"></i>
                                 </button>
+                                
                             </div>
                         </td>
                     </tr>
@@ -205,12 +207,28 @@
 
 <!-- ============================= SECCIÓN COMPONENTES ============================= -->
 <div class="card-custom p-4 mb-4" style="border-left: 4px solid var(--success-color);">
+
     <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0" style="color: var(--primary-color);">
+            <i class="bi bi-laptop"></i>
+            @if (ViewBag.MostrarAlertas == true)
+            {
+                <span>Componentes con Bajo Stock - Alertas</span>
+            }
+            else
+            {
+                <span>Últimos 5 Componentes (Hardware Interno, Insumos, Cables)</span>
+            }
+        </h3>
+        <span class="badge bg-primary" style="font-size: 1rem;">@(componentes?.Count() ?? 0) registros</span>
+    </div>
+
+    @* <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="mb-0" style="color: var(--success-color);">
             <i class="bi bi-gear-fill"></i> Últimos 5 Componentes (Hardware Interno, Insumos, Cables...)
         </h3>
         <span class="badge bg-success" style="font-size: 1rem;">@(componentes?.Count() ?? 0) registros</span>
-    </div>
+    </div> *@
 
     <!-- ✅ Contenedor con scroll -->
     <div class="table-responsive" style="max-height: 400px; overflow-y: auto; overflow-x: auto;">
@@ -225,15 +243,28 @@
                     <th><i class="bi bi-cpu"></i> Tipo</th>
                     @* <th><i class="bi bi-calendar"></i> Fecha Instalación</th> *@
                     <th><i class="bi bi-box-seam"></i> Stock</th>
+
                     <th class="text-center"><i class="bi bi-gear"></i> Acciones</th>
                 </tr>
             </thead>
             <tbody>
+               
+
                 @if (componentes != null && componentes.Any())
                 {
                     @foreach (var comp in componentes)
                     {
-                        <tr>
+                        var rowComp = "";
+                        if (comp.Cantidad == 0)
+                        {
+                            rowComp = "table-danger"; // Rojo para stock en 0
+                        }
+                        else if (comp.Cantidad <= comp.StockMinimo)
+                        {
+                            rowComp = "table-warning"; // Amarillo para bajo stock
+                        }
+                        <tr class="@rowComp">
+              
                             <td class="fw-bold">@comp.Nombre</td>
                             <td>@(comp.Descripcion ?? "Sin descripción")</td>
                             <td>
@@ -269,9 +300,30 @@
                             @* <td>@(comp.IdMarcaNavigation?.Nombre ?? "Sin marca")</td> *@
                             <td>@(comp.IdTipoNavigation?.Descripcion ?? "Sin tipo")</td>
                            @*  <td>@(comp.FechaInstalacion?.ToString("dd/MM/yyyy") ?? "N/A")</td> *@
-                            <td>
+                            @* <td>
                                 <span class="badge bg-info">@comp.Cantidad</span>
+                            </td> *@
+                            <td>
+                                @if (comp.Cantidad == 0)
+                                {
+                                    <span class="badge bg-danger" style="font-size: 0.9rem;">
+                                        <i class="bi bi-x-circle-fill"></i> SIN STOCK
+                                    </span>
+                                }
+                                else if (comp.Cantidad <= comp.StockMinimo)
+                                {
+                                    <span class="badge bg-warning text-dark" style="font-size: 0.9rem;">
+                                        <i class="bi bi-exclamation-triangle-fill"></i> @comp.Cantidad / @comp.StockMinimo
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">
+                                        @comp.Cantidad unidades
+                                    </span>
+                                }
                             </td>
+
                             <td class="text-center">
                                 <div class="btn-group" role="group">
                                     <button class="btn btn-sm btn-outline-primary" onclick="abrirModalDetalleComponente(@comp.IdComponente)" title="Ver Detalles">
@@ -465,7 +517,21 @@
         </div>
     </div>
 }
-<!-- Modal Crear/Editar Dispositivos -->
+
+<!-- Modal Dispositivo (Crear/Editar/Detalle/Eliminar) -->
+<div class="modal fade" id="modalDispositivo" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: var(--success-color); color: white;">
+                <h5 class="modal-title" id="modalDispositivoTitulo"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: brightness(0) invert(1);"></button>
+            </div>
+            <div class="modal-body" id="modalDispositivoContenido"></div>
+        </div>
+    </div>
+</div>
+
+@* <!-- Modal Crear/Editar Dispositivos -->
 <div class="modal fade" id="modalFormulario" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -517,7 +583,7 @@
             </div>
         </div>
     </div>
-</div>
+</div> *@
 
 <!-- Modal Crear Equipo -->
 <div class="modal fade" id="createEquipoModal" tabindex="-1">
@@ -565,111 +631,212 @@
         let movimientoIdEliminar = null;
 
         // ==================== FUNCIONES DISPOSITIVOS ====================
-        function abrirModalCrear() {
-            $('#modalTitulo').html('<i class="bi bi-plus-circle"></i> Nuevo Dispositivo');
-            $.get('@Url.Action("Create", "Dispositivo")', function(data) {
-                $('#modalContenido').html(data);
-                $('#modalFormulario').modal('show');
-            }).fail(function() {
-                alert('Error al cargar el formulario');
-            });
-        }
+        function abrirModalCrearDispositivo() {
+             $('#modalDispositivoTitulo').html('<i class="bi bi-plus-circle"></i> Nuevo Dispositivo');
+             $.get('@Url.Action("Create", "Dispositivo")', function(data) {
+                 $('#modalDispositivoContenido').html(data);
+                 $('#modalDispositivo').modal('show');
+             }).fail(function() {
+                 alert('Error al cargar el formulario de Dispositivo');
+             });
+         }
 
-        function abrirModalEditar(id) {
-            $('#modalTitulo').html('<i class="bi bi-pencil"></i> Editar Dispositivo');
-            $.get('@Url.Action("Edit", "Dispositivo")/' + id, function(data) {
-                $('#modalContenido').html(data);
-                $('#modalFormulario').modal('show');
-            }).fail(function() {
-                alert('Error al cargar el formulario');
-            });
-        }
-
-        function abrirModalDetalle(id) {
-            $.get('@Url.Action("Details", "Dispositivo")/' + id, function(data) {
-                $('#modalDetalleContenido').html(data);
-                $('#modalDetalle').modal('show');
-            }).fail(function() {
-                alert('Error al cargar los detalles');
-            });
-        }
-
-        function abrirModalEliminar(id, nombre) {
-            dispositivoIdEliminar = id;
-            $('#nombreDispositivo').text(nombre);
-            $('#modalEliminar').modal('show');
-        }
-
-        $('#btnConfirmarEliminar').click(function() {
-            if (dispositivoIdEliminar) {
-                $.ajax({
-                    url: '@Url.Action("Delete", "Dispositivo")/' + dispositivoIdEliminar,
-                    type: 'POST',
-                    data: {
-                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val(),
-                        id: dispositivoIdEliminar
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            $('#modalEliminar').modal('hide');
-                            location.reload();
-                        } else {
-                            alert('Error al eliminar el dispositivo');
-                        }
-                    },
-                    error: function() {
-                        alert('Error al eliminar el dispositivo');
-                    }
-                });
-            }
-        });
-
-        // Manejar submit del formulario de creación de dispositivos
-        $(document).on('submit', '#formDispositivo', function(e) {
-            e.preventDefaf();
-            var form = $(this);
-            $.ajax({
-                url: form.attr('action'),
-                type: 'POST',
-                data: form.serialize(),
-                success: function(response) {
-                    if (response.success) {
-                        $('#modalFormulario').modal('hide');
-                        location.reload();
-                    } else {
-                        $('#modalContenido').html(response);
-                    }
-                },
-                error: function() {
-                    alert('Error al procesar la solicitud');
+                function abrirModalEditarDispositivo(id) {
+                    $('#modalDispositivoTitulo').html('<i class="bi bi-pencil"></i> Editar Dispositivo');
+                    $.get('@Url.Action("Edit", "Dispositivo")/' + id, function(data) {
+                        $('#modalDispositivoContenido').html(data);
+                        $('#modalDispositivo').modal('show');
+                    }).fail(function() {
+                        alert('Error al cargar el formulario de edición');
+                    });
                 }
-            });
-        });
 
-        // Manejar submit del formulario de edición de dispositivos
-        $(document).on('submit', '#formDispositivoEdit', function(e) {
-            e.preventDefault();
-            var form = $(this);
-
-            $.ajax({
-                url: '@Url.Action("Edit", "Dispositivo")',
-                type: 'POST',
-                data: form.serialize(),
-                success: function(response) {
-                    if (response.success) {
-                        $('#modalFormulario').modal('hide');
-                        location.reload();
-                    } else {
-                        $('#modalContenido').html(response);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error:', error);
-                    console.log('Response:', xhr.responseText);
-                    alert('Error al procesar la solicitud de edición');
+                function abrirModalDetalleDispositivo(id) {
+                    $('#modalDispositivoTitulo').html('<i class="bi bi-info-circle"></i> Detalles del Dispositivo');
+                    $.get('@Url.Action("Details", "Dispositivo")/' + id, function(data) {
+                        $('#modalDispositivoContenido').html(data);
+                        $('#modalDispositivo').modal('show');
+                    }).fail(function() {
+                        alert('Error al cargar los detalles');
+                    });
                 }
-            });
-        });
+
+                function abrirModalEliminarDispositivo(id, nombre) {
+                    if (confirm('¿Está seguro que desea eliminar el Dispositivo "' + nombre + '"?')) {
+                        $.ajax({
+                            url: '@Url.Action("Delete", "Dispositivo")/' + id,
+                            type: 'POST',
+                            data: {
+                                __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    location.reload();
+                                } else {
+                                    alert('Error al eliminar el Dispositivo');
+                                }
+                            },
+                            error: function() {
+                                alert('Error al procesar la solicitud');
+                            }
+                        });
+                    }
+                }
+
+                // // Manejar submit del formulario de componentes (crear)
+                // $(document).on('submit', '#formDispositivo', function(e) {
+                //     e.preventDefault();
+                //     var form = $(this);
+                //     $.ajax({
+                //         url: form.attr('action'),
+                //         type: 'POST',
+                //         data: form.serialize(),
+                //         success: function(response) {
+                //             if (response.success) {
+                //                 $('#modalDispositivo').modal('hide');
+                //                 location.reload();
+                //             } else {
+                //                 $('#modalDispositivoContenido').html(response);
+                //             }
+                //         },
+                //         error: function() {
+                //             alert('Error al procesar la solicitud');
+                //         }
+                //     });
+                // });
+
+                // Manejar submit del formulario de edición de componentes
+                // $(document).on('submit', '#formDispositivoEdit', function(e) {
+                //     e.preventDefault();
+                //     var form = $(this);
+
+                //     $.ajax({
+                //         url: 'Url.Action("Edit", "Dispositivo")',
+                //         type: 'POST',
+                //         data: form.serialize(),
+                //         success: function(response) {
+                //             if (response.success) {
+                //                 $('#modalDispositivo').modal('hide');
+                //                 location.reload();
+                //             } else {
+                //                 $('#modalDispositivoContenido').html(response);
+                //             }
+                //         },
+                //         error: function(xhr, status, error) {
+                //             console.error('Error:', error);
+                //             console.log('Response:', xhr.responseText);
+                //             alert('Error al procesar la solicitud de edición');
+                //         }
+                //     });
+                // });
+
+
+
+        // function abrirModalCrear() {
+        //     $('#modalTitulo').html('<i class="bi bi-plus-circle"></i> Nuevo Dispositivo');
+        //     $.get('Url.Action("Create", "Dispositivo")', function(data) {
+        //         $('#modalContenido').html(data);
+        //         $('#modalFormulario').modal('show');
+        //     }).fail(function() {
+        //         alert('Error al cargar el formulario');
+        //     });
+        // }
+
+        // function abrirModalEditarDispositivo(id) {
+        //     $('#modalDispositivoTitulo').html('<i class="bi bi-pencil"></i> Editar Dispositivo');
+        //     $.get('Url.Action("Edit", "Dispositivo")/' + id, function(data) {
+        //         $('#modalDispositivoContenido').html(data);
+        //         $('#modalDispositivo').modal('show');
+        //     }).fail(function() {
+        //         alert('Error al cargar el formulario de edición');
+        //     });
+        // }
+
+        // function abrirModalDetalle(id) {
+        //     $.get('Url/* .Action("Details", "Dispositivo") *//' + id, function(data) {
+        //         $('#modalDetalleContenido').html(data);
+        //         $('#modalDetalle').modal('show');
+        //     }).fail(function() {
+        //         alert('Error al cargar los detalles');
+        //     });
+        // }
+
+        // function abrirModalEliminar(id, nombre) {
+        //     dispositivoIdEliminar = id;
+        //     $('#nombreDispositivo').text(nombre);
+        //     $('#modalEliminar').modal('show');
+        // }
+
+        // $('#btnConfirmarEliminar').click(function() {
+        //     if (dispositivoIdEliminar) {
+        //         $.ajax({
+        //             url: 'Url/* .Action("Delete", "Dispositivo") *//' + dispositivoIdEliminar,
+        //             type: 'POST',
+        //             data: {
+        //                 __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val(),
+        //                 id: dispositivoIdEliminar
+        //             },
+        //             success: function(response) {
+        //                 if (response.success) {
+        //                     $('#modalEliminar').modal('hide');
+        //                     location.reload();
+        //                 } else {
+        //                     alert('Error al eliminar el dispositivo');
+        //                 }
+        //             },
+        //             error: function() {
+        //                 alert('Error al eliminar el dispositivo');
+        //             }
+        //         });
+        //     }
+        // });
+
+        // // Manejar submit del formulario de creación de dispositivos
+        // $(document).on('submit', '#formDispositivo', function(e) {
+        //     e.preventDefaf();
+        //     var form = $(this);
+        //     $.ajax({
+        //         url: form.attr('action'),
+        //         type: 'POST',
+        //         data: form.serialize(),
+        //         success: function(response) {
+        //             if (response.success) {
+        //                 $('#modalFormulario').modal('hide');
+        //                 location.reload();
+        //             } else {
+        //                 $('#modalContenido').html(response);
+        //             }
+        //         },
+        //         error: function() {
+        //             alert('Error al procesar la solicitud');
+        //         }
+        //     });
+        // });
+
+        // // Manejar submit del formulario de edición de dispositivos
+        // $(document).on('submit', '#formDispositivoEdit', function(e) {
+        //     e.preventDefault();
+        //     var form = $(this);
+
+        //     $.ajax({
+        //         url: 'Url/* .Action("Edit", "Dispositivo") */',
+        //         type: 'POST',
+        //         data: form.serialize(),
+        //         success: function(response) {
+        //             if (response.success) {
+        //                 $('#modalFormulario').modal('hide');
+        //                 location.reload();
+        //             } else {
+        //                 $('#modalContenido').html(response);
+        //             }
+        //         },
+        //         error: function(xhr, status, error) {
+        //             console.error('Error:', error);
+        //             console.log('Response:', xhr.responseText);
+        //             alert('Error al procesar la solicitud de edición');
+        //         }
+        //     });
+        // });
 
         // ==================== FUNCIONES COMPONENTES ====================
         function abrirModalCrearComponente() {

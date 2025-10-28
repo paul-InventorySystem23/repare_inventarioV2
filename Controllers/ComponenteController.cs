@@ -212,7 +212,6 @@ namespace inventario_coprotab.Controllers
             ViewData["IdMarca"] = new SelectList(marcas, "IdMarca", "Nombre", model.IdMarca);
             ViewData["IdTipo"] = new SelectList(tipos, "IdTipo", "Descripcion", model.IdTipo);
             ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
-
             return PartialView("_EditPartial", model);
         }
 

@@ -113,13 +113,13 @@
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
             <i class="bi bi-x-circle"></i> Cancelar
         </button>
-        <button type="submit" class="btn btn-primary-custom">
+        <button type="submit" class="btn btn-success-custom">
             <i class="bi bi-save"></i> Guardar Cambios
         </button>
     </div>
 </form>
 
-<script>
+@* <script>
     function actualizarFormularioEdit() {
         var tipoSelect = document.getElementById('IdTipoEdit');
         var cantidadDiv = document.getElementById('campo-cantidad-edit');
@@ -165,6 +165,35 @@
             error: function(xhr, status, error) {
                 console.error('Error:', error);
                 console.log('Response:', xhr.responseText);
+                alert('Error al procesar la solicitud');
+            }
+        });
+    });
+</script> *@
+<script>
+    $(function () {
+        var form = $('#formDispositivoEdit');
+        if (form.length) {
+            $.validator.unobtrusive.parse(form);
+        }
+    });
+
+    $(document).on('submit', '#formDispositivoEdit', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        $.ajax({
+            url: form.attr('action'),
+            type: 'POST',
+            data: form.serialize(),
+            success: function(response) {
+                if (response.success) {
+                    $('#modalDispositivo').modal('hide');
+                    location.reload();
+                } else {
+                    $('#modalDispositivoContenido').html(response);
+                }
+            },
+            error: function() {
                 alert('Error al procesar la solicitud');
             }
         });
