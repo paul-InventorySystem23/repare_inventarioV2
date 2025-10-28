@@ -1039,23 +1039,52 @@
             });
         });
 
-        // ==================== MODAL EQUIPO ====================
+
+        // Cargar formulario al abrir el modal
         $('#createEquipoModal').on('show.bs.modal', function () {
             var modal = $(this);
             modal.find('.modal-body').html('<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>');
-            $.get(baseUrl+'/Dispositivo/CreateEquipo', function (data) {
+            $.get(baseUrl + 'Dispositivo/CreateEquipo', function (data) {
                 modal.find('.modal-body').html(data);
             });
         });
 
+        // Limpiar modal al cerrar
         $('#createEquipoModal').on('hidden.bs.modal', function () {
             $(this).find('.modal-body').empty();
         });
 
-        // ==================== DEBUG ====================
-        // Verificar que las funciones están disponibles
-        console.log('Funciones cargadas:');
-        console.log('- abrirModalMovimientoDispositivo:', typeof abrirModalMovimientoDispositivo);
-        console.log('- abrirModalMovimientoComponente:', typeof abrirModalMovimientoComponente);
+        // ✅ Manejar submit del formulario de equipo
+        $(document).on('submit', '#formEquipo', function(e) {
+            e.preventDefault();
+            var form = $(this);
+    
+            console.log('Enviando formulario de equipo');
+            console.log('Datos:', form.serialize());
+    
+            $.ajax({
+                url: form.attr('action'),
+                type: 'POST',
+                data: form.serialize(),
+                success: function(response) {
+                    console.log('Respuesta:', response);
+                    if (response.success) {
+                        $('#createEquipoModal').modal('hide');
+                        // Pequeño delay para que se cierre el modal
+                        setTimeout(function() {
+                            location.reload();
+                        }, 300);
+                    } else {
+                        // Si hay errores, mostrar el formulario actualizado
+                        $('#createEquipoModal .modal-body').html(response);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    console.log('Response:', xhr.responseText);
+                    alert('Error al procesar la solicitud: ' + error);
+                }
+            });
+        });
     </script>
 }

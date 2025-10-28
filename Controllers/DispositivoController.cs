@@ -193,101 +193,34 @@ namespace inventario_coprotab.Controllers
         public IActionResult Create()
         {
             ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre");
-            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion");
+            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares
+         .Where(t => t.Descripcion == "Hardware")
+         .OrderBy(t => t.Descripcion), "IdTipo", "Descripcion");
             ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
 
             var viewModel = new DispositivoCreateViewModel();
             return PartialView("_CreatePartial", viewModel);
         }
 
-        // POST: Dispositivo/CreateModal
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateModal(DispositivoCreateViewModel model)
-        {
-            if (ModelState.IsValid)
+// ==================== MÉTODO CREATE CORREGIDO ====================
+// POST: Dispositivo/CreateModal
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> CreateModal(DispositivoCreateViewModel model)
+{
+    if (ModelState.IsValid)
+    {
+        try 
+        { 
+            // ✅ Validar si el número de serie ya existe (si se proporciona)
+            if (!string.IsNullOrWhiteSpace(model.NroSerie))
             {
-                try 
-                { 
-                    // ✅ Validar si el número de serie ya existe (si se proporciona)
-                    if (!string.IsNullOrWhiteSpace(model.NroSerie))
-                    {
-                        var existeSerie = await _context.Dispositivos
-                            .AnyAsync(c => c.NroSerie == model.NroSerie && c.EstadoRegistro);
+                var existeSerie = await _context.Dispositivos
+                    .AnyAsync(d => d.NroSerie == model.NroSerie && d.EstadoRegistro);
 
-                            if (existeSerie)
-                            {
-                                ModelState.AddModelError("NroSerie", "Ya existe un Dispositivo con esta identificacion unica.");
-
-                                // Recargar datos para la vista
-                                ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", model.IdMarca);
-                                ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", model.IdTipo);
-                                ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
-
-                                return PartialView("_CreatePartial", model);
-                            }
-                    }
-
-                         var dispositivo = new Dispositivo
-                         {
-                                Nombre = model.Nombre,
-                                Descripcion = model.Descripcion,
-                                IdMarca = model.IdMarca,
-                                IdTipo = model.IdTipo,
-                                /*CodigoInventario = codigoInventario,*/ // ✅ Código automático
-                                NroSerie = model.NroSerie,
-                                Estado = model.Estado ?? "Nuevo",
-                             FechaAlta = DateTime.Now, // ✅ DateTime con hora
-                             EstadoRegistro = true,
-                             StockMinimo = 0
-                          };
-
-                            _context.Add(dispositivo);
-                            await _context.SaveChangesAsync();
-
-                            return Json(new { success = true });
-                }
-                catch (DbUpdateException ex)
+                if (existeSerie)
                 {
-                        // ✅ Capturar errores de base de datos
-                        var errorMessage = "Error al guardar el dispositivo.";
-
-                        if (ex.InnerException != null)
-                        {
-                            var innerMessage = ex.InnerException.Message;
-
-                            if (innerMessage.Contains("UQ__componen__AD64A161") || innerMessage.Contains("nro_serie"))
-                            {
-                                errorMessage = "El número de serie ya existe en la base de datos.";
-                                ModelState.AddModelError("NroSerie", errorMessage);
-                            }
-                            else if (innerMessage.Contains("UNIQUE"))
-                            {
-                                errorMessage = "Ya existe un registro con estos datos únicos.";
-                                ModelState.AddModelError("", errorMessage);
-                            }
-                            else
-                            {
-                                errorMessage = "Error de base de datos: " + innerMessage;
-                                ModelState.AddModelError("", errorMessage);
-                            }
-                        }
-                        else
-                        {
-                            ModelState.AddModelError("", errorMessage);
-                        }
-
-                        // Recargar datos para la vista
-                        ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", model.IdMarca);
-                        ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", model.IdTipo);
-                        ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
-
-                        return PartialView("_CreatePartial", model);
-                }
-                catch (Exception ex)
-                {
-                        // ✅ Capturar cualquier otro error
-                        ModelState.AddModelError("", "Error inesperado: " + ex.Message);
+                    ModelState.AddModelError("NroSerie", "Ya existe un Dispositivo con esta identificación única.");
 
                     // Recargar datos para la vista
                     ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", model.IdMarca);
@@ -298,13 +231,92 @@ namespace inventario_coprotab.Controllers
                 }
             }
 
-            // ✅ Si hay errores de validación, recargar datos y devolver la vista parcial
+            // ✅ Crear el dispositivo
+            // ✅ Generar código automáticamente
+            var codigoInventario = await GenerarCodigoInventario();
+            var dispositivo = new Dispositivo
+            {
+                Nombre = model.Nombre,
+                Descripcion = model.Descripcion,
+                IdMarca = model.IdMarca,
+                IdTipo = model.IdTipo,
+                CodigoInventario = codigoInventario, // ✅ Código automático
+                NroSerie = string.IsNullOrWhiteSpace(model.NroSerie) ? null : model.NroSerie?.Trim(),
+                Estado = model.Estado ?? "Nuevo",
+                FechaAlta = DateTime.Now,
+                EstadoRegistro = true,
+                StockMinimo = 0
+            };
+
+            // ✅ Asignar StockActual según el tipo
+            if (model.IdTipo == 2) // Si es Consumible
+            {
+                dispositivo.StockActual = model.CantidadInicial ?? 0;
+            }
+            else
+            {
+                dispositivo.StockActual = 1;
+            }
+
+            _context.Add(dispositivo);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true });
+        }
+        catch (DbUpdateException ex)
+        {
+            var errorMessage = "Error al guardar el dispositivo.";
+
+            if (ex.InnerException != null)
+            {
+                var innerMessage = ex.InnerException.Message;
+
+                if (innerMessage.Contains("UQ__disposit__AD64A1611432F6A2") || innerMessage.Contains("nro_serie"))
+                {
+                    errorMessage = "El número de serie ya existe en la base de datos.";
+                    ModelState.AddModelError("NroSerie", errorMessage);
+                }
+                else if (innerMessage.Contains("UNIQUE"))
+                {
+                    errorMessage = "Ya existe un registro con estos datos únicos.";
+                    ModelState.AddModelError("", errorMessage);
+                }
+                else
+                {
+                    errorMessage = "Error de base de datos: " + innerMessage;
+                    ModelState.AddModelError("", errorMessage);
+                }
+            }
+            else
+            {
+                ModelState.AddModelError("", errorMessage);
+            }
+
             ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", model.IdMarca);
             ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", model.IdTipo);
             ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
 
             return PartialView("_CreatePartial", model);
         }
+        catch (Exception ex)
+        {
+            ModelState.AddModelError("", "Error inesperado: " + ex.Message);
+
+            ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", model.IdMarca);
+            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", model.IdTipo);
+            ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
+
+            return PartialView("_CreatePartial", model);
+        }
+    }
+
+    // ✅ Si hay errores de validación, recargar datos y devolver la vista parcial
+    ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", model.IdMarca);
+    ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", model.IdTipo);
+    ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
+
+    return PartialView("_CreatePartial", model);
+}
 
 //        // ✅ Generar código automáticamente
 //        var codigoInventario = await GenerarCodigoInventario();
@@ -355,7 +367,7 @@ public async Task<IActionResult> CreateEquipo()
                     .ToListAsync(),
 
                 TiposHardware = await _context.TipoHardwares
-                    .Where(t => t.Descripcion == "Hardware") // Solo tipo "Hardware"
+                    .Where(t => t.Descripcion == "") // Solo tipo "Equipo Armado"
                     .Select(t => new SelectListItem { Value = t.IdTipo.ToString(), Text = t.Descripcion })
                     .ToListAsync(),
 
@@ -379,6 +391,7 @@ public async Task<IActionResult> CreateEquipo()
             return PartialView("_CreateEquipoPartial", viewModel);
         }
 
+        // ==================== MÉTODO CREATE EQUIPO CORREGIDO ====================
         // POST: Dispositivo/CreateEquipoModal
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -399,7 +412,7 @@ public async Task<IActionResult> CreateEquipo()
 
                 model.ComponentesDisponibles = await _context.Componentes
                     .Where(c => c.EstadoRegistro)
-                    .Include(c => c.IdMarcaNavigation) // 👈 ¡Incluye!
+                    .Include(c => c.IdMarcaNavigation)
                     .Select(c => new ComponenteCheckboxItem
                     {
                         IdComponente = c.IdComponente,
@@ -410,43 +423,164 @@ public async Task<IActionResult> CreateEquipo()
                 return PartialView("_CreateEquipoPartial", model);
             }
 
-            // ✅ Crear el dispositivo (equipo)
-            var codigoInventario = await GenerarCodigoInventario();
-
-            var equipo = new Dispositivo
+            try
             {
-                Nombre = model.Nombre,
-                Descripcion = model.Descripcion,
-                IdMarca = model.IdMarca,
-                IdTipo = model.IdTipo, // Debe ser "Hardware"
-                CodigoInventario = codigoInventario,
-                NroSerie = model.NroSerie,
-                Estado = model.Estado,
-                FechaAlta = DateTime.Now,
-                EstadoRegistro = true,
-                StockActual = 1,
-                StockMinimo = 0
-            };
-
-            _context.Dispositivos.Add(equipo);
-            await _context.SaveChangesAsync(); // Necesario para obtener IdDispositivo
-
-            // ✅ Asociar componentes seleccionados
-            foreach (var idComponente in model.ComponentesSeleccionados)
-            {
-                var relacion = new RelacionDispositivoComponente
+                // ✅ Validar número de serie si existe
+                if (!string.IsNullOrWhiteSpace(model.NroSerie))
                 {
-                    IdDispositivo = equipo.IdDispositivo,
-                    IdComponente = idComponente
+                    var existeSerie = await _context.Dispositivos
+                        .AnyAsync(d => d.NroSerie == model.NroSerie && d.EstadoRegistro);
+
+                    if (existeSerie)
+                    {
+                        ModelState.AddModelError("NroSerie", "Ya existe un equipo con este número de serie.");
+
+                        // Recargar listas
+                        model.Marcas = await _context.Marcas
+                            .OrderBy(m => m.Nombre)
+                            .Select(m => new SelectListItem { Value = m.IdMarca.ToString(), Text = m.Nombre })
+                            .ToListAsync();
+
+                        model.TiposHardware = await _context.TipoHardwares
+                            .Where(t => t.Descripcion == "Hardware")
+                            .Select(t => new SelectListItem { Value = t.IdTipo.ToString(), Text = t.Descripcion })
+                            .ToListAsync();
+
+                        model.ComponentesDisponibles = await _context.Componentes
+                            .Where(c => c.EstadoRegistro)
+                            .Include(c => c.IdMarcaNavigation)
+                            .Select(c => new ComponenteCheckboxItem
+                            {
+                                IdComponente = c.IdComponente,
+                                NombreCompleto = $"{c.Nombre} - {(c.NroSerie != null ? c.NroSerie : "Sin serie")} ({(c.IdMarcaNavigation != null ? c.IdMarcaNavigation.Nombre : "Sin marca")})"
+                            })
+                            .ToListAsync();
+
+                        return PartialView("_CreateEquipoPartial", model);
+                    }
+                }
+
+                // ✅ Crear el dispositivo (equipo)
+                var codigoInventario = await GenerarCodigoInventario();
+
+                var equipo = new Dispositivo
+                {
+                    Nombre = model.Nombre,
+                    Descripcion = model.Descripcion,
+                    IdMarca = model.IdMarca,
+                    IdTipo = model.IdTipo,
+                    CodigoInventario = codigoInventario,
+                    NroSerie = string.IsNullOrWhiteSpace(model.NroSerie) ? null : model.NroSerie?.Trim(),
+                    Estado = model.Estado,
+                    FechaAlta = DateTime.Now,
+                    EstadoRegistro = true,
+                    StockActual = 1,
+                    StockMinimo = 0
                 };
-                _context.RelacionDispositivoComponentes.Add(relacion);
+
+                _context.Dispositivos.Add(equipo);
+                await _context.SaveChangesAsync(); // Necesario para obtener IdDispositivo
+
+                // ✅ Asociar componentes seleccionados
+                if (model.ComponentesSeleccionados != null && model.ComponentesSeleccionados.Any())
+                {
+                    foreach (var idComponente in model.ComponentesSeleccionados)
+                    {
+                        var relacion = new RelacionDispositivoComponente
+                        {
+                            IdDispositivo = equipo.IdDispositivo,
+                            IdComponente = idComponente
+                        };
+                        _context.RelacionDispositivoComponentes.Add(relacion);
+                    }
+
+                    await _context.SaveChangesAsync();
+                }
+
+                // ✅ Retornar JSON en lugar de RedirectToAction
+                return Json(new { success = true });
             }
+            catch (DbUpdateException ex)
+            {
+                var errorMessage = "Error al guardar el equipo.";
 
-            await _context.SaveChangesAsync();
+                if (ex.InnerException != null)
+                {
+                    var innerMessage = ex.InnerException.Message;
 
-            //return Json(new { success = true });
-            return RedirectToAction("Index", "Dispositivo");
+                    if (innerMessage.Contains("UQ__disposit__AD64A1611432F6A2") || innerMessage.Contains("nro_serie"))
+                    {
+                        errorMessage = "El número de serie ya existe en la base de datos.";
+                        ModelState.AddModelError("NroSerie", errorMessage);
+                    }
+                    else if (innerMessage.Contains("UNIQUE"))
+                    {
+                        errorMessage = "Ya existe un registro con estos datos únicos.";
+                        ModelState.AddModelError("", errorMessage);
+                    }
+                    else
+                    {
+                        errorMessage = "Error de base de datos: " + innerMessage;
+                        ModelState.AddModelError("", errorMessage);
+                    }
+                }
+                else
+                {
+                    ModelState.AddModelError("", errorMessage);
+                }
+
+                // Recargar listas
+                model.Marcas = await _context.Marcas
+                    .OrderBy(m => m.Nombre)
+                    .Select(m => new SelectListItem { Value = m.IdMarca.ToString(), Text = m.Nombre })
+                    .ToListAsync();
+
+                model.TiposHardware = await _context.TipoHardwares
+                    .Where(t => t.Descripcion == "Hardware")
+                    .Select(t => new SelectListItem { Value = t.IdTipo.ToString(), Text = t.Descripcion })
+                    .ToListAsync();
+
+                model.ComponentesDisponibles = await _context.Componentes
+                    .Where(c => c.EstadoRegistro)
+                    .Include(c => c.IdMarcaNavigation)
+                    .Select(c => new ComponenteCheckboxItem
+                    {
+                        IdComponente = c.IdComponente,
+                        NombreCompleto = $"{c.Nombre} - {(c.NroSerie != null ? c.NroSerie : "Sin serie")} ({(c.IdMarcaNavigation != null ? c.IdMarcaNavigation.Nombre : "Sin marca")})"
+                    })
+                    .ToListAsync();
+
+                return PartialView("_CreateEquipoPartial", model);
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Error inesperado: " + ex.Message);
+
+                // Recargar listas
+                model.Marcas = await _context.Marcas
+                    .OrderBy(m => m.Nombre)
+                    .Select(m => new SelectListItem { Value = m.IdMarca.ToString(), Text = m.Nombre })
+                    .ToListAsync();
+
+                model.TiposHardware = await _context.TipoHardwares
+                    .Where(t => t.Descripcion == "Hardware")
+                    .Select(t => new SelectListItem { Value = t.IdTipo.ToString(), Text = t.Descripcion })
+                    .ToListAsync();
+
+                model.ComponentesDisponibles = await _context.Componentes
+                    .Where(c => c.EstadoRegistro)
+                    .Include(c => c.IdMarcaNavigation)
+                    .Select(c => new ComponenteCheckboxItem
+                    {
+                        IdComponente = c.IdComponente,
+                        NombreCompleto = $"{c.Nombre} - {(c.NroSerie != null ? c.NroSerie : "Sin serie")} ({(c.IdMarcaNavigation != null ? c.IdMarcaNavigation.Nombre : "Sin marca")})"
+                    })
+                    .ToListAsync();
+
+                return PartialView("_CreateEquipoPartial", model);
+            }
         }
+
         // GET: Dispositivo/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
@@ -496,86 +630,6 @@ public async Task<IActionResult> CreateEquipo()
         }
 
         // POST: Dispositivo/EditModal
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, DispositivoEditViewModel model)
-        {
-            if (model.IdDispositivo <= 0)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    var dispositivo = await _context.Dispositivos.FindAsync(id);
-                    if (dispositivo == null)
-                    {
-
-                        dispositivo.Nombre = model.Nombre ?? "";
-                        dispositivo.Descripcion = model.Descripcion;
-                        dispositivo.IdMarca = model.IdMarca ?? 0;
-                        dispositivo.IdTipo = model.IdTipo ?? 0;
-                        // ✅ CodigoInventario NO se modifica (es automático)
-                        dispositivo.NroSerie = model.NroSerie;
-                        dispositivo.Estado = model.Estado;
-                        dispositivo.FechaBaja = model.FechaBaja;
-                        dispositivo.StockMinimo = model.StockMinimo ?? 0;
-                    }
-                    var tipo = await _context.Dispositivos.FindAsync(model.IdTipo);
-                    if (tipo?.Descripcion?.Trim().ToLower() == "consumible")
-                    {
-                        dispositivo.StockActual = model.CantidadInicial ?? dispositivo.StockActual;
-                    }
-
-                    _context.Update(dispositivo);
-                    await _context.SaveChangesAsync();
-
-                    return PartialView("_EditPartial", model);
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!DispositivoExists(model.IdDispositivo))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-            }
-
-            ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", model.IdMarca);
-            ViewData["IdTipo"] = new SelectList(_context.TipoHardwares.OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", model.IdTipo);
-            ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
-
-            return PartialView("_EditPartial", model);
-        }
-
-        // POST: Dispositivo/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var dispositivo = await _context.Dispositivos.FindAsync(id);
-            if (dispositivo != null)
-            {
-                dispositivo.EstadoRegistro = false;
-                dispositivo.FechaBaja = DateTime.Now; // ✅ Registrar fecha y hora de baja
-                await _context.SaveChangesAsync();
-                return Json(new { success = true });
-            }
-            return Json(new { success = false });
-        }
-
-
-        private bool DispositivoExists(int id)
-        {
-            return _context.Dispositivos.Any(e => e.IdDispositivo == id);
-        }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(DispositivoEditViewModel model)
@@ -635,6 +689,30 @@ public async Task<IActionResult> CreateEquipo()
                 return PartialView("_EditPartial", model);
             }
         }
+
+        // POST: Dispositivo/Delete/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var dispositivo = await _context.Dispositivos.FindAsync(id);
+            if (dispositivo != null)
+            {
+                dispositivo.EstadoRegistro = false;
+                dispositivo.FechaBaja = DateTime.Now; // ✅ Registrar fecha y hora de baja
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+            return Json(new { success = false });
+        }
+
+
+        private bool DispositivoExists(int id)
+        {
+            return _context.Dispositivos.Any(e => e.IdDispositivo == id);
+        }
+
+        
 
     }
 }
