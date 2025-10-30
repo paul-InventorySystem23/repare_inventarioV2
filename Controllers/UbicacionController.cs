@@ -1,10 +1,8 @@
 ﻿using inventario_coprotab.Models.DBInventario;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading.Tasks;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace inventario_coprotab.Controllers
 {
@@ -16,8 +14,10 @@ namespace inventario_coprotab.Controllers
         {
             _context = context;
         }
+
         public async Task<IActionResult> Index(string searchUbicacion, string searchDispositivo, string searchResponsable, string searchComponente)
         {
+            // 🔹 Cargar movimientos con sus relaciones
             var Lista = await _context.Movimientos
                 .Include(d => d.IdUbicacionNavigation)
                 .Include(d => d.IdDispositivoNavigation)
@@ -26,35 +26,54 @@ namespace inventario_coprotab.Controllers
                 .Where(d => d.IdUbicacionNavigation != null)
                 .ToListAsync();
 
+            // 🔹 Función local para normalizar texto (quita espacios y mayúsculas)
+            string Normalize(string value) =>
+                string.IsNullOrWhiteSpace(value) ? "" : value.ToLower().Replace(" ", "");
+
+            // 🔹 Filtros (ignorando mayúsculas y espacios)
             if (!string.IsNullOrEmpty(searchUbicacion))
-                Lista = Lista.Where(d => d.IdUbicacionNavigation != null && 
-                                         d.IdUbicacionNavigation.Nombre != null &&
-                                         d.IdUbicacionNavigation.Nombre.Contains(searchUbicacion)).ToList();
+            {
+                var filtro = Normalize(searchUbicacion);
+                Lista = Lista.Where(d =>
+                    d.IdUbicacionNavigation?.Nombre != null &&
+                    Normalize(d.IdUbicacionNavigation.Nombre).Contains(filtro)
+                ).ToList();
+            }
 
             if (!string.IsNullOrEmpty(searchDispositivo))
-                Lista = Lista.Where(d => d.IdDispositivoNavigation != null &&
-                                         d.IdDispositivoNavigation.Nombre != null &&
-                                         d.IdDispositivoNavigation.Nombre.Contains (searchDispositivo)).ToList();
+            {
+                var filtro = Normalize(searchDispositivo);
+                Lista = Lista.Where(d =>
+                    d.IdDispositivoNavigation?.Nombre != null &&
+                    Normalize(d.IdDispositivoNavigation.Nombre).Contains(filtro)
+                ).ToList();
+            }
 
             if (!string.IsNullOrEmpty(searchResponsable))
-                Lista = Lista.Where(d => d.IdResponsableNavigation != null && 
-                                         d.IdResponsableNavigation.Nombre != null &&
-                                         d.IdResponsableNavigation.Nombre.Contains(searchResponsable)).ToList();
+            {
+                var filtro = Normalize(searchResponsable);
+                Lista = Lista.Where(d =>
+                    d.IdResponsableNavigation?.Nombre != null &&
+                    Normalize(d.IdResponsableNavigation.Nombre).Contains(filtro)
+                ).ToList();
+            }
+
             if (!string.IsNullOrEmpty(searchComponente))
-                Lista = Lista.Where(d => d.IdComponenteNavigation != null &&
-                                         d.IdComponenteNavigation.Nombre != null &&
-                                         d.IdComponenteNavigation.Nombre.Contains(searchComponente)).ToList();
+            {
+                var filtro = Normalize(searchComponente);
+                Lista = Lista.Where(d =>
+                    d.IdComponenteNavigation?.Nombre != null &&
+                    Normalize(d.IdComponenteNavigation.Nombre).Contains(filtro)
+                ).ToList();
+            }
 
+            // 🔹 Mantener valores de búsqueda en los inputs
+            ViewBag.SearchUbicacion = searchUbicacion;
+            ViewBag.SearchDispositivo = searchDispositivo;
+            ViewBag.SearchResponsable = searchResponsable;
+            ViewBag.SearchComponente = searchComponente;
 
-            var ListaFiltrada =  Lista;
-
-            ViewBag.SearchCode = searchUbicacion;
-            ViewBag.SearchSerie = searchDispositivo;
-            ViewBag.SearchTipo = searchResponsable;
-            ViewBag.SearchSeriec = searchComponente;
-
-
-            return View(ListaFiltrada);
+            return View(Lista);
         }
     }
 }

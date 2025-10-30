@@ -11,53 +11,64 @@
     <form method="get" id="formFiltros">
         @Html.AntiForgeryToken()
         <div class="row g-3">
+            <!-- 🔹 Campo Ubicación -->
             <div class="col-md-3">
-                <input type="text" name="searchUbicacion" class="form-control" placeholder="Ubicacion" value="@ViewBag.SearchUbicacion" />
+                <input type="text" name="searchUbicacion" class="form-control"
+                       placeholder="Ubicación" value="@ViewBag.SearchUbicacion" />
             </div>
+
+            <!-- 🔹 Campo Dispositivo -->
             <div class="col-md-3">
-                <input type="text" name="searchDispositivo" class="form-control" placeholder="Dispositivos" value="@ViewBag.SearchDispositivo" />
+                <input type="text" name="searchDispositivo" class="form-control"
+                       placeholder="Dispositivo" value="@ViewBag.SearchDispositivo" />
             </div>
+
+            <!-- 🔹 Campo Responsable -->
             <div class="col-md-2">
-                <input type="text" name="searchResponsable" class="form-control" placeholder="Responsable" value="@ViewBag.SearchResponsable" />
+                <input type="text" name="searchResponsable" class="form-control"
+                       placeholder="Responsable" value="@ViewBag.SearchResponsable" />
             </div>
+
+            
+            <!-- 🔹 Botón Buscar -->
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary-custom w-100">
                     <i class="bi bi-search"></i> Buscar
                 </button>
             </div>
         </div>
+
+        <!-- 🔹 Botón Limpiar -->
         <div class="mt-2">
             <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-x-circle"></i> Limpiar Filtros
             </a>
         </div>
-
     </form>
 </div>
 
+<!-- ===================== TABLA ===================== -->
 <table class="table table-custom table-hover">
     <thead>
         <tr>
-            <th><i class="bi bi-geo-alt"></i> Ubicacion</th>
-            <th><i class="bi bi-tag"></i> Dispositivo</th>
-            <th><i class="bi bi-tag"></i> Componente</th>
+            <th><i class="bi bi-geo-alt"></i> Ubicación</th>
+            <th><i class="bi bi-laptop"></i> Dispositivo</th>
+            <th><i class="bi bi-cpu"></i> Componente</th>
             <th><i class="bi bi-card-text"></i> Tipo de Movimiento</th>
             <th><i class="bi bi-person-raised-hand"></i> Responsable</th>
             <th><i class="bi bi-calendar"></i> Fecha</th>
-
         </tr>
     </thead>
     <tbody>
         @foreach (var item in Model)
-        {   
-
+        {
             <tr>
                 <td>@item.IdUbicacionNavigation?.Nombre</td>
-                <td class="text-center">@(item.IdDispositivoNavigation?.Nombre?? "-")</td>
-                <td class="text-center">@(item.IdComponenteNavigation?.Nombre?? "-")</td>
+                <td class="text-center">@(item.IdDispositivoNavigation?.Nombre ?? "-")</td>
+                <td class="text-center">@(item.IdComponenteNavigation?.Nombre ?? "-")</td>
                 <td>@item.TipoMovimiento</td>
-                <td>@item.IdResponsableNavigation?.Nombre </td>
-                <td>@item.Fecha</td>
+                <td>@item.IdResponsableNavigation?.Nombre</td>
+                <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
             </tr>
         }
     </tbody>
