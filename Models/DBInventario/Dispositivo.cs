@@ -37,6 +37,8 @@ public partial class Dispositivo
 
     public virtual ICollection<Movimiento> Movimientos { get; set; } = new List<Movimiento>();
 
+    public virtual ICollection<RelacionDetalle> RelacionDetalles { get; set; } = new List<RelacionDetalle>();
+
     public virtual ICollection<RelacionDispositivoComponente> RelacionDispositivoComponentes { get; set; } = new List<RelacionDispositivoComponente>();
 
     public virtual ICollection<ReparacionDetalle> ReparacionDetalles { get; set; } = new List<ReparacionDetalle>();

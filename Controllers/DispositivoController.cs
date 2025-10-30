@@ -618,7 +618,7 @@ public async Task<IActionResult> CreateEquipo()
             if (!marcas.Any() || !tipos.Any())
             {
                 TempData["ErrorMessage"] = "No hay marcas o tipos disponibles.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Index", "Dispositivo");
             }
             var tipoHardware = await _context.TipoHardwares
                                .FirstOrDefaultAsync(t => t.Descripcion == "Hardware");

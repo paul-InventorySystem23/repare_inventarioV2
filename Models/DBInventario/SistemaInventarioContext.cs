@@ -23,6 +23,10 @@ public partial class SistemaInventarioContext : DbContext
 
     public virtual DbSet<Movimiento> Movimientos { get; set; }
 
+    public virtual DbSet<Relacion> Relacions { get; set; }
+
+    public virtual DbSet<RelacionDetalle> RelacionDetalles { get; set; }
+
     public virtual DbSet<RelacionDispositivoComponente> RelacionDispositivoComponentes { get; set; }
 
     public virtual DbSet<ReparacionDetalle> ReparacionDetalles { get; set; }
@@ -38,7 +42,7 @@ public partial class SistemaInventarioContext : DbContext
     public virtual DbSet<VwHardwareCompleto> VwHardwareCompletos { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseSqlServer("Name=MiConexion");
+        => optionsBuilder.UseSqlServer("Name=ConnectionStrings:MiConexion");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -47,16 +51,13 @@ public partial class SistemaInventarioContext : DbContext
             entity.HasKey(e => e.IdComponente).HasName("PK__componen__B5F34A8AFEA2C121");
 
             entity.ToTable("componentes");
-            
+
             entity.HasIndex(e => e.NroSerie, "UQ__componen__AD64A161BC78FB82").IsUnique();
 
             entity.Property(e => e.IdComponente).HasColumnName("id_componente");
             entity.Property(e => e.Cantidad)
                 .HasDefaultValue(1)
                 .HasColumnName("cantidad");
-            entity.Property(e => e.StockMinimo)
-                .HasDefaultValue(1)
-                .HasColumnName("stock_minimo");
             entity.Property(e => e.Descripcion)
                 .IsUnicode(false)
                 .HasColumnName("descripcion");
@@ -80,6 +81,9 @@ public partial class SistemaInventarioContext : DbContext
                 .HasMaxLength(100)
                 .IsUnicode(false)
                 .HasColumnName("nro_serie");
+            entity.Property(e => e.StockMinimo)
+                .HasDefaultValue(1)
+                .HasColumnName("stock_minimo");
 
             entity.HasOne(d => d.IdMarcaNavigation).WithMany(p => p.Componentes)
                 .HasForeignKey(d => d.IdMarca)
@@ -176,11 +180,8 @@ public partial class SistemaInventarioContext : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("fecha");
-            entity.Property(e => e.IdDispositivo).HasColumnName("id_dispositivo");
-
-            // ✅ NUEVO: Propiedad para componente
             entity.Property(e => e.IdComponente).HasColumnName("id_componente");
-
+            entity.Property(e => e.IdDispositivo).HasColumnName("id_dispositivo");
             entity.Property(e => e.IdResponsable).HasColumnName("id_responsable");
             entity.Property(e => e.IdUbicacion).HasColumnName("id_ubicacion");
             entity.Property(e => e.Observaciones)
@@ -191,17 +192,13 @@ public partial class SistemaInventarioContext : DbContext
                 .IsUnicode(false)
                 .HasColumnName("tipo_movimiento");
 
-            // ✅ Relación con Dispositivo (ahora opcional)
-            entity.HasOne(d => d.IdDispositivoNavigation).WithMany(p => p.Movimientos)
-                .HasForeignKey(d => d.IdDispositivo)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Movimientos_Dispositivos");
-
-            // ✅ NUEVO: Relación con Componente
             entity.HasOne(d => d.IdComponenteNavigation).WithMany(p => p.Movimientos)
                 .HasForeignKey(d => d.IdComponente)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Movimientos_Componentes");
+
+            entity.HasOne(d => d.IdDispositivoNavigation).WithMany(p => p.Movimientos)
+                .HasForeignKey(d => d.IdDispositivo)
+                .HasConstraintName("FK_Movimientos_Dispositivos");
 
             entity.HasOne(d => d.IdResponsableNavigation).WithMany(p => p.Movimientos)
                 .HasForeignKey(d => d.IdResponsable)
@@ -210,6 +207,45 @@ public partial class SistemaInventarioContext : DbContext
             entity.HasOne(d => d.IdUbicacionNavigation).WithMany(p => p.Movimientos)
                 .HasForeignKey(d => d.IdUbicacion)
                 .HasConstraintName("FK_Movimientos_Ubicaciones");
+        });
+
+        modelBuilder.Entity<Relacion>(entity =>
+        {
+            entity.HasKey(e => e.IdRelacion).HasName("PK__relacion__51F3AF4CD6C6AB60");
+
+            entity.ToTable("relacion");
+
+            entity.Property(e => e.IdRelacion).HasColumnName("id_relacion");
+            entity.Property(e => e.Fecha)
+                .HasDefaultValueSql("(CONVERT([date],getdate()))")
+                .HasColumnName("fecha");
+        });
+
+        modelBuilder.Entity<RelacionDetalle>(entity =>
+        {
+            entity.HasKey(e => e.IdRelacionDetalle).HasName("PK__relacion__22D74CEE5660B7A7");
+
+            entity.ToTable("relacion_detalle");
+
+            entity.Property(e => e.IdRelacionDetalle).HasColumnName("id_relacion_detalle");
+            entity.Property(e => e.IdComponente).HasColumnName("id_componente");
+            entity.Property(e => e.IdDispositivo).HasColumnName("id_dispositivo");
+            entity.Property(e => e.IdRelacion).HasColumnName("id_relacion");
+
+            entity.HasOne(d => d.IdComponenteNavigation).WithMany(p => p.RelacionDetalles)
+                .HasForeignKey(d => d.IdComponente)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_relacion_detalle_componentes");
+
+            entity.HasOne(d => d.IdDispositivoNavigation).WithMany(p => p.RelacionDetalles)
+                .HasForeignKey(d => d.IdDispositivo)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_relacion_detalle_dispositivos");
+
+            entity.HasOne(d => d.IdRelacionNavigation).WithMany(p => p.RelacionDetalles)
+                .HasForeignKey(d => d.IdRelacion)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_relacion_detalle_relacion");
         });
 
         modelBuilder.Entity<RelacionDispositivoComponente>(entity =>

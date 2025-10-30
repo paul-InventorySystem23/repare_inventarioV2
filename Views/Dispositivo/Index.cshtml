@@ -19,9 +19,9 @@
             <i class="bi bi-plus-circle"></i> Nuevo Dispositivo
             
         </button>
-        <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#createEquipoModal">
+        @* <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#createEquipoModal">
             <i class="bi bi-cpu"></i> Nuevo Equipo
-        </button>
+        </button> *@
         <button class="btn btn-success-custom" onclick="abrirModalCrearComponente()">
             <i class="bi bi-gear"></i> Nuevo Componente
         </button>
@@ -641,7 +641,7 @@
              });
          }
 
-                function abrirModalEditarDispositivo(id) {
+        function abrirModalEditarDispositivo(id) {
                     $('#modalDispositivoTitulo').html('<i class="bi bi-pencil"></i> Editar Dispositivo');
                     $.get('@Url.Action("Edit", "Dispositivo")/' + id, function(data) {
                         $('#modalDispositivoContenido').html(data);
@@ -649,9 +649,9 @@
                     }).fail(function() {
                         alert('Error al cargar el formulario de edición');
                     });
-                }
+        }
 
-                function abrirModalDetalleDispositivo(id) {
+        function abrirModalDetalleDispositivo(id) {
                     $('#modalDispositivoTitulo').html('<i class="bi bi-info-circle"></i> Detalles del Dispositivo');
                     $.get('@Url.Action("Details", "Dispositivo")/' + id, function(data) {
                         $('#modalDispositivoContenido').html(data);
@@ -659,9 +659,9 @@
                     }).fail(function() {
                         alert('Error al cargar los detalles');
                     });
-                }
+        }
 
-                function abrirModalEliminarDispositivo(id, nombre) {
+        function abrirModalEliminarDispositivo(id, nombre) {
                     if (confirm('¿Está seguro que desea eliminar el Dispositivo "' + nombre + '"?')) {
                         $.ajax({
                             url: '@Url.Action("Delete", "Dispositivo")/' + id,
@@ -681,54 +681,54 @@
                             }
                         });
                     }
-                }
+        }
 
-                // // Manejar submit del formulario de componentes (crear)
-                // $(document).on('submit', '#formDispositivo', function(e) {
-                //     e.preventDefault();
-                //     var form = $(this);
-                //     $.ajax({
-                //         url: form.attr('action'),
-                //         type: 'POST',
-                //         data: form.serialize(),
-                //         success: function(response) {
-                //             if (response.success) {
-                //                 $('#modalDispositivo').modal('hide');
-                //                 location.reload();
-                //             } else {
-                //                 $('#modalDispositivoContenido').html(response);
-                //             }
-                //         },
-                //         error: function() {
-                //             alert('Error al procesar la solicitud');
-                //         }
-                //     });
-                // });
+                // Manejar submit del formulario de componentes (crear)
+        $(document).on('submit', '#formDispositivo', function(e) {
+                    e.preventDefault();
+                    var form = $(this);
+                    $.ajax({
+                        url: form.attr('action'),
+                        type: 'POST',
+                        data: form.serialize(),
+                        success: function(response) {
+                            if (response.success) {
+                                $('#modalDispositivo').modal('hide');
+                                location.reload();
+                            } else {
+                                $('#modalDispositivoContenido').html(response);
+                            }
+                        },
+                        error: function() {
+                            alert('Error al procesar la solicitud');
+                        }
+                    });
+        });
 
                 // Manejar submit del formulario de edición de componentes
-                // $(document).on('submit', '#formDispositivoEdit', function(e) {
-                //     e.preventDefault();
-                //     var form = $(this);
+        $(document).on('submit', '#formDispositivoEdit', function(e) {
+                    e.preventDefault();
+                    var form = $(this);
 
-                //     $.ajax({
-                //         url: 'Url.Action("Edit", "Dispositivo")',
-                //         type: 'POST',
-                //         data: form.serialize(),
-                //         success: function(response) {
-                //             if (response.success) {
-                //                 $('#modalDispositivo').modal('hide');
-                //                 location.reload();
-                //             } else {
-                //                 $('#modalDispositivoContenido').html(response);
-                //             }
-                //         },
-                //         error: function(xhr, status, error) {
-                //             console.error('Error:', error);
-                //             console.log('Response:', xhr.responseText);
-                //             alert('Error al procesar la solicitud de edición');
-                //         }
-                //     });
-                // });
+                    $.ajax({
+                        url: 'Url.Action("Edit", "Dispositivo")',
+                        type: 'POST',
+                        data: form.serialize(),
+                        success: function(response) {
+                            if (response.success) {
+                                $('#modalDispositivo').modal('hide');
+                                location.reload();
+                            } else {
+                                $('#modalDispositivoContenido').html(response);
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error:', error);
+                            console.log('Response:', xhr.responseText);
+                            alert('Error al procesar la solicitud de edición');
+                        }
+                    });
+        });
 
 
 

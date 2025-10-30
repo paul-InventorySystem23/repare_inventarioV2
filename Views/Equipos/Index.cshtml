@@ -1,0 +1,439 @@
+﻿@model IEnumerable<inventario_coprotab.Models.DBInventario.Relacion>
+
+@{
+    ViewData["Title"] = "Gestión de Equipos";
+}
+
+
+<!-- Token CSRF necesario para las peticiones POST -->
+@Html.AntiForgeryToken()
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Gestión de Equipos</h2>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#crearEquipoModal">
+            <i class="bi bi-plus-circle"></i> Crear Equipo
+        </button>
+            </div>
+
+    <!-- Lista de equipos existentes -->
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Fecha</th>
+                        <th>Dispositivo</th>
+                        <th>Componentes</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var equipo in Model)
+                    {
+                        <tr>
+                            <td>@equipo.IdRelacion</td>
+                            <td>@equipo.Fecha.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @if (equipo.RelacionDetalles != null && equipo.RelacionDetalles.Any())
+                                {
+                                    var detalle = equipo.RelacionDetalles.FirstOrDefault();
+                                    if (detalle?.IdDispositivoNavigation != null)
+                                    {
+                                        var dispositivo = detalle.IdDispositivoNavigation;
+                                        var tipoDesc = dispositivo.IdTipoNavigation?.Descripcion ?? "Sin tipo";
+                                        <span>@dispositivo.NroSerie - @tipoDesc</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Sin dispositivo</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                @if (equipo.RelacionDetalles != null && equipo.RelacionDetalles.Any())
+                                {
+                                    foreach (var detalle in equipo.RelacionDetalles)
+                                    {
+                                        if (detalle?.IdComponenteNavigation != null)
+                                        {
+                                            <span class="badge bg-info text-dark me-1">@detalle.IdComponenteNavigation.Nombre</span>
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Sin componentes</span>
+                                }
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-info" onclick="verDetalleEquipo(@equipo.IdRelacion)">
+                                    <i class="bi bi-eye"></i> Ver
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para crear equipo -->
+<div class="modal fade" id="crearEquipoModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Crear Nuevo Equipo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Selector de dispositivo -->
+                <div class="mb-4">
+                    <label for="selectDispositivo" class="form-label"><strong>Seleccionar Dispositivo:</strong></label>
+                    <select class="form-select" id="selectDispositivo">
+                        <option value="">Cargando dispositivos...</option>
+                    </select>
+                </div>
+
+                <!-- Buscador de componentes -->
+                <div class="mb-3">
+                    <label for="buscarComponente" class="form-label"><strong>Buscar Componente:</strong></label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="buscarComponente" placeholder="Buscar por nombre, serie o categoría...">
+                        <button class="btn btn-outline-secondary" type="button" id="btnBuscar">
+                            <i class="bi bi-search"></i> Buscar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Resultados de búsqueda -->
+                <div id="resultadosBusqueda" class="mb-3"></div>
+
+                <!-- Tabla de componentes agregados -->
+                <div class="card">
+                    <div class="card-header">
+                        <strong>Componentes del Equipo</strong>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm" id="tablaComponentes">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Nro. Serie</th>
+                                    <th>Categoría</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="componentesAgregados">
+                                <tr id="sinComponentes">
+                                    <td colspan="4" class="text-center text-muted">No hay componentes agregados</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btnFinalizarEquipo">
+                    <i class="bi bi-check-circle"></i> Finalizar Equipo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para ver detalle del equipo -->
+<div class="modal fade" id="detalleEquipoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-info-circle"></i> Detalle del Equipo #<span id="detalleIdRelacion"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Información general -->
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <strong>Información General</strong>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Fecha de Creación:</strong> <span id="detalleFecha"></span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>ID Relación:</strong> <span id="detalleIdRelacion2"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dispositivo -->
+                <div class="card mb-3">
+                    <div class="card-header bg-primary text-white">
+                        <strong><i class="bi bi-laptop"></i> Dispositivo Principal</strong>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <p><strong>Nro. Serie:</strong><br><span id="detalleDispNroSerie"></span></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Categoría:</strong><br><span id="detalleDispCategoria"></span></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p>
+                                    <strong>Estado:</strong><br>
+                                    <span class="badge" id="detalleDispEstado"></span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Componentes -->
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <strong><i class="bi bi-cpu"></i> Componentes del Equipo</strong>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-hover table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Nro. Serie</th>
+                                    <th>Categoría</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detalleComponentes">
+                                <!-- Los componentes se cargarán aquí -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        let componentesSeleccionados = [];
+
+        $(document).ready(function() {
+            cargarDispositivos();
+
+            // Buscar al presionar Enter
+            $('#buscarComponente').on('keypress', function(e) {
+                if (e.which === 13) {
+                    buscarComponentes();
+                }
+            });
+
+            // Buscar al hacer clic en el botón
+            $('#btnBuscar').on('click', buscarComponentes);
+
+            // Finalizar equipo
+            $('#btnFinalizarEquipo').on('click', finalizarEquipo);
+
+            // Limpiar modal al cerrar
+            $('#crearEquipoModal').on('hidden.bs.modal', function() {
+                componentesSeleccionados = [];
+                $('#componentesAgregados').html('<tr id="sinComponentes"><td colspan="4" class="text-center text-muted">No hay componentes agregados</td></tr>');
+                $('#selectDispositivo').val('');
+                $('#buscarComponente').val('');
+                $('#resultadosBusqueda').html('');
+            });
+        });
+
+        function cargarDispositivos() {
+            $.get('/Equipos/ObtenerDispositivos', function(data) {
+                let options = '<option value="">Seleccione un dispositivo...</option>';
+                data.forEach(function(dispositivo) {
+                    options += `<option value="${dispositivo.id}">${dispositivo.nombre}</option>`;
+                });
+                $('#selectDispositivo').html(options);
+            });
+        }
+
+        function buscarComponentes() {
+            const termino = $('#buscarComponente').val().trim();
+
+            if (termino.length < 2) {
+                alert('Ingrese al menos 2 caracteres para buscar');
+                return;
+            }
+
+            $.get('/Equipos/BuscarComponentes', { termino: termino }, function(data) {
+                if (data.length === 0) {
+                    $('#resultadosBusqueda').html('<div class="alert alert-info">No se encontraron componentes</div>');
+                    return;
+                }
+
+                let html = '<div class="list-group">';
+                data.forEach(function(comp) {
+                    const yaAgregado = componentesSeleccionados.some(c => c.id === comp.id);
+                    const disabled = yaAgregado ? 'disabled' : '';
+                    const textoBoton = yaAgregado ? 'Agregado' : 'Agregar';
+
+                    html += `
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>${comp.nombre}</strong><br>
+                                <small>Serie: ${comp.nroSerie} | Categoría: ${comp.tipo}</small>
+                            </div>
+                            <button class="btn btn-sm btn-primary" ${disabled} onclick="agregarComponente(${comp.id}, '${comp.nombre}', '${comp.nroSerie}', '${comp.tipo}')">
+                                ${textoBoton}
+                            </button>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+
+                $('#resultadosBusqueda').html(html);
+            });
+        }
+
+        function agregarComponente(id, nombre, nroSerie, tipo) {
+            if (componentesSeleccionados.some(c => c.id === id)) {
+                return;
+            }
+
+            componentesSeleccionados.push({ id, nombre, nroSerie, tipo });
+
+            $('#sinComponentes').remove();
+
+            const fila = `
+                <tr id="comp-${id}">
+                    <td>${nombre}</td>
+                    <td>${nroSerie}</td>
+                    <td>${tipo}</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="eliminarComponente(${id})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+
+            $('#componentesAgregados').append(fila);
+            buscarComponentes(); // Actualizar resultados
+        }
+
+        function eliminarComponente(id) {
+            componentesSeleccionados = componentesSeleccionados.filter(c => c.id !== id);
+            $(`#comp-${id}`).remove();
+
+            if (componentesSeleccionados.length === 0) {
+                $('#componentesAgregados').html('<tr id="sinComponentes"><td colspan="4" class="text-center text-muted">No hay componentes agregados</td></tr>');
+            }
+
+            buscarComponentes(); // Actualizar resultados
+        }
+
+        function finalizarEquipo() {
+            const idDispositivo = $('#selectDispositivo').val();
+
+            if (!idDispositivo) {
+                alert('Debe seleccionar un dispositivo');
+                return;
+            }
+
+            if (componentesSeleccionados.length === 0) {
+                alert('Debe agregar al menos un componente');
+                return;
+            }
+
+            const datos = {
+                idDispositivo: parseInt(idDispositivo),
+                componentes: componentesSeleccionados.map(c => c.id)
+            };
+
+            // Obtener el token CSRF
+            const token = $('input[name="__RequestVerificationToken"]').val();
+
+            $.ajax({
+                url: '/Equipos/CrearEquipo',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(datos),
+                headers: {
+                    'RequestVerificationToken': token
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert('Equipo creado exitosamente');
+                        $('#crearEquipoModal').modal('hide');
+                        location.reload();
+                    } else {
+                        console.error('Error completo:', response);
+                        alert('Error: ' + response.message + '\n\nDetalles: ' + (response.innerError || 'Sin detalles'));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error AJAX:', xhr.responseText);
+                    alert('Error al crear el equipo. Revisa la consola para más detalles.');
+                }
+            });
+        }
+
+        function verDetalleEquipo(idRelacion) {
+            $.get('/Equipos/DetalleEquipo', { id: idRelacion }, function(response) {
+                if (response.success) {
+                    // Cargar información general
+                    $('#detalleIdRelacion').text(response.idRelacion);
+                    $('#detalleIdRelacion2').text(response.idRelacion);
+                    $('#detalleFecha').text(response.fecha);
+
+                    // Cargar información del dispositivo
+                    $('#detalleDispNroSerie').text(response.dispositivo.nroSerie);
+                    $('#detalleDispCategoria').text(response.dispositivo.tipo);
+
+                    const estadoDisp = response.dispositivo.estado;
+                    const badgeClass = estadoDisp ? 'bg-success' : 'bg-danger';
+                    const estadoTexto = estadoDisp ? 'Disponible' : 'En uso';
+                    $('#detalleDispEstado').attr('class', 'badge ' + badgeClass).text(estadoTexto);
+
+                    // Cargar componentes
+                    let componentesHtml = '';
+                    response.componentes.forEach(function(comp) {
+                        const estadoComp = comp.estado;
+                        const badgeClassComp = estadoComp ? 'bg-success' : 'bg-danger';
+                        const estadoTextoComp = estadoComp ? 'Disponible' : 'En uso';
+
+                        componentesHtml += `
+                            <tr>
+                                <td>${comp.nombre}</td>
+                                <td>${comp.nroSerie}</td>
+                                <td>${comp.tipo}</td>
+                                <td><span class="badge ${badgeClassComp}">${estadoTextoComp}</span></td>
+                            </tr>
+                        `;
+                    });
+
+                    $('#detalleComponentes').html(componentesHtml);
+
+                    // Mostrar el modal
+                    $('#detalleEquipoModal').modal('show');
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            }).fail(function() {
+                alert('Error al cargar el detalle del equipo');
+            });
+        }
+                        
+    </script>
+}

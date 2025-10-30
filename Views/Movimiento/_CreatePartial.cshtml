@@ -44,7 +44,6 @@
             <label asp-for="TipoMovimiento" class="form-label fw-bold">
                 <i class="bi bi-arrow-left-right"></i> Tipo de Movimiento
             </label>
-            Partial.cshtml
             <select asp-for="TipoMovimiento" class="form-select" disabled="@(ViewBag.StockCero == true ? "disabled" : null)">
                 <option value="">-- Seleccionar --</option>
                 @foreach (var tipo in ViewBag.TipoDisponibles as List<string>)
