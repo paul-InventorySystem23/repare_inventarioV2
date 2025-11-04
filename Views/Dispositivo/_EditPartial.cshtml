@@ -18,7 +18,9 @@
             <label asp-for="IdMarca" class="form-label fw-bold">
                 <i class="bi bi-bookmark"></i> Marca
             </label>
-            <select asp-for="IdMarca" class="form-select" asp-items="ViewBag.IdMarca"></select>
+            <select asp-for="IdMarca" class="form-select select2-marca-edit" asp-items="ViewBag.IdMarca">
+                <option value="">-- Buscar o seleccionar marca --</option>
+            </select>
             <span asp-validation-for="IdMarca" class="text-danger small"></span>
         </div>
     </div>
@@ -100,12 +102,14 @@
         </div>
 
         <div class="col-md-6 mb-3">
-            <label asp-for="FechaBaja" class="form-label fw-bold">
+            <label class="form-label fw-bold">
                 <i class="bi bi-calendar-x"></i> Fecha de Baja
             </label>
-            <input asp-for="FechaBaja" class="form-control" type="date"
-                   value="@(Model.FechaBaja?.ToString("yyyy-MM-dd"))" />
-            <span asp-validation-for="FechaBaja" class="text-danger small"></span>
+            <input type="text" class="form-control"
+                   value="@(Model.FechaBaja?.ToString("dd/MM/yyyy HH:mm") ?? "Sin fecha de baja")"
+                   readonly
+                   style="background-color: #f8f9fa;" />
+            <small class="text-muted">Este campo es de solo lectura y se actualiza automáticamente</small>
         </div>
     </div>
 
@@ -196,6 +200,17 @@
             error: function() {
                 alert('Error al procesar la solicitud');
             }
+        });
+    });
+</script>}
+<script>
+    $(document).ready(function() {
+        $('.select2-marca-edit').select2({
+            theme: 'bootstrap-5',
+            placeholder: '-- Buscar o seleccionar marca --',
+            allowClear: true,
+            width: '100%',
+            dropdownParent: $('#modalDispositivo')
         });
     });
 </script>

@@ -41,7 +41,13 @@
                 <input type="text" name="searchSerie" class="form-control" placeholder="Número de Serie" value="@ViewBag.SearchSerie" />
             </div>
             <div class="col-md-2">
-                <input type="text" name="searchTipo" class="form-control" placeholder="Tipo" value="@ViewBag.SearchTipo" />
+                <select name="searchTipo" class="form-select">
+                    <option value="">Todos los tipos</option>
+                    @foreach (var tipo in ViewBag.TiposDisponibles as List<string>)
+                    {
+                        <option value="@tipo" selected="@(ViewBag.SearchTipo == tipo)">@tipo</option>
+                    }
+                </select>
             </div>
             <div class="col-md-2">
                 <select name="searchEstado" class="form-select">
