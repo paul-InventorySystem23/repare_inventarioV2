@@ -1,11 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using inventario_coprotab.Models.DBInventario;
+using inventario_coprotab.ViewModels;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-//using Relacion = inventario_coprotab.Models.DBInventario.Relacion;
 
 namespace inventario_coprotab.Controllers
 {
@@ -19,16 +20,49 @@ namespace inventario_coprotab.Controllers
         }
 
         // GET: Equipos
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchNombre, string searchSerie, string searchFecha)
         {
-            var equipos = await _context.Relacions
+            var query = _context.Relacions
                 .Include(r => r.RelacionDetalles)
                     .ThenInclude(rd => rd.IdDispositivoNavigation)
-                        .ThenInclude(d => d.IdTipoNavigation)  
+                        .ThenInclude(d => d.IdTipoNavigation)
                 .Include(r => r.RelacionDetalles)
                     .ThenInclude(rd => rd.IdComponenteNavigation)
-                .OrderByDescending(r => r.IdRelacion)
+                        .ThenInclude(c => c.IdTipoNavigation)
+                .AsQueryable();
+
+            // Aplicar filtros
+            if (!string.IsNullOrEmpty(searchNombre))
+            {
+                query = query.Where(r => r.RelacionDetalles.Any(rd =>
+                    rd.IdDispositivoNavigation != null &&
+                    EF.Functions.Like(rd.IdDispositivoNavigation.Nombre.ToLower(), $"%{searchNombre.ToLower()}%")));
+            }
+
+            if (!string.IsNullOrEmpty(searchSerie))
+            {
+                query = query.Where(r => r.RelacionDetalles.Any(rd =>
+                    rd.IdDispositivoNavigation != null &&
+                    rd.IdDispositivoNavigation.NroSerie != null &&
+                    rd.IdDispositivoNavigation.NroSerie.Contains(searchSerie)));
+            }
+
+            if (!string.IsNullOrEmpty(searchFecha))
+            {
+                if (DateTime.TryParse(searchFecha, out DateTime fecha))
+                {
+                    var fechaFiltro = DateOnly.FromDateTime(fecha);
+                    query = query.Where(r => r.Fecha == fechaFiltro);
+                }
+            }
+
+            var equipos = await query
+                .OrderByDescending(r => r.Fecha)
                 .ToListAsync();
+
+            ViewBag.SearchNombre = searchNombre;
+            ViewBag.SearchSerie = searchSerie;
+            ViewBag.SearchFecha = searchFecha;
 
             return View(equipos);
         }
@@ -42,58 +76,199 @@ namespace inventario_coprotab.Controllers
                     .ThenInclude(rd => rd.IdDispositivoNavigation)
                         .ThenInclude(d => d.IdTipoNavigation)
                 .Include(r => r.RelacionDetalles)
+                    .ThenInclude(rd => rd.IdDispositivoNavigation)
+                        .ThenInclude(d => d.IdMarcaNavigation)
+                .Include(r => r.RelacionDetalles)
                     .ThenInclude(rd => rd.IdComponenteNavigation)
                         .ThenInclude(c => c.IdTipoNavigation)
+                .Include(r => r.RelacionDetalles)
+                    .ThenInclude(rd => rd.IdComponenteNavigation)
+                        .ThenInclude(c => c.IdMarcaNavigation)
                 .FirstOrDefaultAsync(r => r.IdRelacion == id);
 
             if (equipo == null)
             {
-                return Json(new { success = false, message = "Equipo no encontrado" });
+                return NotFound();
+            }
+
+            return PartialView("_DetailsPartial", equipo);
+        }
+
+        // GET: Equipos/Edit/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var equipo = await _context.Relacions
+                .Include(r => r.RelacionDetalles)
+                    .ThenInclude(rd => rd.IdDispositivoNavigation)
+                .Include(r => r.RelacionDetalles)
+                    .ThenInclude(rd => rd.IdComponenteNavigation)
+                .FirstOrDefaultAsync(r => r.IdRelacion == id);
+
+            if (equipo == null)
+            {
+                return NotFound();
             }
 
             var dispositivo = equipo.RelacionDetalles.FirstOrDefault()?.IdDispositivoNavigation;
-            var componentes = equipo.RelacionDetalles
-                .Select(rd => new
-                {
-                    id = rd.IdComponente,
-                    nombre = rd.IdComponenteNavigation.Nombre,
-                    nroSerie = rd.IdComponenteNavigation.NroSerie,
-                    tipo = rd.IdComponenteNavigation.IdTipoNavigation?.Descripcion ?? "Sin tipo",
-                    estado = rd.IdComponenteNavigation.Estado
-                })
+            var componentesIds = equipo.RelacionDetalles
+                .Select(rd => rd.IdComponente)
                 .ToList();
 
-            var resultado = new
+            var model = new EquipoEditViewModel
             {
-                success = true,
-                idRelacion = equipo.IdRelacion,
-                fecha = equipo.Fecha.ToString("dd/MM/yyyy"),
-                dispositivo = new
-                {
-                    id = dispositivo?.IdDispositivo,
-                    nombre = dispositivo?.Nombre,
-                    nroSerie = dispositivo?.NroSerie,
-                    tipo = dispositivo?.IdTipoNavigation?.Descripcion ?? "Sin tipo",
-                    estado = dispositivo?.Estado
-                },
-                componentes = componentes
+                IdRelacion = equipo.IdRelacion,
+                IdDispositivo = dispositivo?.IdDispositivo ?? 0,
+                DispositivoNombre = dispositivo?.Nombre ?? "N/A",
+                ComponentesSeleccionados = componentesIds,
+                ComponentesDisponibles = await _context.Componentes
+                    .Where(c => c.EstadoRegistro)
+                    .Include(c => c.IdMarcaNavigation)
+                    .Select(c => new ComponenteCheckboxItem
+                    {
+                        IdComponente = c.IdComponente,
+                        NombreCompleto = $"{c.Nombre} - {(c.NroSerie ?? "Sin serie")} ({(c.IdMarcaNavigation != null ? c.IdMarcaNavigation.Nombre : "Sin marca")})",
+                        Seleccionado = componentesIds.Contains(c.IdComponente)
+                    })
+                    .ToListAsync()
             };
 
-            return Json(resultado);
+            return PartialView("_EditPartial", model);
         }
 
-        // GET: Obtener dispositivos para el dropdown
-        [HttpGet]
-        public async Task<IActionResult> ObtenerDispositivos()
+        // POST: Equipos/Edit
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(EquipoEditViewModel model)
         {
+            if (!ModelState.IsValid)
+            {
+                return Json(new { success = false, message = "Datos inválidos" });
+            }
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // Eliminar detalles antiguos
+                var detallesAntiguos = await _context.RelacionDetalles
+                    .Where(rd => rd.IdRelacion == model.IdRelacion)
+                    .ToListAsync();
+
+                _context.RelacionDetalles.RemoveRange(detallesAntiguos);
+
+                // Agregar nuevos detalles
+                foreach (var componenteId in model.ComponentesSeleccionados)
+                {
+                    var nuevoDetalle = new inventario_coprotab.Models.DBInventario.RelacionDetalle
+                    {
+                        IdRelacion = model.IdRelacion,
+                        IdDispositivo = model.IdDispositivo,
+                        IdComponente = componenteId
+                    };
+                    _context.RelacionDetalles.Add(nuevoDetalle);
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return Json(new { success = false, message = "Error al actualizar el equipo: " + ex.Message });
+            }
+        }
+
+        // POST: Equipos/Delete/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var relacion = await _context.Relacions
+                    .Include(r => r.RelacionDetalles)
+                    .FirstOrDefaultAsync(r => r.IdRelacion == id);
+
+                if (relacion == null)
+                {
+                    return Json(new { success = false, message = "Equipo no encontrado" });
+                }
+
+                // Obtener IDs de dispositivo y componentes antes de eliminar
+                var dispositivoId = relacion.RelacionDetalles.FirstOrDefault()?.IdDispositivo;
+                var componentesIds = relacion.RelacionDetalles.Select(rd => rd.IdComponente).ToList();
+
+                // Eliminar detalles
+                _context.RelacionDetalles.RemoveRange(relacion.RelacionDetalles);
+
+                // Eliminar relación
+                _context.Relacions.Remove(relacion);
+
+                await _context.SaveChangesAsync();
+
+                // Reactivar dispositivo
+                if (dispositivoId.HasValue)
+                {
+                    var dispositivo = await _context.Dispositivos.FindAsync(dispositivoId.Value);
+                    if (dispositivo != null)
+                    {
+                        dispositivo.EstadoRegistro = true;
+                    }
+                }
+
+                // Reactivar componentes
+                var componentes = await _context.Componentes
+                    .Where(c => componentesIds.Contains(c.IdComponente))
+                    .ToListAsync();
+
+                foreach (var componente in componentes)
+                {
+                    componente.EstadoRegistro = true;
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return Json(new { success = false, message = "Error al eliminar el equipo: " + ex.Message });
+            }
+        }
+
+        // GET: Buscar dispositivos
+        [HttpGet]
+        public async Task<IActionResult> BuscarDispositivos(string termino)
+        {
+            if (string.IsNullOrEmpty(termino) || termino.Length < 3)
+            {
+                return Json(new List<object>());
+            }
+
             var dispositivos = await _context.Dispositivos
                 .Include(d => d.IdTipoNavigation)
-                .Where(d => d.EstadoRegistro == true)
+                .Include(d => d.IdMarcaNavigation)
+                .Where(d => d.EstadoRegistro == true &&
+                           d.IdTipoNavigation.Descripcion == "Hardware" &&
+                           (d.Nombre.Contains(termino) ||
+                            (d.NroSerie != null && d.NroSerie.Contains(termino))))
                 .Select(d => new
                 {
                     id = d.IdDispositivo,
-                    nombre = d.Nombre + " - " + d.NroSerie
+                    nombre = d.Nombre,
+                    nroSerie = d.NroSerie ?? "Sin serie",
+                    marca = d.IdMarcaNavigation != null ? d.IdMarcaNavigation.Nombre : "Sin marca"
                 })
+                .Take(10)
                 .ToListAsync();
 
             return Json(dispositivos);
@@ -103,22 +278,24 @@ namespace inventario_coprotab.Controllers
         [HttpGet]
         public async Task<IActionResult> BuscarComponentes(string termino)
         {
-            if (string.IsNullOrEmpty(termino))
+            if (string.IsNullOrEmpty(termino) || termino.Length < 3)
             {
                 return Json(new List<object>());
             }
 
             var componentes = await _context.Componentes
                 .Include(c => c.IdTipoNavigation)
+                .Include(c => c.IdMarcaNavigation)
                 .Where(c => c.EstadoRegistro == true &&
                            (c.Nombre.Contains(termino) ||
-                            c.NroSerie.Contains(termino)))
+                            (c.NroSerie != null && c.NroSerie.Contains(termino))))
                 .Select(c => new
                 {
                     id = c.IdComponente,
                     nombre = c.Nombre,
-                    nroSerie = c.NroSerie,
-                    tipo = c.IdTipoNavigation.Descripcion
+                    nroSerie = c.NroSerie ?? "Sin serie",
+                    tipo = c.IdTipoNavigation != null ? c.IdTipoNavigation.Descripcion : "Sin tipo",
+                    marca = c.IdMarcaNavigation != null ? c.IdMarcaNavigation.Nombre : "Sin marca"
                 })
                 .Take(10)
                 .ToListAsync();
@@ -128,6 +305,7 @@ namespace inventario_coprotab.Controllers
 
         // POST: Crear equipo
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CrearEquipo([FromBody] CrearEquipoViewModel modelo)
         {
             if (!ModelState.IsValid)
@@ -143,7 +321,6 @@ namespace inventario_coprotab.Controllers
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // Crear la relación
                 var relacion = new inventario_coprotab.Models.DBInventario.Relacion
                 {
                     Fecha = DateOnly.FromDateTime(DateTime.Now)
@@ -152,7 +329,6 @@ namespace inventario_coprotab.Controllers
                 _context.Relacions.Add(relacion);
                 await _context.SaveChangesAsync();
 
-                // Crear los detalles de la relación
                 foreach (var componenteId in modelo.Componentes)
                 {
                     var detalle = new inventario_coprotab.Models.DBInventario.RelacionDetalle
@@ -167,7 +343,7 @@ namespace inventario_coprotab.Controllers
 
                 await _context.SaveChangesAsync();
 
-                // Actualizar estado del dispositivo
+                // Actualizar estados
                 var dispositivo = await _context.Dispositivos.FindAsync(modelo.IdDispositivo);
                 if (dispositivo != null)
                 {
@@ -175,7 +351,6 @@ namespace inventario_coprotab.Controllers
                     await _context.SaveChangesAsync();
                 }
 
-                // Actualizar estado de los componentes
                 var componentes = await _context.Componentes
                     .Where(c => modelo.Componentes.Contains(c.IdComponente))
                     .ToListAsync();
@@ -204,7 +379,6 @@ namespace inventario_coprotab.Controllers
         }
     }
 
-    // Modelo de vista para crear equipo
     public class CrearEquipoViewModel
     {
         public int IdDispositivo { get; set; }

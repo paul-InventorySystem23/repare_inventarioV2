@@ -1,0 +1,74 @@
+﻿@model inventario_coprotab.ViewModels.EquipoEditViewModel
+
+<form method="post" id="formEditarEquipo">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="IdRelacion" />
+    <input type="hidden" asp-for="IdDispositivo" />
+
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+    <!-- Información del Dispositivo -->
+    <div class="alert alert-info mb-4">
+        <h6 class="mb-2">
+            <i class="bi bi-laptop"></i> Dispositivo Principal
+        </h6>
+        <p class="mb-0"><strong>@Model.DispositivoNombre</strong></p>
+        <small class="text-muted">Este dispositivo no puede ser cambiado en la edición</small>
+    </div>
+
+    <!-- Componentes del Equipo -->
+    <div class="card-custom p-3">
+        <h6 class="fw-bold mb-3">
+            <i class="bi bi-gear-fill"></i> Seleccionar Componentes para el Equipo
+        </h6>
+
+        <div class="row">
+            @if (Model.ComponentesDisponibles != null && Model.ComponentesDisponibles.Any())
+            {
+                @for (int i = 0; i < Model.ComponentesDisponibles.Count; i++)
+                {
+                    <div class="col-md-6 mb-2">
+                        <div class="form-check">
+                            <input type="checkbox"
+                                   name="ComponentesSeleccionados"
+                                   value="@Model.ComponentesDisponibles[i].IdComponente"
+                                   id="comp_edit_@i"
+                                   class="form-check-input"
+                                   @(Model.ComponentesDisponibles[i].Seleccionado ? "checked" : "") />
+                            <label class="form-check-label" for="comp_edit_@i">
+                                @Model.ComponentesDisponibles[i].NombreCompleto
+                            </label>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12">
+                    <div class="alert alert-warning mb-0">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        No hay componentes disponibles para agregar.
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="modal-footer border-0 pt-4">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle"></i> Cancelar
+        </button>
+        <button type="submit" class="btn btn-success-custom">
+            <i class="bi bi-save"></i> Guardar Cambios
+        </button>
+    </div>
+</form>
+
+<script>
+    $(function () {
+        var form = $('#formEditarEquipo');
+        if (form.length) {
+            $.validator.unobtrusive.parse(form);
+        }
+    });
+</script>
