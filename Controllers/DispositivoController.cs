@@ -69,7 +69,12 @@ namespace inventario_coprotab.Controllers
 
             if (!string.IsNullOrEmpty(searchEstado))
                 queryDispositivos = queryDispositivos.Where(d => d.Estado == searchEstado);
-
+            // ✅ NUEVO: Cargar tipos disponibles para el filtro
+            ViewBag.TiposDisponibles = await _context.TipoHardwares
+                .OrderBy(t => t.Descripcion)
+                .Select(t => t.Descripcion)
+                .Distinct()
+                .ToListAsync();
             // ✅ NUEVO: Filtrar por alertas de bajo stock
             if (mostrarAlertas == true)
             {
