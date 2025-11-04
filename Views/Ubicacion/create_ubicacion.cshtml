@@ -1,0 +1,191 @@
+﻿@model IEnumerable<inventario_coprotab.Models.DBInventario.Ubicacione>
+
+@{
+    ViewData["Title"] = "Gestión de Ubicaciones";
+}
+
+<div class="container mt-4">
+    <!-- Título y botones -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3><i class="bi bi-geo-alt"></i> Gestión de Ubicaciones</h3>
+        <div class="d-flex gap-2">
+            <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalNuevaUbicacion">
+                <i class="bi bi-plus-circle"></i> Nueva Ubicación
+            </button>
+        </div>
+    </div>
+
+    <!-- 🔹 Barra de búsqueda -->
+    <form method="get" class="mb-3">
+        <div class="input-group">
+            <input type="text" name="searchUbicacion" value="@ViewBag.SearchUbicacion" class="form-control" placeholder="Buscar ubicación..." />
+            <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
+            <a asp-action="Create_Ubicacion" class="btn btn-outline-secondary"><i class="bi bi-x-circle"></i></a>
+        </div>
+    </form>
+
+    <!-- 🔹 Tabla -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Nombre</th>
+                        <th>Descripción</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaUbicaciones">
+                    @if (Model.Any())
+                    {
+                        var i = 1;
+                        foreach (var item in Model)
+                        {
+                            <tr data-id="@item.IdUbicacion" data-nombre="@item.Nombre" data-descripcion="@item.Descripcion">
+                                <td>@(i++)</td>
+                                <td>@item.Nombre</td>
+                                <td>@(string.IsNullOrEmpty(item.Descripcion) ? "-" : item.Descripcion)</td>
+                                <td class="text-center">
+                                    <!-- Botón Editar -->
+                                    <button type="button" class="btn btn-warning btn-sm me-1 btnEditar" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+
+                                    <!-- Botón Eliminar -->
+                                    <form asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('¿Eliminar esta ubicación?');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.IdUbicacion" />
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr><td colspan="4" class="text-center text-muted">No hay ubicaciones registradas.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ======================== MODAL NUEVA UBICACIÓN ======================== -->
+<div class="modal fade" id="modalNuevaUbicacion" tabindex="-1" aria-labelledby="modalNuevaUbicacionLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Nueva Ubicación</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formNuevaUbicacion">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" id="nombreUbicacion" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descripción</label>
+                        <input type="text" id="descripcionUbicacion" class="form-control" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-save"></i> Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ======================== MODAL EDITAR UBICACIÓN ======================== -->
+<div class="modal fade" id="modalEditarUbicacion" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title"><i class="bi bi-pencil"></i> Editar Ubicación</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formEditarUbicacion">
+                <div class="modal-body">
+                    <input type="hidden" id="editIdUbicacion" />
+                    <div class="mb-3">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" id="editNombre" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descripción</label>
+                        <input type="text" id="editDescripcion" class="form-control" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // ✅ Crear nueva ubicación
+        document.getElementById("formNuevaUbicacion").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const data = {
+                nombre: document.getElementById("nombreUbicacion").value.trim(),
+                descripcion: document.getElementById("descripcionUbicacion").value.trim()
+            };
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            const res = await fetch('@Url.Action("Create", "Ubicacion")', {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "RequestVerificationToken": token },
+                body: JSON.stringify(data)
+            });
+            if (res.ok) location.reload(); else alert("❌ Error al guardar ubicación");
+        });
+
+        // ✅ Abrir modal de edición
+        document.querySelectorAll(".btnEditar").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const tr = e.target.closest("tr");
+                document.getElementById("editIdUbicacion").value = tr.dataset.id;
+                document.getElementById("editNombre").value = tr.dataset.nombre;
+                document.getElementById("editDescripcion").value = tr.dataset.descripcion;
+                new bootstrap.Modal(document.getElementById("modalEditarUbicacion")).show();
+            });
+        });
+
+        // ✅ Guardar edición
+        document.getElementById("formEditarUbicacion").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const data = {
+                IdUbicacion: document.getElementById("editIdUbicacion").value,
+                Nombre: document.getElementById("editNombre").value.trim(),
+                Descripcion: document.getElementById("editDescripcion").value.trim()
+            };
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            const res = await fetch('@Url.Action("Edit", "Ubicacion")', {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "RequestVerificationToken": token },
+                body: JSON.stringify(data)
+            });
+            if (res.ok) location.reload(); else alert("❌ Error al editar ubicación");
+        });
+    </script>
+}
