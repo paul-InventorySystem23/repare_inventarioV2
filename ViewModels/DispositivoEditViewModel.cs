@@ -14,10 +14,7 @@ namespace inventario_coprotab.ViewModels
 
         [Required(ErrorMessage = "La marca es obligatoria")]
         public int? IdMarca { get; set; }
-
-        [Required(ErrorMessage = "El tipo es obligatorio")]
         public int? IdTipo { get; set; }
-
         public string? CodigoInventario { get; set; }
 
         public string? NroSerie { get; set; }

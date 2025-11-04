@@ -1,4 +1,4 @@
-﻿// ViewModels/ComponenteCreateViewModel.cs
+﻿//ViewModels/ComponenteCreateViewModel.cs
 using System;
 using System.ComponentModel.DataAnnotations;
 
@@ -17,6 +17,7 @@ namespace inventario_coprotab.ViewModels
         [Required(ErrorMessage = "El tipo es obligatorio")]
         public int IdTipo { get; set; }
 
+        [Required(ErrorMessage = "El numero de Serie es obligatorio")]
         public string? NroSerie { get; set; }
 
         [Required(ErrorMessage = "El estado es obligatorio")]

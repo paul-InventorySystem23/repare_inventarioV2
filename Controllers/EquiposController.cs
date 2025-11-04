@@ -24,7 +24,7 @@ namespace inventario_coprotab.Controllers
             var equipos = await _context.Relacions
                 .Include(r => r.RelacionDetalles)
                     .ThenInclude(rd => rd.IdDispositivoNavigation)
-                        .ThenInclude(d => d.IdTipoNavigation)  // ← Agrega esta línea
+                        .ThenInclude(d => d.IdTipoNavigation)  
                 .Include(r => r.RelacionDetalles)
                     .ThenInclude(rd => rd.IdComponenteNavigation)
                 .OrderByDescending(r => r.IdRelacion)

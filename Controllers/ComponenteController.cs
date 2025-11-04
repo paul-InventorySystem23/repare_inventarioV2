@@ -3,10 +3,12 @@ using inventario_coprotab.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.Blazor;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace inventario_coprotab.Controllers
 {
@@ -85,7 +87,9 @@ namespace inventario_coprotab.Controllers
                         }
                     }
 
-                    var componente = new Componente
+
+
+                    var componente = new  Models.DBInventario.Componente
                     {
                         Nombre = model.Nombre,
                         Descripcion = model.Descripcion,
@@ -99,7 +103,9 @@ namespace inventario_coprotab.Controllers
                         StockMinimo = model.StockMinimo ?? 0
                     };
 
-                    _context.Add(componente);
+
+
+                    _context.Componentes.Add(componente);
                     await _context.SaveChangesAsync();
 
                     return Json(new { success = true });
