@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using inventario_coprotab.Models.DBInventario;
 using inventario_coprotab.ViewModels;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -63,6 +62,13 @@ namespace inventario_coprotab.Controllers
             ViewBag.SearchNombre = searchNombre;
             ViewBag.SearchSerie = searchSerie;
             ViewBag.SearchFecha = searchFecha;
+
+            // Cargar la lista de responsables para el formulario de creación de equipos.
+            // Se ordena por apellido y nombre para que sea más fácil de seleccionar.
+            ViewBag.Responsables = await _context.Responsables
+                .OrderBy(r => r.Apellido)
+                .ThenBy(r => r.Nombre)
+                .ToListAsync();
 
             return View(equipos);
         }
@@ -339,6 +345,28 @@ namespace inventario_coprotab.Controllers
                     };
 
                     _context.RelacionDetalles.Add(detalle);
+
+                    // Crear o actualizar la relación dispositivo/componente con responsable y observaciones.
+                    var relacionExistente = await _context.RelacionDispositivoComponentes
+                        .FirstOrDefaultAsync(rdc =>
+                            rdc.IdDispositivo == modelo.IdDispositivo &&
+                            rdc.IdComponente == componenteId);
+
+                    if (relacionExistente == null)
+                    {
+                        relacionExistente = new inventario_coprotab.Models.DBInventario.RelacionDispositivoComponente
+                        {
+                            IdDispositivo = modelo.IdDispositivo,
+                            IdComponente = componenteId
+                        };
+                        _context.RelacionDispositivoComponentes.Add(relacionExistente);
+                    }
+
+                    // Actualizar responsable y observaciones para este dispositivo/componente
+                    relacionExistente.IdResponsable = modelo.IdResponsable;
+                    relacionExistente.Observaciones = string.IsNullOrWhiteSpace(modelo.Observaciones)
+                        ? null
+                        : modelo.Observaciones;
                 }
 
                 await _context.SaveChangesAsync();
@@ -377,11 +405,18 @@ namespace inventario_coprotab.Controllers
                 });
             }
         }
+
     }
 
     public class CrearEquipoViewModel
     {
         public int IdDispositivo { get; set; }
         public List<int> Componentes { get; set; }
+
+        // Identificador del responsable a cargo del equipo. Puede ser nulo cuando no se especifica un responsable.
+        public int? IdResponsable { get; set; }
+
+        // Observaciones generales sobre el equipo o la relación dispositivo/componente.
+        public string? Observaciones { get; set; }
     }
 }

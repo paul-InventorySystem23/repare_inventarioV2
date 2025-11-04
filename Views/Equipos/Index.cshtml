@@ -18,11 +18,11 @@
     <form method="get" id="formFiltros">
         <div class="row g-3">
             <div class="col-md-4">
-                <input type="text" name="searchNombre" class="form-control" 
+                <input type="text" name="searchNombre" class="form-control"
                        placeholder="Buscar por nombre del dispositivo" value="@ViewBag.SearchNombre" />
             </div>
             <div class="col-md-3">
-                <input type="text" name="searchSerie" class="form-control" 
+                <input type="text" name="searchSerie" class="form-control"
                        placeholder="Número de Serie" value="@ViewBag.SearchSerie" />
             </div>
             <div class="col-md-3">
@@ -77,9 +77,9 @@
                                     var dispositivo = detalle.IdDispositivoNavigation;
                                     var tipoDesc = dispositivo.IdTipoNavigation?.Descripcion ?? "Sin tipo";
                                     <div>
-                                        <strong>@dispositivo.Nombre</strong><br/>
+                                        <strong>@dispositivo.Nombre</strong><br />
                                         <small class="text-muted">
-                                            <i class="bi bi-upc"></i> @(dispositivo.NroSerie ?? "Sin serie") | 
+                                            <i class="bi bi-upc"></i> @(dispositivo.NroSerie ?? "Sin serie") |
                                             <i class="bi bi-tag"></i> @tipoDesc
                                         </small>
                                     </div>
@@ -116,18 +116,18 @@
                         </td>
                         <td class="text-center">
                             <div class="btn-group" role="group">
-                                <button class="btn btn-sm btn-outline-primary" 
-                                        onclick="verDetalleEquipo(@equipo.IdRelacion)" 
+                                <button class="btn btn-sm btn-outline-primary"
+                                        onclick="verDetalleEquipo(@equipo.IdRelacion)"
                                         title="Ver Detalles">
                                     <i class="bi bi-eye"></i>
                                 </button>
-                                <button class="btn btn-sm btn-warning-custom" 
-                                        onclick="abrirModalEditarEquipo(@equipo.IdRelacion)" 
+                                <button class="btn btn-sm btn-warning-custom"
+                                        onclick="abrirModalEditarEquipo(@equipo.IdRelacion)"
                                         title="Editar">
                                     <i class="bi bi-pencil"></i>
                                 </button>
-                                <button class="btn btn-sm btn-danger-custom" 
-                                        onclick="eliminarEquipo(@equipo.IdRelacion)" 
+                                <button class="btn btn-sm btn-danger-custom"
+                                        onclick="eliminarEquipo(@equipo.IdRelacion)"
                                         title="Eliminar">
                                     <i class="bi bi-trash"></i>
                                 </button>
@@ -164,9 +164,9 @@
                         <i class="bi bi-laptop"></i> Buscar Dispositivo:
                     </label>
                     <div class="input-group">
-                        <input type="text" class="form-control" id="buscarDispositivo" 
+                        <input type="text" class="form-control" id="buscarDispositivo"
                                placeholder="Escribe al menos 3 letras para buscar...">
-                        <button class="btn btn-success-custom" type="button" 
+                        <button class="btn btn-success-custom" type="button"
                                 onclick="abrirModalNuevoDispositivo()">
                             <i class="bi bi-plus"></i>
                         </button>
@@ -182,9 +182,9 @@
                         <i class="bi bi-gear-fill"></i> Buscar Componente:
                     </label>
                     <div class="input-group">
-                        <input type="text" class="form-control" id="buscarComponente" 
+                        <input type="text" class="form-control" id="buscarComponente"
                                placeholder="Escribe al menos 3 letras para buscar...">
-                        <button class="btn btn-success-custom" type="button" 
+                        <button class="btn btn-success-custom" type="button"
                                 onclick="abrirModalNuevoComponente()">
                             <i class="bi bi-plus"></i>
                         </button>
@@ -213,6 +213,28 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Selección del responsable y observaciones -->
+                <div class="mt-4">
+                    <label for="idResponsable" class="form-label fw-bold">
+                        <i class="bi bi-person"></i> Responsable:
+                    </label>
+                    <select id="idResponsable" class="form-select">
+                        <option value="">-- Seleccione un responsable --</option>
+                        @foreach (var resp in ViewBag.Responsables as List<inventario_coprotab.Models.DBInventario.Responsable>)
+                        {
+                            <option value="@resp.IdResponsable">@resp.Nombre @resp.Apellido</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mt-3">
+                    <label for="observaciones" class="form-label fw-bold">
+                        <i class="bi bi-chat-left-text"></i> Observaciones:
+                    </label>
+                    <textarea id="observaciones" class="form-control" rows="3"
+                              placeholder="Ingrese observaciones..."></textarea>
                 </div>
             </div>
             <div class="modal-footer">
@@ -248,7 +270,7 @@
                 <h5 class="modal-title">
                     <i class="bi bi-info-circle"></i> Detalle del Equipo
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" 
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
                         style="filter: brightness(0) invert(1);"></button>
             </div>
             <div class="modal-body" id="modalDetalleEquipoContenido"></div>
@@ -298,7 +320,7 @@
             $('#buscarDispositivo').on('input', function() {
                 clearTimeout(timeoutDispositivo);
                 const termino = $(this).val().trim();
-                
+
                 if (termino.length < 3) {
                     $('#resultadosDispositivo').html('');
                     return;
@@ -313,7 +335,7 @@
             $('#buscarComponente').on('input', function() {
                 clearTimeout(timeoutComponente);
                 const termino = $(this).val().trim();
-                
+
                 if (termino.length < 3) {
                     $('#resultadosComponente').html('');
                     return;
@@ -337,10 +359,13 @@
                 $('#resultadosComponente').html('');
                 $('#dispositivoSeleccionadoId').val('');
                 $('#dispositivoSeleccionadoInfo').html('');
+                // Limpiar responsable y observaciones
+                $('#idResponsable').val('');
+                $('#observaciones').val('');
             });
         });
 
-                // Continuación del script de Index.cshtml de Equipos
+        // Continuación del script de Index.cshtml de Equipos
 
         function buscarDispositivos(termino) {
             $.get(baseUrl + 'Equipos/BuscarDispositivos', { termino: termino }, function(data) {
@@ -411,9 +436,7 @@
                 let html = '<div class="list-group" style="max-height: 300px; overflow-y: auto;">';
                 data.forEach(function(comp) {
                     const yaAgregado = componentesSeleccionados.some(c => c.id === comp.id);
-                    const disabled = yaAgregado ? 'disabled' : '';
                     const clase = yaAgregado ? 'list-group-item-secondary' : 'list-group-item-action';
-
                     html += `
                         <div class="list-group-item ${clase}" style="cursor: ${yaAgregado ? 'not-allowed' : 'pointer'};"
                              onclick="${yaAgregado ? '' : `agregarComponente(${comp.id}, '${comp.nombre}', '${comp.nroSerie}', '${comp.tipo}', '${comp.marca}')`}">
@@ -486,9 +509,15 @@
                 return;
             }
 
+            // Obtener valores de responsable y observaciones del formulario
+            const idResponsableVal = $('#idResponsable').val();
+            const observacionesVal = $('#observaciones').val();
+
             const datos = {
                 idDispositivo: dispositivoSeleccionado.id,
-                componentes: componentesSeleccionados.map(c => c.id)
+                componentes: componentesSeleccionados.map(c => c.id),
+                idResponsable: idResponsableVal ? parseInt(idResponsableVal) : null,
+                observaciones: observacionesVal
             };
 
             const token = $('input[name="__RequestVerificationToken"]').val();
