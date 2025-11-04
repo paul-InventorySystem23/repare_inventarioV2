@@ -19,5 +19,7 @@ public partial class Responsable
 
     public virtual ICollection<Movimiento> Movimientos { get; set; } = new List<Movimiento>();
 
+    public virtual ICollection<RelacionDispositivoComponente> RelacionDispositivoComponentes { get; set; } = new List<RelacionDispositivoComponente>();
+
     public virtual ICollection<Reparacione> Reparaciones { get; set; } = new List<Reparacione>();
 }

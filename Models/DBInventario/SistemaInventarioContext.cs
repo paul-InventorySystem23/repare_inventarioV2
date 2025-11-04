@@ -42,7 +42,7 @@ public partial class SistemaInventarioContext : DbContext
     public virtual DbSet<VwHardwareCompleto> VwHardwareCompletos { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseSqlServer("Name=ConnectionStrings:MiConexion");
+        => optionsBuilder.UseSqlServer("Name=MiConexion");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -259,6 +259,7 @@ public partial class SistemaInventarioContext : DbContext
             entity.Property(e => e.IdRelacion).HasColumnName("id_relacion");
             entity.Property(e => e.IdComponente).HasColumnName("id_componente");
             entity.Property(e => e.IdDispositivo).HasColumnName("id_dispositivo");
+            entity.Property(e => e.IdResponsable).HasColumnName("id_responsable");
             entity.Property(e => e.Observaciones)
                 .IsUnicode(false)
                 .HasColumnName("observaciones");
@@ -272,6 +273,10 @@ public partial class SistemaInventarioContext : DbContext
                 .HasForeignKey(d => d.IdDispositivo)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Relacion_Dispositivo");
+
+            entity.HasOne(d => d.IdResponsableNavigation).WithMany(p => p.RelacionDispositivoComponentes)
+                .HasForeignKey(d => d.IdResponsable)
+                .HasConstraintName("FK_Relacion_Responsable");
         });
 
         modelBuilder.Entity<ReparacionDetalle>(entity =>
