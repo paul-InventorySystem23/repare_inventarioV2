@@ -31,6 +31,7 @@ namespace inventario_coprotab.Controllers
                 return RedirectToAction(nameof(Create)); // O a Index si prefieres
             }
             return View(marca);
+            //return PartialView("_CreatePartial", Model);
         }
         // GET: Marca/GetMarcas
         [HttpGet]

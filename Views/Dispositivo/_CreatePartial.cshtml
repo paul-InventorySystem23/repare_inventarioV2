@@ -18,7 +18,9 @@
                 <i class="bi bi-bookmark"></i> Marca
             </label>
             <div class="input-group">
-                <select asp-for="IdMarca" class="form-select" asp-items="ViewBag.IdMarca"></select>
+                <select asp-for="IdMarca" class="form-select select2-marca" asp-items="ViewBag.IdMarca">
+                    <option value="">-- Buscar o seleccionar marca --</option>
+                </select>
                 <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#createMarcaModal">
                     <i class="bi bi-plus"></i>
                 </button>
@@ -117,7 +119,48 @@
         </div>
     </div>
 </div>
+<script>
+    $(document).ready(function() {
+        // Inicializar Select2 para marcas
+        $('.select2-marca').select2({
+            theme: 'bootstrap-5',
+            placeholder: '-- Buscar o seleccionar marca --',
+            allowClear: true,
+            width: '100%',
+            language: {
+                noResults: function() {
+                    return "No se encontraron resultados";
+                },
+                searching: function() {
+                    return "Buscando...";
+                }
+            }
+        });
 
+        // Reinicializar Select2 cuando se abre el modal
+        $('#modalDispositivo').on('shown.bs.modal', function () {
+            $('.select2-marca').select2({
+                theme: 'bootstrap-5',
+                placeholder: '-- Buscar o seleccionar marca --',
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('#modalDispositivo')
+            });
+        });
+
+        // Limpiar Select2 al cerrar el modal
+        $('#modalDispositivo').on('hidden.bs.modal', function () {
+            $('.select2-marca').select2('destroy');
+        });
+    });
+
+    // Función para agregar nueva marca al Select2
+    function agregarMarcaAlSelect(id, nombre) {
+        var select = $('.select2-marca');
+        var newOption = new Option(nombre, id, true, true);
+        select.append(newOption).trigger('change');
+    }
+</script>
 <script>
     $(function () {
         var form = $('#formDispositivo');
@@ -147,8 +190,8 @@
         });
     });
 
-    function crearMarcaDispositivo() {
-        var nombre = document.getElementById('nombreMarcaDisp').value.trim();
+        function crearMarca() {
+        var nombre = document.getElementById('nombreMarca').value.trim();
         if (!nombre) {
             alert('El nombre es obligatorio');
             return;
@@ -167,15 +210,13 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                var select = document.querySelector('#formDispositivo select[name="IdMarca"]');
-                var option = document.createElement('option');
-                option.value = data.id;
-                option.text = data.nombre;
-                option.selected = true;
-                select.appendChild(option);
+                // Agregar al Select2
+                agregarMarcaAlSelect(data.id, data.nombre);
 
-                $('#createMarcaModalDisp').modal('hide');
-                document.getElementById('nombreMarcaDisp').value = '';
+                $('#createMarcaModal').modal('hide');
+                document.getElementById('nombreMarca').value = '';
+
+                // Mostrar notificación de éxito
                 alert('Marca creada exitosamente');
             } else {
                 var errorMsg = data.errors?.join('\n') || 'Error desconocido';

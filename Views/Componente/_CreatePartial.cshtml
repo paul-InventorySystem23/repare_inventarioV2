@@ -18,7 +18,9 @@
                 <i class="bi bi-bookmark"></i> Marca
             </label>
             <div class="input-group">
-                <select asp-for="IdMarca" class="form-select" asp-items="ViewBag.IdMarca"></select>
+                <select asp-for="IdMarca" class="form-select select2-marca-comp" asp-items="ViewBag.IdMarca">
+                    <option value="">-- Buscar o seleccionar marca --</option>
+                </select>
                 <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#createMarcaModalComp">
                     <i class="bi bi-plus"></i>
                 </button>
@@ -299,6 +301,58 @@
         .catch(error => {
             console.error('Error:', error);
             alert('Error de red al crear el tipo');
+        });
+    }
+</script>
+<script>
+    $(document).ready(function() {
+        $('.select2-marca-comp').select2({
+            theme: 'bootstrap-5',
+            placeholder: '-- Buscar o seleccionar marca --',
+            allowClear: true,
+            width: '100%',
+            dropdownParent: $('#modalComponente')
+        });
+    });
+
+    function agregarMarcaAlSelectComp(id, nombre) {
+        var select = $('.select2-marca-comp');
+        var newOption = new Option(nombre, id, true, true);
+        select.append(newOption).trigger('change');
+    }
+
+    function crearMarcaComponente() {
+        var nombre = document.getElementById('nombreMarcaComp').value.trim();
+        if (!nombre) {
+            alert('El nombre es obligatorio');
+            return;
+        }
+
+        var token = $('input[name="__RequestVerificationToken"]').val();
+
+        fetch(baseUrl+'Marca/CreateAjax', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token
+            },
+            body: JSON.stringify({ nombre: nombre })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                agregarMarcaAlSelectComp(data.id, data.nombre);
+                $('#createMarcaModalComp').modal('hide');
+                document.getElementById('nombreMarcaComp').value = '';
+                alert('Marca creada exitosamente');
+            } else {
+                var errorMsg = data.errors?.join('\n') || 'Error desconocido';
+                alert('Error al crear la marca:\n' + errorMsg);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error de red al crear la marca');
         });
     }
 </script>

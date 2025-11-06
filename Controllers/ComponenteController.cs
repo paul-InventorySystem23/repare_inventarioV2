@@ -33,7 +33,7 @@ namespace inventario_coprotab.Controllers
                 .Include(c => c.IdMarcaNavigation)
                 .Include(c => c.IdTipoNavigation)
                 .FirstOrDefaultAsync(m => m.IdComponente == id);
-
+                
             if (componente == null)
             {
                 return NotFound();
@@ -80,6 +80,7 @@ namespace inventario_coprotab.Controllers
                             ViewData["IdMarca"] = new SelectList(_context.Marcas.OrderBy(m => m.Nombre), "IdMarca", "Nombre", model.IdMarca);
                             ViewData["IdTipo"] = new SelectList(_context.TipoHardwares
                                 .Where(t => t.Descripcion != "Hardware")
+                                .Where(t => t.Descripcion != "Equipo Armado")
                                 .OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", model.IdTipo);
                             ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
 
