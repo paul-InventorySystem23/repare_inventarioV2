@@ -114,9 +114,9 @@ namespace inventario_coprotab.Controllers
                 queryComponentes = queryComponentes.Where(c => c.Cantidad <= c.StockMinimo);
             }
 
-            // ✅ Ordenar por fecha de instalación descendente
+            // ✅ Ordenar por Id de Componente descendente
             var componentes = await queryComponentes
-                .OrderByDescending(c => c.FechaInstalacion)
+                .OrderByDescending(c => c.IdComponente)
                 //.Take(mostrarAlertas == true ? int.MaxValue : 5)
                 .ToListAsync();
 
@@ -475,7 +475,7 @@ public async Task<IActionResult> CreateEquipo()
 
                 _context.Dispositivos.Add(equipo);
                 await _context.SaveChangesAsync(); // Necesario para obtener IdDispositivo
-
+                
                 // ✅ Asociar componentes seleccionados
                 if (model.ComponentesSeleccionados != null && model.ComponentesSeleccionados.Any())
                 {
@@ -588,7 +588,12 @@ public async Task<IActionResult> CreateEquipo()
             };
 
             var marcas = await _context.Marcas.OrderBy(m => m.Nombre).ToListAsync();
-            var tipos = await _context.TipoHardwares.OrderBy(t => t.Descripcion).ToListAsync();
+            var tipos = await _context.TipoHardwares
+                .Where(t => t.Descripcion == "Hardware" || t.Descripcion == "Equipo Armado")
+                .OrderBy(t => t.Descripcion)
+                .ToListAsync();
+            //var tipos = await _context.TipoHardwares
+            //    .OrderBy(t => t.Descripcion).ToListAsync();
 
             if (!marcas.Any() || !tipos.Any())
             {
@@ -596,14 +601,10 @@ public async Task<IActionResult> CreateEquipo()
                 return RedirectToAction("Index", "Dispositivo");
             }
 
-            var tipoHardware = await _context.TipoHardwares
-                               .FirstOrDefaultAsync(t => t.Descripcion == "Hardware");
-
+            
             ViewData["IdMarca"] = new SelectList(marcas, "IdMarca", "Nombre", Model.IdMarca);
             ViewData["IdTipo"] = new SelectList(tipos, "IdTipo", "Descripcion", Model.IdTipo);
             ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
-            ViewBag.IdTipoHardware = tipoHardware?.IdTipo;
-
             return PartialView("_EditPartial", Model);
         }
 
@@ -622,15 +623,16 @@ public async Task<IActionResult> CreateEquipo()
             {
                 // Recargar listas para el formulario
                 var marcas = await _context.Marcas.OrderBy(m => m.Nombre).ToListAsync();
-                var tipos = await _context.TipoHardwares.OrderBy(t => t.Descripcion).ToListAsync();
-                var tipoHardware = await _context.TipoHardwares
-                                   .FirstOrDefaultAsync(t => t.Descripcion == "Hardware");
+                var tipos = new SelectList(_context.TipoHardwares
+                .Where(t => t.Descripcion == "Hardware" || t.Descripcion == "Equipo Armado")
+                .OrderBy(t => t.Descripcion), "IdTipo", "Descripcion", model.IdTipo);
+                //var tipos = await _context.TipoHardwares.OrderBy(t => t.Descripcion).ToListAsync();
+                //var tipoHardware = await _context.TipoHardwares
+                //                   .FirstOrDefaultAsync(t => t.Descripcion == "Hardware");
 
                 ViewData["IdMarca"] = new SelectList(marcas, "IdMarca", "Nombre", model.IdMarca);
                 ViewData["IdTipo"] = new SelectList(tipos, "IdTipo", "Descripcion", model.IdTipo);
                 ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
-                ViewBag.IdTipoHardware = tipoHardware?.IdTipo;
-
                 return PartialView("_EditPartial", model);
             }
 
@@ -656,15 +658,14 @@ public async Task<IActionResult> CreateEquipo()
 
                         // Recargar datos para la vista
                         var marcasError = await _context.Marcas.OrderBy(m => m.Nombre).ToListAsync();
-                        var tiposError = await _context.TipoHardwares.OrderBy(t => t.Descripcion).ToListAsync();
-                        var tipoHardware = await _context.TipoHardwares
-                                           .FirstOrDefaultAsync(t => t.Descripcion == "Hardware");
+                        var tiposError = await _context.TipoHardwares
+                            .Where(t => t.Descripcion == "Hardware" || t.Descripcion == "Equipo Armado")
+                            .OrderBy(t => t.Descripcion)
+                            .ToListAsync();
 
                         ViewData["IdMarca"] = new SelectList(marcasError, "IdMarca", "Nombre", model.IdMarca);
                         ViewData["IdTipo"] = new SelectList(tiposError, "IdTipo", "Descripcion", model.IdTipo);
                         ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
-                        ViewBag.IdTipoHardware = tipoHardware?.IdTipo;
-
                         return PartialView("_EditPartial", model);
                     }
                 }
@@ -717,13 +718,12 @@ public async Task<IActionResult> CreateEquipo()
                 var marcas = await _context.Marcas.OrderBy(m => m.Nombre).ToListAsync();
                 var tipos = await _context.TipoHardwares.OrderBy(t => t.Descripcion).ToListAsync();
                 var tipoHardware = await _context.TipoHardwares
-                                   .FirstOrDefaultAsync(t => t.Descripcion == "Hardware");
+                                   .FirstOrDefaultAsync(t => t.Descripcion == "Hardware" || t.Descripcion == "Equipo Armado");
 
                 ViewData["IdMarca"] = new SelectList(marcas, "IdMarca", "Nombre", model.IdMarca);
                 ViewData["IdTipo"] = new SelectList(tipos, "IdTipo", "Descripcion", model.IdTipo);
                 ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
-                ViewBag.IdTipoHardware = tipoHardware?.IdTipo;
-
+                
                 return PartialView("_EditPartial", model);
             }
             catch (Exception ex)
@@ -732,21 +732,20 @@ public async Task<IActionResult> CreateEquipo()
 
                 // Recargar datos para la vista
                 var marcas = await _context.Marcas.OrderBy(m => m.Nombre).ToListAsync();
-                var tipos = await _context.TipoHardwares.OrderBy(t => t.Descripcion).ToListAsync();
-                var tipoHardware = await _context.TipoHardwares
-                                   .FirstOrDefaultAsync(t => t.Descripcion == "Hardware");
+                var tipos = await _context.TipoHardwares
+                    .Where(t => t.Descripcion == "Hardware" || t.Descripcion == "Equipo Armado")
+                    .OrderBy(t => t.Descripcion)
+                    .ToListAsync();
+
 
                 ViewData["IdMarca"] = new SelectList(marcas, "IdMarca", "Nombre", model.IdMarca);
                 ViewData["IdTipo"] = new SelectList(tipos, "IdTipo", "Descripcion", model.IdTipo);
                 ViewBag.EstadosDisponibles = new List<string> { "Nuevo", "En uso", "Obsoleto" };
-                ViewBag.IdTipoHardware = tipoHardware?.IdTipo;
-
+                
                 return PartialView("_EditPartial", model);
             }
         }
-
-
-
+        
         // POST: Dispositivo/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]

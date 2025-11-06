@@ -598,6 +598,43 @@
             $.get(baseUrl + 'Dispositivo/Create', function(data) {
                 $('#modalNuevoDispositivoContenido').html(data);
                 $('#modalNuevoDispositivo').modal('show');
+
+                // Manejar el envío del formulario de creación de dispositivo
+                $('#modalNuevoDispositivoContenido form').off('submit').on('submit', function(e) {
+                    e.preventDefault();
+
+                    var form = $(this);
+                    var formData = form.serialize();
+
+                    $.ajax({
+                        url: form.attr('action'),
+                        type: 'POST',
+                        data: formData,
+                        success: function(response) {
+                            // Mostrar mensaje de éxito
+                            if (response.success) {
+                                // Cerrar modal de nuevo dispositivo
+                                $('#modalNuevoDispositivo').modal('hide');
+
+                                // Mostrar mensaje de éxito
+                                alert('El dispositivo se creó correctamente');
+
+                                // Volver a abrir el modal de crear equipo
+                                $('#crearEquipoModal').modal('show');
+
+                                // Opcional: actualizar lista de dispositivos en el modal principal
+                                if (typeof actualizarListaDispositivos === 'function') {
+                                    actualizarListaDispositivos();
+                                }
+                            } else {
+                                alert('Error al crear el dispositivo: ' + (response.message || ''));
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            alert('Error al crear el dispositivo: ' + error);
+                        }
+                    });
+                });
             });
         }
 
@@ -606,6 +643,43 @@
             $.get(baseUrl + 'Componente/Create', function(data) {
                 $('#modalNuevoComponenteContenido').html(data);
                 $('#modalNuevoComponente').modal('show');
+
+                // Manejar el envío del formulario de creación de componente
+                $('#modalNuevoComponenteContenido form').off('submit').on('submit', function(e) {
+                    e.preventDefault();
+
+                    var form = $(this);
+                    var formData = form.serialize();
+
+                    $.ajax({
+                        url: form.attr('action'),
+                        type: 'POST',
+                        data: formData,
+                        success: function(response) {
+                            // Mostrar mensaje de éxito
+                            if (response.success) {
+                                // Cerrar modal de nuevo componente
+                                $('#modalNuevoComponente').modal('hide');
+
+                                // Mostrar mensaje de éxito
+                                alert('El componente se creó correctamente');
+
+                                // Volver a abrir el modal de crear equipo
+                                $('#crearEquipoModal').modal('show');
+
+                                // Opcional: actualizar lista de componentes en el modal principal
+                                if (typeof actualizarListaComponentes === 'function') {
+                                    actualizarListaComponentes();
+                                }
+                            } else {
+                                alert('Error al crear el componente: ' + (response.message || ''));
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            alert('Error al crear el componente: ' + error);
+                        }
+                    });
+                });
             });
         }
 

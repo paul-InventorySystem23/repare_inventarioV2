@@ -33,7 +33,7 @@ namespace inventario_coprotab.Controllers
                 .Include(c => c.IdMarcaNavigation)
                 .Include(c => c.IdTipoNavigation)
                 .FirstOrDefaultAsync(m => m.IdComponente == id);
-
+                
             if (componente == null)
             {
                 return NotFound();
