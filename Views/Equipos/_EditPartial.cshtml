@@ -4,7 +4,6 @@
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="IdRelacion" />
     <input type="hidden" asp-for="IdDispositivo" />
-    <input type="hidden" id="componentesSeleccionadosJson" name="componentesSeleccionadosJson" />
 
     <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
@@ -125,12 +124,13 @@
 
 <!-- ============ SCRIPTS ============ -->
 <script>
+    // ✅ Variables globales del modal de edición
     let componentesEquipoEdit = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ComponentesActuales.Select(c => c.IdComponente)));
     let timeoutComponenteEdit = null;
 
     $(document).ready(function() {
-        // Búsqueda de componentes con delay
-        $('#buscarComponenteEdit').on('input', function() {
+        // ✅ Búsqueda de componentes con delay
+        $('#buscarComponenteEdit').off('input').on('input', function() {
             clearTimeout(timeoutComponenteEdit);
             const termino = $(this).val().trim();
 
@@ -144,23 +144,20 @@
             }, 300);
         });
 
-        // Manejar envío del formulario
+        // ✅ Manejar envío del formulario
         $('#formEditarEquipo').off('submit').on('submit', function(e) {
             e.preventDefault();
-
-            // Actualizar el campo hidden con los componentes seleccionados
-            $('#componentesSeleccionadosJson').val(JSON.stringify(componentesEquipoEdit));
 
             var $form = $(this);
             var formData = $form.serializeArray();
 
-            // Agregar cada componente seleccionado al formData
+            // ✅ Agregar cada componente seleccionado al formData
             componentesEquipoEdit.forEach(function(id) {
                 formData.push({ name: 'ComponentesSeleccionados', value: id });
             });
 
             $.ajax({
-                url: '@Url.Action("Edit", "Equipos")',
+                url: baseUrl + 'Equipos/Edit',
                 type: 'POST',
                 data: $.param(formData),
                 success: function(response) {
@@ -168,7 +165,7 @@
                         $('#modalEditarEquipo').modal('hide');
                         location.reload();
                     } else {
-                        $('#modalEditarEquipoContenido').html(response);
+                        alert(response.message || 'Error al guardar');
                     }
                 },
                 error: function() {
@@ -180,6 +177,7 @@
         actualizarContador();
     });
 
+    // ✅ Función para buscar componentes
     function buscarComponentesParaEditar(termino) {
         $.get(baseUrl + 'Equipos/BuscarComponentes', { termino: termino }, function(data) {
             if (data.length === 0) {
@@ -220,14 +218,13 @@
         });
     }
 
+    // ✅ Función para agregar componente
     function agregarComponenteAEquipo(id, nombre, nroSerie, tipo, marca) {
         if (componentesEquipoEdit.includes(id)) {
             return;
         }
 
         componentesEquipoEdit.push(id);
-
-        // Remover fila vacía si existe
         $('#filaVacia').remove();
 
         const fila = `
@@ -252,13 +249,13 @@
         actualizarContador();
     }
 
+    // ✅ Función para eliminar componente
     function eliminarComponenteDeEquipo(id) {
         if (confirm('¿Está seguro que desea eliminar este componente del equipo?')) {
             componentesEquipoEdit = componentesEquipoEdit.filter(compId => compId !== id);
             $(`tr[data-componente-id="${id}"]`).fadeOut(300, function() {
                 $(this).remove();
 
-                // Mostrar fila vacía si no quedan componentes
                 if (componentesEquipoEdit.length === 0) {
                     $('#componentesEquipoBody').html(`
                         <tr id="filaVacia">
@@ -274,10 +271,12 @@
         }
     }
 
+    // ✅ Actualizar contador
     function actualizarContador() {
         $('#contadorComponentes').text(componentesEquipoEdit.length);
     }
 
+    // ✅ Abrir modal de nuevo componente
     function abrirModalNuevoComponenteDesdeEdit() {
         $.get(baseUrl + 'Componente/Create', function(data) {
             $('#modalNuevoComponente').remove();
@@ -307,18 +306,10 @@
             });
         });
     }
-
-    // Validación
-    $(function () {
-        var form = $('#formEditarEquipo');
-        if (form.length) {
-            $.validator.unobtrusive.parse(form);
-        }
-    });
 </script>
 
 <style>
-   @@keyframes fadeIn {
+    @@keyframes fadeIn {
         from
 
     {
@@ -336,14 +327,5 @@
     #resultadosComponenteEdit .list-group-item:hover:not(.list-group-item-secondary) {
         background-color: rgba(39, 174, 96, 0.1);
         transform: translateX(5px);
-    }
-
-    #tablaComponentesEquipo tbody tr:hover {
-        background-color: rgba(243, 156, 18, 0.1);
-    }
-
-    .btn-danger-custom:hover {
-        transform: scale(1.1);
-        box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
     }
 </style>

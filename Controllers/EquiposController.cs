@@ -177,23 +177,27 @@ namespace inventario_coprotab.Controllers
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // Eliminar detalles antiguos
+                // ✅ Eliminar detalles antiguos
                 var detallesAntiguos = await _context.RelacionDetalles
                     .Where(rd => rd.IdRelacion == model.IdRelacion)
                     .ToListAsync();
 
                 _context.RelacionDetalles.RemoveRange(detallesAntiguos);
+                await _context.SaveChangesAsync();
 
-                // Agregar nuevos detalles
-                foreach (var componenteId in model.ComponentesSeleccionados)
+                // ✅ Agregar nuevos detalles (CORRECCIÓN: ahora valida si hay componentes seleccionados)
+                if (model.ComponentesSeleccionados != null && model.ComponentesSeleccionados.Any())
                 {
-                    var nuevoDetalle = new inventario_coprotab.Models.DBInventario.RelacionDetalle
+                    foreach (var componenteId in model.ComponentesSeleccionados)
                     {
-                        IdRelacion = model.IdRelacion,
-                        IdDispositivo = model.IdDispositivo,
-                        IdComponente = componenteId
-                    };
-                    _context.RelacionDetalles.Add(nuevoDetalle);
+                        var nuevoDetalle = new inventario_coprotab.Models.DBInventario.RelacionDetalle
+                        {
+                            IdRelacion = model.IdRelacion,
+                            IdDispositivo = model.IdDispositivo,
+                            IdComponente = componenteId
+                        };
+                        _context.RelacionDetalles.Add(nuevoDetalle);
+                    }
                 }
 
                 await _context.SaveChangesAsync();

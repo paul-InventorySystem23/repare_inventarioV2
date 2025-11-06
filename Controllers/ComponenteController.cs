@@ -98,7 +98,7 @@ namespace inventario_coprotab.Controllers
                         IdTipo = model.IdTipo,
                         NroSerie = string.IsNullOrWhiteSpace(model.NroSerie) ? null : model.NroSerie.Trim(),
                         Estado = model.Estado ?? "Nuevo",
-                        FechaInstalacion = model.FechaInstalacion,
+                        FechaInstalacion = DateTime.Now, // Fecha y hora actual automática
                         EstadoRegistro = true,
                         Cantidad = model.Cantidad ?? 1,
                         StockMinimo = model.StockMinimo ?? 0
