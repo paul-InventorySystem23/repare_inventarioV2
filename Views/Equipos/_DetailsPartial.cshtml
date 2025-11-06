@@ -20,19 +20,13 @@
                 }
 
                 <div class="row">
-                    <div class="col-md-3">
-                        <p>
-                            <strong><i class="bi bi-hash"></i> ID Relación:</strong><br>
-                            <span class="badge bg-secondary">#@Model.IdRelacion</span>
-                        </p>
-                    </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <p>
                             <strong><i class="bi bi-calendar"></i> Fecha de Creación:</strong><br>
                             @Model.Fecha.ToString("dd/MM/yyyy")
                         </p>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <p>
                             <strong><i class="bi bi-person"></i> Responsable:</strong><br>
                             @if (responsable != null)
@@ -64,7 +58,7 @@
                             }
                         </p>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <p>
                             <strong><i class="bi bi-gear-fill"></i> Total Componentes:</strong><br>
                             <span class="badge bg-success" style="font-size: 1rem;">

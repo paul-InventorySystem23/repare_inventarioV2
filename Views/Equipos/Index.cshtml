@@ -555,17 +555,28 @@
             });
         }
 
-        function abrirModalEditarEquipo(id) {
+                function abrirModalEditarEquipo(id) {
             $('#modalEditarEquipoContenido').html('<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>');
             $('#modalEditarEquipo').modal('show');
 
-            $.get(baseUrl + 'Equipos/Edit/' + id, function(data) {
+            $.get(baseUrl + 'Equipos/Edit/' + id, function (data) {
                 $('#modalEditarEquipoContenido').html(data);
-            }).fail(function() {
+
+                // ✅ Re-ejecutar los scripts incluidos en el partial
+                $('#modalEditarEquipoContenido').find("script").each(function () {
+                    $.globalEval(this.text || this.textContent || this.innerHTML || "");
+                });
+
+                // ✅ Vuelve a inicializar el buscador al cargar el partial
+                if (typeof inicializarBuscadorComponentes === "function") {
+                    inicializarBuscadorComponentes();
+                }
+            }).fail(function () {
                 alert('Error al cargar el formulario de edición');
                 $('#modalEditarEquipo').modal('hide');
             });
         }
+
 
         function eliminarEquipo(id) {
             if (!confirm('¿Está seguro que desea eliminar este equipo? Esta acción reactivará el dispositivo y los componentes.')) {
