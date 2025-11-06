@@ -1,331 +1,372 @@
-﻿@model inventario_coprotab.ViewModels.EquipoEditViewModel
+﻿    @model inventario_coprotab.ViewModels.EquipoEditViewModel
+    <form method="post" id="formEditarEquipo">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="IdRelacion" />
+        <input type="hidden" asp-for="IdDispositivo" />
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
-<form method="post" id="formEditarEquipo">
-    @Html.AntiForgeryToken()
-    <input type="hidden" asp-for="IdRelacion" />
-    <input type="hidden" asp-for="IdDispositivo" />
-
-    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
-
-    <!-- ============ INFORMACIÓN DEL DISPOSITIVO ============ -->
-    <div class="alert alert-info mb-4" style="border-left: 4px solid var(--secondary-color);">
-        <div class="d-flex align-items-center">
-            <i class="bi bi-laptop" style="font-size: 2rem; color: var(--secondary-color); margin-right: 1rem;"></i>
-            <div>
-                <h6 class="mb-1 fw-bold">Dispositivo Principal</h6>
-                <p class="mb-0"><strong>@Model.DispositivoNombre</strong></p>
-                <small class="text-muted">Este dispositivo no puede ser cambiado en la edición</small>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============ BUSCADOR DE COMPONENTES ============ -->
-    <div class="card-custom p-4 mb-4" style="border-left: 4px solid var(--success-color);">
-        <h6 class="fw-bold mb-3" style="color: var(--success-color);">
-            <i class="bi bi-search"></i> Buscar y Agregar Componentes
-        </h6>
-
-        <div class="row">
-            <div class="col-12">
-                <label class="form-label fw-bold">
-                    <i class="bi bi-gear-fill"></i> Buscar Componente:
-                </label>
-                <div class="input-group mb-2">
-                    <input type="text" class="form-control" id="buscarComponenteEdit"
-                           placeholder="Escribe al menos 3 letras para buscar...">
-                    <button class="btn btn-success-custom" type="button" onclick="abrirModalNuevoComponenteDesdeEdit()">
-                        <i class="bi bi-plus-circle"></i> Nuevo
-                    </button>
+        <!-- ============ INFORMACIÓN DEL DISPOSITIVO ============ -->
+        <div class="alert alert-info mb-4" style="border-left: 4px solid var(--secondary-color);">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-laptop" style="font-size: 2rem; color: var(--secondary-color); margin-right: 1rem;"></i>
+                <div>
+                    <h6 class="mb-1 fw-bold">Dispositivo Principal</h6>
+                    <p class="mb-0"><strong>@Model.DispositivoNombre</strong></p>
+                    <small class="text-muted">Este dispositivo no puede ser cambiado en la edición</small>
                 </div>
-                <div id="resultadosComponenteEdit" class="mt-2"></div>
             </div>
         </div>
-    </div>
 
-    <!-- ============ TABLA DE COMPONENTES DEL EQUIPO ============ -->
-    <div class="card-custom p-4 mb-3" style="border-left: 4px solid var(--warning-color);">
-        <h6 class="fw-bold mb-3" style="color: var(--warning-color);">
-            <i class="bi bi-list-check"></i> Componentes del Equipo
-            <span class="badge bg-info ms-2" id="contadorComponentes">@Model.ComponentesActuales.Count</span>
-        </h6>
+        <!-- ============ BUSCADOR DE COMPONENTES ============ -->
+        <div class="card-custom p-4 mb-4" style="border-left: 4px solid var(--success-color);">
+            <h6 class="fw-bold mb-3" style="color: var(--success-color);">
+                <i class="bi bi-search"></i> Buscar y Agregar Componentes
+            </h6>
 
-        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-            <table class="table table-hover table-sm mb-0" id="tablaComponentesEquipo">
-                <thead style="position: sticky; top: 0; z-index: 10; background: var(--warning-color); color: white;">
-                    <tr>
-                        <th style="width: 35%;">Nombre</th>
-                        <th style="width: 20%;">Nro. Serie</th>
-                        <th style="width: 20%;">Tipo</th>
-                        <th style="width: 15%;">Marca</th>
-                        <th style="width: 10%;" class="text-center">Acción</th>
-                    </tr>
-                </thead>
-                <tbody id="componentesEquipoBody">
-                    @if (Model.ComponentesActuales.Any())
-                    {
-                        foreach (var comp in Model.ComponentesActuales)
+            <div class="row">
+                <div class="col-12">
+                    <label class="form-label fw-bold">
+                        <i class="bi bi-gear-fill"></i> Buscar Componente:
+                    </label>
+                    <div class="input-group mb-2">
+                        <input type="text" class="form-control" id="buscarComponenteEdit"
+                               placeholder="Escribe al menos 3 letras para buscar...">
+                        <button class="btn btn-success-custom" type="button" onclick="abrirModalNuevoComponenteDesdeEdit()">
+                            <i class="bi bi-plus-circle"></i> Nuevo
+                        </button>
+                    </div>
+                    <div id="resultadosComponenteEdit" class="mt-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ TABLA DE COMPONENTES DEL EQUIPO ============ -->
+        <div class="card-custom p-4 mb-3" style="border-left: 4px solid var(--warning-color);">
+            <h6 class="fw-bold mb-3" style="color: var(--warning-color);">
+                <i class="bi bi-list-check"></i> Componentes del Equipo
+                <span class="badge bg-info ms-2" id="contadorComponentes">@Model.ComponentesActuales.Count</span>
+            </h6>
+
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-hover table-sm mb-0" id="tablaComponentesEquipo">
+                    <thead style="position: sticky; top: 0; z-index: 10; background: var(--warning-color); color: white;">
+                        <tr>
+                            <th style="width: 35%;">Nombre</th>
+                            <th style="width: 20%;">Nro. Serie</th>
+                            <th style="width: 20%;">Tipo</th>
+                            <th style="width: 15%;">Marca</th>
+                            <th style="width: 10%;" class="text-center">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="componentesEquipoBody">
+                        @if (Model.ComponentesActuales.Any())
                         {
-                            <tr data-componente-id="@comp.IdComponente">
-                                <td class="fw-bold">@comp.Nombre</td>
-                                <td>
-                                    @if (!string.IsNullOrEmpty(comp.NroSerie))
-                                    {
-                                        <code>@comp.NroSerie</code>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">Sin serie</span>
-                                    }
-                                </td>
-                                <td>
-                                    <span class="badge" style="background-color: var(--secondary-color);">
-                                        @(comp.Tipo ?? "Sin tipo")
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge" style="background-color: var(--success-color);">
-                                        @(comp.Marca ?? "Sin marca")
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    <button type="button" class="btn btn-sm btn-danger-custom"
-                                            onclick="eliminarComponenteDeEquipo(@comp.IdComponente)"
-                                            title="Eliminar del equipo">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
+                            foreach (var comp in Model.ComponentesActuales)
+                            {
+                                <tr data-componente-id="@comp.IdComponente">
+                                    <td class="fw-bold">@comp.Nombre</td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(comp.NroSerie))
+                                        {
+                                            <code>@comp.NroSerie</code>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Sin serie</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge" style="background-color: var(--secondary-color);">
+                                            @(comp.Tipo ?? "Sin tipo")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" style="background-color: var(--success-color);">
+                                            @(comp.Marca ?? "Sin marca")
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-sm btn-danger-custom"
+                                                onclick="eliminarComponenteDeEquipo(@comp.IdComponente)"
+                                                title="Eliminar del equipo">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr id="filaVacia">
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                                    <p class="mb-0 mt-2">No hay componentes en este equipo</p>
                                 </td>
                             </tr>
                         }
-                    }
-                    else
-                    {
-                        <tr id="filaVacia">
-                            <td colspan="5" class="text-center text-muted py-4">
-                                <i class="bi bi-inbox" style="font-size: 2rem;"></i>
-                                <p class="mb-0 mt-2">No hay componentes en este equipo</p>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
 
-    <!-- ============ PIE DEL MODAL ============ -->
-    <div class="modal-footer border-0 pt-4">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-            <i class="bi bi-x-circle"></i> Cancelar
-        </button>
-        <button type="submit" class="btn btn-success-custom">
-            <i class="bi bi-save"></i> Guardar Cambios
-        </button>
-    </div>
-</form>
+        <!-- ============ PIE DEL MODAL ============ -->
+        <div class="modal-footer border-0 pt-4">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                <i class="bi bi-x-circle"></i> Cancelar
+            </button>
+            <button type="submit" class="btn btn-success-custom">
+                <i class="bi bi-save"></i> Guardar Cambios
+            </button>
+        </div>
+    </form>
+    <!-- ============ SCRIPTS ============ -->
+    <script>
+        // ✅ Variables globales del modal de edición
+        let componentesEquipoEdit = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ComponentesActuales.Select(c => c.IdComponente)));
+        let timeoutComponenteEdit = null;
+        let editModalInitialized = false; // ✅ Bandera para evitar inicialización múltiple
 
-<!-- ============ SCRIPTS ============ -->
-<script>
-    // ✅ Variables globales del modal de edición
-    let componentesEquipoEdit = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ComponentesActuales.Select(c => c.IdComponente)));
-    let timeoutComponenteEdit = null;
-
-    $(document).ready(function() {
-        // ✅ Búsqueda de componentes con delay
-        $('#buscarComponenteEdit').off('input').on('input', function() {
-            clearTimeout(timeoutComponenteEdit);
-            const termino = $(this).val().trim();
-
-            if (termino.length < 3) {
-                $('#resultadosComponenteEdit').html('');
+        // ✅ Función de inicialización (se ejecuta solo una vez por apertura de modal)
+        function inicializarModalEdicion() {
+            // Evitar múltiples inicializaciones
+            if (editModalInitialized) {
+                console.log('Modal ya inicializado, saltando...');
                 return;
             }
 
-            timeoutComponenteEdit = setTimeout(function() {
-                buscarComponentesParaEditar(termino);
-            }, 300);
-        });
+            editModalInitialized = true;
+            console.log('Inicializando modal de edición...');
 
-        // ✅ Manejar envío del formulario
-        $('#formEditarEquipo').off('submit').on('submit', function(e) {
-            e.preventDefault();
+            // ✅ Búsqueda de componentes con delay - usar .off() antes de .on()
+            $('#buscarComponenteEdit').off('input').on('input', function() {
+                clearTimeout(timeoutComponenteEdit);
+                const termino = $(this).val().trim();
 
-            var $form = $(this);
-            var formData = $form.serializeArray();
-
-            // ✅ Agregar cada componente seleccionado al formData
-            componentesEquipoEdit.forEach(function(id) {
-                formData.push({ name: 'ComponentesSeleccionados', value: id });
-            });
-
-            $.ajax({
-                url: baseUrl + 'Equipos/Edit',
-                type: 'POST',
-                data: $.param(formData),
-                success: function(response) {
-                    if (response.success) {
-                        $('#modalEditarEquipo').modal('hide');
-                        location.reload();
-                    } else {
-                        alert(response.message || 'Error al guardar');
-                    }
-                },
-                error: function() {
-                    alert('Error al procesar la solicitud');
+                if (termino.length < 3) {
+                    $('#resultadosComponenteEdit').html('');
+                    return;
                 }
+
+                timeoutComponenteEdit = setTimeout(function() {
+                    buscarComponentesParaEditar(termino);
+                }, 300);
             });
+
+            // ✅ Manejar envío del formulario - usar .off() antes de .on()
+            $('#formEditarEquipo').off('submit').on('submit', function(e) {
+                e.preventDefault();
+
+                var $form = $(this);
+                var formData = $form.serializeArray();
+
+                // ✅ Agregar cada componente seleccionado al formData
+                componentesEquipoEdit.forEach(function(id) {
+                    formData.push({ name: 'ComponentesSeleccionados', value: id });
+                });
+
+                console.log('Enviando datos:', formData);
+
+                $.ajax({
+                    url: baseUrl + 'Equipos/Edit',
+                    type: 'POST',
+                    data: $.param(formData),
+                    success: function(response) {
+                        console.log('Respuesta del servidor:', response);
+                        if (response.success) {
+                            $('#modalEditarEquipo').modal('hide');
+                            location.reload();
+                        } else {
+                            alert(response.message || 'Error al guardar. Por favor verifica los datos.');
+                            // Mostrar errores específicos si existen
+                            if (response.errors) {
+                                console.error('Errores de validación:', response.errors);
+                            }
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error AJAX:', error);
+                        console.log('Response completo:', xhr.responseText);
+                        alert('Error al procesar la solicitud. Revisa la consola para más detalles.');
+                    }
+                });
+            });
+
+            actualizarContador();
+        }
+
+        // ✅ Ejecutar inicialización cuando se carga el contenido
+        $(document).ready(function() {
+            inicializarModalEdicion();
         });
 
-        actualizarContador();
-    });
+        // ✅ Limpiar bandera cuando se cierra el modal
+        $('#modalEditarEquipo').on('hidden.bs.modal', function() {
+            console.log('Modal cerrado, limpiando inicialización...');
+            editModalInitialized = false;
+            $('#buscarComponenteEdit').off('input');
+            $('#formEditarEquipo').off('submit');
+        });
 
-    // ✅ Función para buscar componentes
-    function buscarComponentesParaEditar(termino) {
-        $.get(baseUrl + 'Equipos/BuscarComponentes', { termino: termino }, function(data) {
-            if (data.length === 0) {
+        // ✅ Función para buscar componentes
+        function buscarComponentesParaEditar(termino) {
+            console.log('Buscando componentes:', termino);
+
+            $.get(baseUrl + 'Equipos/BuscarComponentes', { termino: termino }, function(data) {
+                console.log('Componentes encontrados:', data.length);
+
+                if (data.length === 0) {
+                    $('#resultadosComponenteEdit').html(
+                        '<div class="alert alert-info small mb-0"><i class="bi bi-info-circle"></i> No se encontraron componentes</div>'
+                    );
+                    return;
+                }
+
+                let html = '<div class="list-group" style="max-height: 300px; overflow-y: auto; border-radius: 8px;">';
+                data.forEach(function(comp) {
+                    const yaAgregado = componentesEquipoEdit.includes(comp.id);
+                    const clase = yaAgregado ? 'list-group-item-secondary' : 'list-group-item-action';
+                    const cursor = yaAgregado ? 'not-allowed' : 'pointer';
+
+                    html += `
+                        <div class="list-group-item ${clase}" style="cursor: ${cursor}; transition: all 0.2s;"
+                             onclick="${yaAgregado ? '' : `agregarComponenteAEquipo(${comp.id}, '${comp.nombre}', '${comp.nroSerie}', '${comp.tipo}', '${comp.marca}')`}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong><i class="bi bi-gear-fill"></i> ${comp.nombre}</strong><br>
+                                    <small class="text-muted">
+                                        <i class="bi bi-hash"></i> ${comp.nroSerie} |
+                                        <i class="bi bi-cpu"></i> ${comp.tipo} |
+                                        <i class="bi bi-bookmark"></i> ${comp.marca}
+                                    </small>
+                                </div>
+                                ${yaAgregado
+                                    ? '<span class="badge bg-secondary"><i class="bi bi-check-circle"></i> En el equipo</span>'
+                                    : '<i class="bi bi-plus-circle text-success" style="font-size: 1.5rem;"></i>'}
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+
+                $('#resultadosComponenteEdit').html(html);
+            }).fail(function(xhr, status, error) {
+                console.error('Error al buscar componentes:', error);
                 $('#resultadosComponenteEdit').html(
-                    '<div class="alert alert-info small mb-0"><i class="bi bi-info-circle"></i> No se encontraron componentes</div>'
+                    '<div class="alert alert-danger small mb-0"><i class="bi bi-exclamation-triangle"></i> Error al buscar componentes</div>'
                 );
+            });
+        }
+
+        // ✅ Función para agregar componente
+        function agregarComponenteAEquipo(id, nombre, nroSerie, tipo, marca) {
+            if (componentesEquipoEdit.includes(id)) {
+                console.log('Componente ya agregado:', id);
                 return;
             }
 
-            let html = '<div class="list-group" style="max-height: 300px; overflow-y: auto; border-radius: 8px;">';
-            data.forEach(function(comp) {
-                const yaAgregado = componentesEquipoEdit.includes(comp.id);
-                const clase = yaAgregado ? 'list-group-item-secondary' : 'list-group-item-action';
-                const cursor = yaAgregado ? 'not-allowed' : 'pointer';
+            console.log('Agregando componente:', id, nombre);
+            componentesEquipoEdit.push(id);
+            $('#filaVacia').remove();
 
-                html += `
-                    <div class="list-group-item ${clase}" style="cursor: ${cursor}; transition: all 0.2s;"
-                         onclick="${yaAgregado ? '' : `agregarComponenteAEquipo(${comp.id}, '${comp.nombre}', '${comp.nroSerie}', '${comp.tipo}', '${comp.marca}')`}">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong><i class="bi bi-gear-fill"></i> ${comp.nombre}</strong><br>
-                                <small class="text-muted">
-                                    <i class="bi bi-hash"></i> ${comp.nroSerie} |
-                                    <i class="bi bi-cpu"></i> ${comp.tipo} |
-                                    <i class="bi bi-bookmark"></i> ${comp.marca}
-                                </small>
+            const fila = `
+                <tr data-componente-id="${id}" style="animation: fadeIn 0.3s;">
+                    <td class="fw-bold">${nombre}</td>
+                    <td>${nroSerie !== 'Sin serie' ? '<code>' + nroSerie + '</code>' : '<span class="text-muted">Sin serie</span>'}</td>
+                    <td><span class="badge" style="background-color: var(--secondary-color);">${tipo}</span></td>
+                    <td><span class="badge" style="background-color: var(--success-color);">${marca}</span></td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-danger-custom"
+                                onclick="eliminarComponenteDeEquipo(${id})"
+                                title="Eliminar del equipo">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+
+            $('#componentesEquipoBody').append(fila);
+            $('#resultadosComponenteEdit').html('');
+            $('#buscarComponenteEdit').val('');
+            actualizarContador();
+        }
+
+        // ✅ Función para eliminar componente
+        function eliminarComponenteDeEquipo(id) {
+            if (confirm('¿Está seguro que desea eliminar este componente del equipo?')) {
+                console.log('Eliminando componente:', id);
+                componentesEquipoEdit = componentesEquipoEdit.filter(compId => compId !== id);
+                $(`tr[data-componente-id="${id}"]`).fadeOut(300, function() {
+                    $(this).remove();
+
+                    if (componentesEquipoEdit.length === 0) {
+                        $('#componentesEquipoBody').html(`
+                            <tr id="filaVacia">
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                                    <p class="mb-0 mt-2">No hay componentes en este equipo</p>
+                                </td>
+                            </tr>
+                        `);
+                    }
+                    actualizarContador();
+                });
+            }
+        }
+
+        // ✅ Actualizar contador
+        function actualizarContador() {
+            $('#contadorComponentes').text(componentesEquipoEdit.length);
+        }
+
+        // ✅ Abrir modal de nuevo componente
+        function abrirModalNuevoComponenteDesdeEdit() {
+            $.get(baseUrl + 'Componente/Create', function(data) {
+                $('#modalNuevoComponente').remove();
+
+                const modalHtml = `
+                    <div class="modal fade" id="modalNuevoComponente" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header modal-header-custom">
+                                    <h5 class="modal-title">
+                                        <i class="bi bi-plus-circle"></i> Nuevo Componente
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: brightness(0) invert(1);"></button>
+                                </div>
+                                <div class="modal-body" id="modalNuevoComponenteContenido"></div>
                             </div>
-                            ${yaAgregado
-                                ? '<span class="badge bg-secondary"><i class="bi bi-check-circle"></i> En el equipo</span>'
-                                : '<i class="bi bi-plus-circle text-success" style="font-size: 1.5rem;"></i>'}
                         </div>
                     </div>
                 `;
-            });
-            html += '</div>';
 
-            $('#resultadosComponenteEdit').html(html);
-        });
-    }
+                $('body').append(modalHtml);
+                $('#modalNuevoComponenteContenido').html(data);
+                $('#modalNuevoComponente').modal('show');
 
-    // ✅ Función para agregar componente
-    function agregarComponenteAEquipo(id, nombre, nroSerie, tipo, marca) {
-        if (componentesEquipoEdit.includes(id)) {
-            return;
-        }
-
-        componentesEquipoEdit.push(id);
-        $('#filaVacia').remove();
-
-        const fila = `
-            <tr data-componente-id="${id}" style="animation: fadeIn 0.3s;">
-                <td class="fw-bold">${nombre}</td>
-                <td>${nroSerie !== 'Sin serie' ? '<code>' + nroSerie + '</code>' : '<span class="text-muted">Sin serie</span>'}</td>
-                <td><span class="badge" style="background-color: var(--secondary-color);">${tipo}</span></td>
-                <td><span class="badge" style="background-color: var(--success-color);">${marca}</span></td>
-                <td class="text-center">
-                    <button type="button" class="btn btn-sm btn-danger-custom"
-                            onclick="eliminarComponenteDeEquipo(${id})"
-                            title="Eliminar del equipo">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `;
-
-        $('#componentesEquipoBody').append(fila);
-        $('#resultadosComponenteEdit').html('');
-        $('#buscarComponenteEdit').val('');
-        actualizarContador();
-    }
-
-    // ✅ Función para eliminar componente
-    function eliminarComponenteDeEquipo(id) {
-        if (confirm('¿Está seguro que desea eliminar este componente del equipo?')) {
-            componentesEquipoEdit = componentesEquipoEdit.filter(compId => compId !== id);
-            $(`tr[data-componente-id="${id}"]`).fadeOut(300, function() {
-                $(this).remove();
-
-                if (componentesEquipoEdit.length === 0) {
-                    $('#componentesEquipoBody').html(`
-                        <tr id="filaVacia">
-                            <td colspan="5" class="text-center text-muted py-4">
-                                <i class="bi bi-inbox" style="font-size: 2rem;"></i>
-                                <p class="mb-0 mt-2">No hay componentes en este equipo</p>
-                            </td>
-                        </tr>
-                    `);
-                }
-                actualizarContador();
+                $('#modalNuevoComponente').on('hidden.bs.modal', function() {
+                    $('#modalEditarEquipo').modal('show');
+                });
             });
         }
-    }
+    </script>
+    <style>
+        @@keyframes fadeIn {
+            from
 
-    // ✅ Actualizar contador
-    function actualizarContador() {
-        $('#contadorComponentes').text(componentesEquipoEdit.length);
-    }
+        {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
 
-    // ✅ Abrir modal de nuevo componente
-    function abrirModalNuevoComponenteDesdeEdit() {
-        $.get(baseUrl + 'Componente/Create', function(data) {
-            $('#modalNuevoComponente').remove();
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
 
-            const modalHtml = `
-                <div class="modal fade" id="modalNuevoComponente" tabindex="-1">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header modal-header-custom">
-                                <h5 class="modal-title">
-                                    <i class="bi bi-plus-circle"></i> Nuevo Componente
-                                </h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: brightness(0) invert(1);"></button>
-                            </div>
-                            <div class="modal-body" id="modalNuevoComponenteContenido"></div>
-                        </div>
-                    </div>
-                </div>
-            `;
+        }
 
-            $('body').append(modalHtml);
-            $('#modalNuevoComponenteContenido').html(data);
-            $('#modalNuevoComponente').modal('show');
-
-            $('#modalNuevoComponente').on('hidden.bs.modal', function() {
-                $('#modalEditarEquipo').modal('show');
-            });
-        });
-    }
-</script>
-
-<style>
-    @@keyframes fadeIn {
-        from
-
-    {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-    }
-
-    #resultadosComponenteEdit .list-group-item:hover:not(.list-group-item-secondary) {
-        background-color: rgba(39, 174, 96, 0.1);
-        transform: translateX(5px);
-    }
-</style>
+        #resultadosComponenteEdit .list-group-item:hover:not(.list-group-item-secondary) {
+            background-color: rgba(39, 174, 96, 0.1);
+            transform: translateX(5px);
+        }
+    </style>

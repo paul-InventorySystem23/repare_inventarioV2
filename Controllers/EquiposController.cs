@@ -85,6 +85,10 @@ namespace inventario_coprotab.Controllers
                     .ThenInclude(rd => rd.IdDispositivoNavigation)
                         .ThenInclude(d => d.IdMarcaNavigation)
                 .Include(r => r.RelacionDetalles)
+                    .ThenInclude(rd => rd.IdDispositivoNavigation)
+                        .ThenInclude(d => d.RelacionDispositivoComponentes) // 👈 se añade
+                            .ThenInclude(rdc => rdc.IdResponsableNavigation) // 👈 para traer responsable
+                .Include(r => r.RelacionDetalles)
                     .ThenInclude(rd => rd.IdComponenteNavigation)
                         .ThenInclude(c => c.IdTipoNavigation)
                 .Include(r => r.RelacionDetalles)
@@ -93,12 +97,11 @@ namespace inventario_coprotab.Controllers
                 .FirstOrDefaultAsync(r => r.IdRelacion == id);
 
             if (equipo == null)
-            {
                 return NotFound();
-            }
 
             return PartialView("_DetailsPartial", equipo);
         }
+
 
         // GET: Equipos/Edit/5
         public async Task<IActionResult> Edit(int? id)
@@ -164,53 +167,130 @@ namespace inventario_coprotab.Controllers
 
             return PartialView("_EditPartial", model);
         }
+       
         // POST: Equipos/Edit
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(EquipoEditViewModel model)
         {
-            if (!ModelState.IsValid)
+            // ✅ Logging para debugging
+            Console.WriteLine($"=== INICIO EDICIÓN EQUIPO ===");
+            Console.WriteLine($"IdRelacion: {model.IdRelacion}");
+            Console.WriteLine($"IdDispositivo: {model.IdDispositivo}");
+            Console.WriteLine($"Componentes recibidos: {model.ComponentesSeleccionados?.Count ?? 0}");
+            if (model.ComponentesSeleccionados != null)
             {
-                return Json(new { success = false, message = "Datos inválidos" });
+                Console.WriteLine($"IDs de componentes: {string.Join(", ", model.ComponentesSeleccionados)}");
+            }
+
+            // ✅ Validación manual: al menos debe haber componentes seleccionados
+            if (model.ComponentesSeleccionados == null || !model.ComponentesSeleccionados.Any())
+            {
+                Console.WriteLine("ERROR: No hay componentes seleccionados");
+                return Json(new
+                {
+                    success = false,
+                    message = "Debe seleccionar al menos un componente para el equipo",
+                    errors = new[] { "ComponentesSeleccionados: Debe agregar al menos un componente" }
+                });
+            }
+
+            // ✅ Validación: el dispositivo debe existir
+            var dispositivoExiste = await _context.Dispositivos.AnyAsync(d => d.IdDispositivo == model.IdDispositivo);
+            if (!dispositivoExiste)
+            {
+                Console.WriteLine($"ERROR: Dispositivo {model.IdDispositivo} no existe");
+                return Json(new
+                {
+                    success = false,
+                    message = "El dispositivo especificado no existe",
+                    errors = new[] { "IdDispositivo: El dispositivo no es válido" }
+                });
+            }
+
+            // ✅ Validación: todos los componentes deben existir
+            var componentesValidos = await _context.Componentes
+                .Where(c => model.ComponentesSeleccionados.Contains(c.IdComponente))
+                .Select(c => c.IdComponente)
+                .ToListAsync();
+
+            var componentesInvalidos = model.ComponentesSeleccionados
+                .Except(componentesValidos)
+                .ToList();
+
+            if (componentesInvalidos.Any())
+            {
+                Console.WriteLine($"ERROR: Componentes inválidos: {string.Join(", ", componentesInvalidos)}");
+                return Json(new
+                {
+                    success = false,
+                    message = $"Los siguientes componentes no existen: {string.Join(", ", componentesInvalidos)}",
+                    errors = new[] { "ComponentesSeleccionados: Algunos componentes no son válidos" }
+                });
             }
 
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
+                Console.WriteLine("Iniciando transacción...");
+
+                // ✅ Verificar que la relación existe
+                var relacionExiste = await _context.Relacions.AnyAsync(r => r.IdRelacion == model.IdRelacion);
+                if (!relacionExiste)
+                {
+                    Console.WriteLine($"ERROR: Relación {model.IdRelacion} no existe");
+                    return Json(new
+                    {
+                        success = false,
+                        message = "El equipo especificado no existe"
+                    });
+                }
+
                 // ✅ Eliminar detalles antiguos
                 var detallesAntiguos = await _context.RelacionDetalles
                     .Where(rd => rd.IdRelacion == model.IdRelacion)
                     .ToListAsync();
 
+                Console.WriteLine($"Eliminando {detallesAntiguos.Count} detalles antiguos...");
                 _context.RelacionDetalles.RemoveRange(detallesAntiguos);
                 await _context.SaveChangesAsync();
 
-                // ✅ Agregar nuevos detalles (CORRECCIÓN: ahora valida si hay componentes seleccionados)
-                if (model.ComponentesSeleccionados != null && model.ComponentesSeleccionados.Any())
+                // ✅ Agregar nuevos detalles
+                Console.WriteLine($"Agregando {model.ComponentesSeleccionados.Count} nuevos detalles...");
+                foreach (var componenteId in model.ComponentesSeleccionados)
                 {
-                    foreach (var componenteId in model.ComponentesSeleccionados)
+                    var nuevoDetalle = new inventario_coprotab.Models.DBInventario.RelacionDetalle
                     {
-                        var nuevoDetalle = new inventario_coprotab.Models.DBInventario.RelacionDetalle
-                        {
-                            IdRelacion = model.IdRelacion,
-                            IdDispositivo = model.IdDispositivo,
-                            IdComponente = componenteId
-                        };
-                        _context.RelacionDetalles.Add(nuevoDetalle);
-                    }
+                        IdRelacion = model.IdRelacion,
+                        IdDispositivo = model.IdDispositivo,
+                        IdComponente = componenteId
+                    };
+                    _context.RelacionDetalles.Add(nuevoDetalle);
+                    Console.WriteLine($"  - Agregado: Dispositivo {model.IdDispositivo} + Componente {componenteId}");
                 }
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                return Json(new { success = true });
+                Console.WriteLine("=== EDICIÓN EXITOSA ===");
+                return Json(new { success = true, message = "Equipo actualizado correctamente" });
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                return Json(new { success = false, message = "Error al actualizar el equipo: " + ex.Message });
+                Console.WriteLine($"ERROR en transacción: {ex.Message}");
+                Console.WriteLine($"Inner Exception: {ex.InnerException?.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+
+                return Json(new
+                {
+                    success = false,
+                    message = "Error al actualizar el equipo: " + ex.Message,
+                    details = ex.InnerException?.Message
+                });
             }
         }
+
 
         // POST: Equipos/Delete/5
         [HttpPost]

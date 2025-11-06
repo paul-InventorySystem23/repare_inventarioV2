@@ -2,66 +2,101 @@
 
 <div class="container-fluid">
     <div class="row">
-        <!-- Información General -->
+        <!-- ==================== INFORMACIÓN GENERAL ==================== -->
         <div class="col-md-12 mb-3">
             <div class="card-custom p-3">
                 <h6 class="fw-bold mb-3" style="color: var(--secondary-color);">
                     <i class="bi bi-info-circle"></i> Información General
                 </h6>
+
+                @{
+                    // ✅ Obtener relación dispositivo-componente (incluye responsable y observaciones)
+                    var relacionDispositivo = Model.RelacionDetalles?
+                        .SelectMany(rd => rd.IdDispositivoNavigation.RelacionDispositivoComponentes)
+                        .FirstOrDefault();
+
+                    var responsable = relacionDispositivo?.IdResponsableNavigation;
+                    var observaciones = relacionDispositivo?.Observaciones;
+                }
+
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <p>
                             <strong><i class="bi bi-hash"></i> ID Relación:</strong><br>
                             <span class="badge bg-secondary">#@Model.IdRelacion</span>
                         </p>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <p>
                             <strong><i class="bi bi-calendar"></i> Fecha de Creación:</strong><br>
                             @Model.Fecha.ToString("dd/MM/yyyy")
                         </p>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <p>
                             <strong><i class="bi bi-person"></i> Responsable:</strong><br>
-                            @{
-                                var responsable = Model.RelacionDetalles?.FirstOrDefault()?.IdDispositivoNavigation?.RelacionDispositivoComponentes?.FirstOrDefault()?.IdResponsableNavigation;
-                                if (responsable != null)
-                                {
-                                    <span class="badge bg-info">@responsable.Nombre @responsable.Apellido</span>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">Sin responsable asignado</span>
-                                }
+                            @if (responsable != null)
+                            {
+                                <span class="badge bg-info text-dark" style="font-size: 0.95rem;">
+                                    <i class="bi bi-person-badge"></i> @responsable.Nombre @responsable.Apellido
+                                </span>
+                                <br />
+                                <small class="text-muted">
+                                    @if (!string.IsNullOrEmpty(responsable.Sector))
+                                    {
+                                        <i class="bi bi-building"></i> @responsable.Sector <br />
+                                    }
+                                    @if (!string.IsNullOrEmpty(responsable.Email))
+                                    {
+                                        <i class="bi bi-envelope"></i> @responsable.Email <br />
+                                    }
+                                    @if (!string.IsNullOrEmpty(responsable.Telefono))
+                                    {
+                                        <i class="bi bi-telephone"></i> @responsable.Telefono
+                                    }
+                                </small>
                             }
+                            else
+                            {
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-person-x"></i> Sin responsable asignado
+                                </span>
+                            }
+                        </p>
+                    </div>
+                    <div class="col-md-3">
+                        <p>
+                            <strong><i class="bi bi-gear-fill"></i> Total Componentes:</strong><br>
+                            <span class="badge bg-success" style="font-size: 1rem;">
+                                @(Model.RelacionDetalles?.Count(rd => rd.IdComponente > 0) ?? 0) componentes
+                            </span>
                         </p>
                     </div>
                 </div>
 
-                @{
-                    var observaciones = Model.RelacionDetalles?.FirstOrDefault()?.IdDispositivoNavigation?.RelacionDispositivoComponentes?.FirstOrDefault()?.Observaciones;
-                    if (!string.IsNullOrEmpty(observaciones))
-                    {
-                        <div class="row mt-3">
-                            <div class="col-12">
-                                <p>
-                                    <strong><i class="bi bi-chat-left-text"></i> Observaciones:</strong><br>
-                                    <span class="text-muted">@observaciones</span>
-                                </p>
+                @if (!string.IsNullOrEmpty(observaciones))
+                {
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="alert alert-light border-start border-4 border-info" role="alert">
+                                <h6 class="alert-heading">
+                                    <i class="bi bi-chat-left-text"></i> Observaciones
+                                </h6>
+                                <p class="mb-0">@observaciones</p>
                             </div>
                         </div>
-                    }
+                    </div>
                 }
             </div>
         </div>
 
-        <!-- Dispositivo Principal -->
+        <!-- ==================== DISPOSITIVO PRINCIPAL ==================== -->
         <div class="col-md-12 mb-3">
             <div class="card-custom p-3">
                 <h6 class="fw-bold mb-3" style="color: var(--secondary-color);">
                     <i class="bi bi-laptop"></i> Dispositivo Principal
                 </h6>
+
                 @if (Model.RelacionDetalles != null && Model.RelacionDetalles.Any())
                 {
                     var detalle = Model.RelacionDetalles.FirstOrDefault();
@@ -69,63 +104,73 @@
                     {
                         var dispositivo = detalle.IdDispositivoNavigation;
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <p>
-                                    <strong>Nombre:</strong><br>
+                                    <strong><i class="bi bi-tag"></i> Nombre:</strong><br>
                                     @dispositivo.Nombre
                                 </p>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <p>
-                                    <strong>Número de Serie:</strong><br>
+                                    <strong><i class="bi bi-upc"></i> Código Inventario:</strong><br>
+                                    @if (!string.IsNullOrEmpty(dispositivo.CodigoInventario))
+                                    {
+                                        <span class="badge bg-secondary">@dispositivo.CodigoInventario</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Sin código</span>
+                                    }
+                                </p>
+                            </div>
+                            <div class="col-md-3">
+                                <p>
+                                    <strong><i class="bi bi-hash"></i> Número de Serie:</strong><br>
                                     <code>@(dispositivo.NroSerie ?? "Sin serie")</code>
                                 </p>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <p>
-                                    <strong>Tipo:</strong><br>
+                                    <strong><i class="bi bi-cpu"></i> Tipo:</strong><br>
                                     <span class="badge" style="background-color: var(--secondary-color);">
                                         @(dispositivo.IdTipoNavigation?.Descripcion ?? "Sin tipo")
                                     </span>
                                 </p>
                             </div>
                         </div>
-                        @if (dispositivo.IdMarcaNavigation != null)
-                        {
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <p>
-                                        <strong>Marca:</strong><br>
-                                        <span class="badge" style="background-color: var(--success-color);">
-                                            @dispositivo.IdMarcaNavigation.Nombre
-                                        </span>
-                                    </p>
-                                </div>
-                                <div class="col-md-4">
-                                    <p>
-                                        <strong>Estado:</strong><br>
-                                        @if (dispositivo.Estado == "Nuevo")
-                                        {
-                                            <span class="badge badge-custom" style="background-color: var(--success-color);">
-                                                <i class="bi bi-star-fill"></i> @dispositivo.Estado
-                                            </span>
-                                        }
-                                        else if (dispositivo.Estado == "En uso")
-                                        {
-                                            <span class="badge badge-custom" style="background-color: var(--secondary-color);">
-                                                <i class="bi bi-check-circle-fill"></i> @dispositivo.Estado
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge badge-custom" style="background-color: var(--warning-color);">
-                                                <i class="bi bi-exclamation-circle-fill"></i> @dispositivo.Estado
-                                            </span>
-                                        }
-                                    </p>
-                                </div>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <p>
+                                    <strong><i class="bi bi-bookmark"></i> Marca:</strong><br>
+                                    <span class="badge" style="background-color: var(--success-color);">
+                                        @(dispositivo.IdMarcaNavigation?.Nombre ?? "Sin marca")
+                                    </span>
+                                </p>
                             </div>
-                        }
+                            <div class="col-md-4">
+                                <p>
+                                    <strong>Estado:</strong><br>
+                                    @if (dispositivo.Estado == "Nuevo")
+                                    {
+                                        <span class="badge badge-custom" style="background-color: var(--success-color);">
+                                            <i class="bi bi-star-fill"></i> @dispositivo.Estado
+                                        </span>
+                                    }
+                                    else if (dispositivo.Estado == "En uso")
+                                    {
+                                        <span class="badge badge-custom" style="background-color: var(--secondary-color);">
+                                            <i class="bi bi-check-circle-fill"></i> @dispositivo.Estado
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-custom" style="background-color: var(--warning-color);">
+                                            <i class="bi bi-exclamation-circle-fill"></i> @dispositivo.Estado
+                                        </span>
+                                    }
+                                </p>
+                            </div>
+                        </div>
                     }
                     else
                     {
@@ -143,7 +188,7 @@
             </div>
         </div>
 
-        <!-- Componentes del Equipo -->
+        <!-- ==================== COMPONENTES DEL EQUIPO ==================== -->
         <div class="col-md-12">
             <div class="card-custom p-3">
                 <h6 class="fw-bold mb-3" style="color: var(--success-color);">
@@ -235,6 +280,7 @@
     </div>
 </div>
 
+<!-- ==================== FOOTER ==================== -->
 <div class="modal-footer border-0 pt-4">
     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
         <i class="bi bi-x-circle"></i> Cerrar
