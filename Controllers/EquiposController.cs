@@ -113,6 +113,10 @@ namespace inventario_coprotab.Controllers
                     .ThenInclude(rd => rd.IdDispositivoNavigation)
                 .Include(r => r.RelacionDetalles)
                     .ThenInclude(rd => rd.IdComponenteNavigation)
+                        .ThenInclude(c => c.IdMarcaNavigation)
+                .Include(r => r.RelacionDetalles)
+                    .ThenInclude(rd => rd.IdComponenteNavigation)
+                        .ThenInclude(c => c.IdTipoNavigation)
                 .FirstOrDefaultAsync(r => r.IdRelacion == id);
 
             if (equipo == null)
@@ -125,15 +129,30 @@ namespace inventario_coprotab.Controllers
                 .Select(rd => rd.IdComponente)
                 .ToList();
 
+            // ✅ Mapear componentes actuales con toda su información
+            var componentesActuales = equipo.RelacionDetalles
+                .Where(rd => rd.IdComponenteNavigation != null)
+                .Select(rd => new ComponenteEquipoItem
+                {
+                    IdComponente = rd.IdComponente,
+                    Nombre = rd.IdComponenteNavigation!.Nombre,
+                    NroSerie = rd.IdComponenteNavigation.NroSerie,
+                    Tipo = rd.IdComponenteNavigation.IdTipoNavigation?.Descripcion,
+                    Marca = rd.IdComponenteNavigation.IdMarcaNavigation?.Nombre
+                })
+                .ToList();
+
             var model = new EquipoEditViewModel
             {
                 IdRelacion = equipo.IdRelacion,
                 IdDispositivo = dispositivo?.IdDispositivo ?? 0,
                 DispositivoNombre = dispositivo?.Nombre ?? "N/A",
                 ComponentesSeleccionados = componentesIds,
+                ComponentesActuales = componentesActuales,
                 ComponentesDisponibles = await _context.Componentes
                     .Where(c => c.EstadoRegistro)
                     .Include(c => c.IdMarcaNavigation)
+                    .Include(c => c.IdTipoNavigation)
                     .Select(c => new ComponenteCheckboxItem
                     {
                         IdComponente = c.IdComponente,
@@ -145,7 +164,6 @@ namespace inventario_coprotab.Controllers
 
             return PartialView("_EditPartial", model);
         }
-
         // POST: Equipos/Edit
         [HttpPost]
         [ValidateAntiForgeryToken]
